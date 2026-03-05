@@ -1,65 +1,1627 @@
-import Image from "next/image";
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
+'use client';
 
-export default function Home() {
+import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, Avatar, SimpleGrid, ActionIcon, Tooltip, Image, Spoiler, Tabs } from '@mantine/core';
+import { motion, useScroll, useTransform, useAnimation, useMotionValue, useSpring } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import {
+  Megaphone,
+  Upload,
+  MessageCircle,
+  Award,
+  Truck,
+  Headphones,
+  DollarSign,
+  Sparkles,
+  Shield,
+  Clock,
+  Users,
+  ChevronRight,
+  Star,
+  Palette,
+  CheckCircle,
+  Phone,
+  ArrowRight,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  Quote,
+  Printer,
+  Zap,
+  Gem,
+} from 'lucide-react';
+import CountUp from 'react-countup';
+import Footer from './component/footer';
+import { useMediaQuery } from '@mantine/hooks';
+import confetti from 'canvas-confetti';
+import { Variants } from 'framer-motion';
+
+const MotionDiv = motion.div;
+const MotionSection = motion.section;
+
+
+// const MotionContainer = motion(Container as any);
+// const MotionTitle = motion(Title as any);
+const MotionText = motion(Text as any);
+const MotionCard = motion(Card as any);
+// const MotionButton = motion(Button as any);
+
+// ==================== STUNNING WELCOME TEXT COMPONENT ====================
+const StunningWelcomeText = () => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (textRef.current) {
+        const rect = textRef.current.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        setMousePosition({ x, y });
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <MotionDiv
+      ref={textRef}
+      className="relative mb-12"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
+    >
+      {/* Animated Gradient Orbs */}
+      <motion.div
+        className="absolute -top-20 -left-20 w-64 h-64 bg-gradient-to-r from-red-500/30 to-orange-500/30 rounded-full blur-3xl"
+        animate={{
+          x: mousePosition.x * 2,
+          y: mousePosition.y * 2,
+          scale: [1, 1.2, 1],
+        }}
+        transition={{ duration: 0.5 }}
+      />
+      <motion.div
+        className="absolute -bottom-20 -right-20 w-64 h-64 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-3xl"
+        animate={{
+          x: -mousePosition.x * 2,
+          y: -mousePosition.y * 2,
+          scale: [1, 1.2, 1],
+        }}
+        transition={{ duration: 0.5 }}
+      />
+
+      {/* Main Welcome Text */}
+      <div className="relative text-center">
+        {/* Animated Word "Welcome" */}
+        <motion.div
+          className="overflow-hidden mb-4"
+          initial={{ width: 0 }}
+          animate={{ width: "100%" }}
+          transition={{ duration: 1, delay: 0.5 }}
+        >
+          <motion.div
+            className="inline-block"
+            animate={{
+              textShadow: isHovered 
+                ? [
+                    '0 0 20px rgba(239,68,68,0.5)',
+                    '0 0 40px rgba(249,115,22,0.5)',
+                    '0 0 20px rgba(239,68,68,0.5)',
+                  ]
+                : '0 0 0px rgba(0,0,0,0)',
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Text
+              size="xl"
+              fw={300}
+              className="text-3xl md:text-4xl lg:text-5xl tracking-[0.3em] uppercase mb-2"
+              style={{ 
+                fontFamily: 'Montserrat, sans-serif',
+                background: 'linear-gradient(135deg, #ef4444, #f97316, #f59e0b, #ef4444)',
+                backgroundSize: '300% 300%',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              <motion.span
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                }}
+                transition={{ duration: 5, repeat: Infinity }}
+              >
+                WELCOME TO
+              </motion.span>
+            </Text>
+          </motion.div>
+        </motion.div>
+
+        {/* Main Brand Name with 3D Effect */}
+        <motion.div
+          className="relative perspective-1000"
+          style={{
+            transformStyle: 'preserve-3d',
+          }}
+        >
+          <motion.h1
+            className="text-5xl md:text-7xl lg:text-8xl font-black mb-6"
+            style={{
+              fontFamily: 'Montserrat, sans-serif',
+              transform: `rotateX(${mousePosition.y * 0.1}deg) rotateY(${mousePosition.x * 0.1}deg)`,
+            }}
+          >
+            <span className="relative inline-block">
+              {/* Gradient Text */}
+              <span className="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent">
+                LUCIA
+              </span>
+              
+              {/* Floating Particles around text */}
+              {[...Array(8)].map((_, i) => (
+                <motion.span
+                  key={i}
+                  className="absolute w-1 h-1 bg-orange-500 rounded-full"
+                  style={{
+                    left: `${(i * 12)}%`,
+                    top: `${Math.sin(i) * 50}%`,
+                  }}
+                  animate={{
+                    y: [0, -20, 0],
+                    opacity: [0, 1, 0],
+                    scale: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 2 + i * 0.3,
+                    repeat: Infinity,
+                    delay: i * 0.2,
+                  }}
+                />
+              ))}
+            </span>
+          </motion.h1>
+
+          {/* Second Line with Staggered Animation */}
+          <motion.div
+            className="overflow-hidden"
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.8, duration: 0.6 }}
+          >
+            <Title
+              order={2}
+              className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white"
+            >
+              <motion.span
+                className="inline-block"
+                animate={{
+                  color: isHovered ? ['#ef4444', '#f97316', '#f59e0b', '#ef4444'] : '#000',
+                }}
+                transition={{ duration: 3, repeat: isHovered ? Infinity : 0 }}
+              >
+                Printing & Advertising
+              </motion.span>
+            </Title>
+          </motion.div>
+        </motion.div>
+
+        {/* Animated Underline with Glow */}
+        <motion.div
+          className="relative h-1 mx-auto mt-8 overflow-hidden rounded-full"
+          style={{ width: '60%' }}
+        >
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500"
+            animate={{
+              x: ['-100%', '100%'],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'linear',
+            }}
+          />
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 blur-md"
+            animate={{
+              x: ['-100%', '100%'],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'linear',
+              delay: 0.5,
+            }}
+          />
+        </motion.div>
+
+        {/* Floating Icons */}
+        <motion.div
+          className="absolute -left-12 top-1/2 text-red-500"
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 10, -10, 0],
+          }}
+          transition={{ duration: 4, repeat: Infinity }}
+        >
+          <Printer size={40} />
+        </motion.div>
+
+        <motion.div
+          className="absolute -right-12 top-1/2 text-orange-500"
+          animate={{
+            y: [0, 20, 0],
+            rotate: [0, -10, 10, 0],
+          }}
+          transition={{ duration: 5, repeat: Infinity }}
+        >
+          <Sparkles size={40} />
+        </motion.div>
+
+        <motion.div
+          className="absolute left-1/4 -bottom-12 text-yellow-500"
+          animate={{
+            x: [0, 20, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{ duration: 4.5, repeat: Infinity }}
+        >
+          <Zap size={32} />
+        </motion.div>
+
+        <motion.div
+          className="absolute right-1/4 -bottom-12 text-purple-500"
+          animate={{
+            x: [0, -20, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{ duration: 4, repeat: Infinity }}
+        >
+          <Gem size={32} />
+        </motion.div>
+
+        {/* Light Rays Effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-transparent via-orange-500 to-transparent"
+            animate={{
+              rotate: [0, 45, 0],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{ duration: 8, repeat: Infinity }}
+          />
+        </div>
+      </div>
+    </MotionDiv>
+  );
+};
+
+// ==================== ANIMATED BACKGROUND WAVES ====================
+const AnimatedWaves = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <svg
+        className="absolute bottom-0 left-0 w-full h-auto"
+        viewBox="0 0 1440 320"
+        preserveAspectRatio="none"
+      >
+        <motion.path
+          fill="rgba(239,68,68,0.1)"
+          fillOpacity="1"
+          d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,170.7C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+          animate={{
+            d: [
+              "M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,170.7C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+              "M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,138.7C672,117,768,107,864,122.7C960,139,1056,181,1152,186.7C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+              "M0,224L48,208C96,192,192,160,288,149.3C384,139,480,149,576,165.3C672,181,768,203,864,197.3C960,192,1056,160,1152,138.7C1248,117,1344,107,1392,112L1440,117L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+              "M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,170.7C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z",
+            ]
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "linear",
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </svg>
     </div>
+  );
+};
+
+// Custom hook for scroll animations
+const useScrollAnimation = (threshold = 0.1) => {
+  const [ref, inView] = useInView({ threshold, triggerOnce: true });
+  const controls = useAnimation();
+
+  useEffect(() => {
+    if (inView) {
+      controls.start('visible');
+    }
+  }, [controls, inView]);
+
+  // Return ref as the ref object, and controls separately
+  return { 
+    ref,      // This is the ref to attach to elements
+    controls, // This is for animations
+    inView 
+  };
+};
+
+
+// Custom hook for mouse position tracking
+const useMousePosition = (excludeSelector?: string) => {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isExcluded, setIsExcluded] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (excludeSelector) {
+        const excludedElement = document.querySelector(excludeSelector);
+        if (excludedElement) {
+          const rect = excludedElement.getBoundingClientRect();
+          const isOverExcluded = 
+            e.clientX >= rect.left && 
+            e.clientX <= rect.right && 
+            e.clientY >= rect.top && 
+            e.clientY <= rect.bottom;
+          
+          setIsExcluded(isOverExcluded);
+          
+          if (!isOverExcluded) {
+            setMousePosition({ x: e.clientX, y: e.clientY });
+          }
+        } else {
+          setMousePosition({ x: e.clientX, y: e.clientY });
+        }
+      } else {
+        setMousePosition({ x: e.clientX, y: e.clientY });
+      }
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [excludeSelector]);
+
+  return { mousePosition, isExcluded };
+};
+
+// Floating particles animation
+const FloatingParticles = () => {
+  const [mounted, setMounted] = useState(false);
+  const [particles, setParticles] = useState<Array<{
+    id: number;
+    startX: number;
+    startY: number;
+    moveX: number;
+    moveY: number;
+    duration: number;
+    size: number;
+    color: string;
+    rotation: number;
+    shape: 'circle' | 'square' | 'triangle';
+  }>>([]);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    const colors = ['rgba(239,68,68,0.2)', 'rgba(249,115,22,0.2)', 'rgba(245,158,11,0.2)', 'rgba(34,197,94,0.2)', 'rgba(59,130,246,0.2)', 'rgba(168,85,247,0.2)'];
+    const shapes = ['circle', 'square', 'triangle'] as const;
+    
+    const newParticles = [...Array(30)].map((_, i) => ({
+      id: i,
+      startX: Math.random() * (typeof window !== 'undefined' ? window.innerWidth - 100 : 1000) + 50,
+      startY: Math.random() * (typeof window !== 'undefined' ? window.innerHeight - 100 : 800) + 50,
+      moveX: (Math.random() - 0.5) * 150,
+      moveY: (Math.random() - 0.5) * 150,
+      duration: 15 + Math.random() * 15,
+      size: 3 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      shape: shapes[Math.floor(Math.random() * shapes.length)],
+    }));
+    
+    setParticles(newParticles);
+
+    const handleResize = () => {
+      setParticles(prev => prev.map(p => ({
+        ...p,
+        startX: Math.random() * (window.innerWidth - 100) + 50,
+        startY: Math.random() * (window.innerHeight - 100) + 50,
+      })));
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  if (!mounted || particles.length === 0) return null;
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {particles.map((p) => {
+        const shapeClass = 
+          p.shape === 'circle' ? 'rounded-full' :
+          p.shape === 'square' ? 'rounded-md' :
+          'triangle-shape';
+        
+        return (
+          <motion.div
+            key={p.id}
+            className={`absolute ${shapeClass}`}
+            style={{
+              width: p.size,
+              height: p.size,
+              backgroundColor: p.color,
+              rotate: p.rotation,
+              ...(p.shape === 'triangle' && {
+                width: 0,
+                height: 0,
+                backgroundColor: 'transparent',
+                borderLeft: `${p.size}px solid transparent`,
+                borderRight: `${p.size}px solid transparent`,
+                borderBottom: `${p.size * 1.5}px solid ${p.color}`,
+              }),
+            }}
+            initial={{
+              x: p.startX,
+              y: p.startY,
+            }}
+            animate={{
+              x: [p.startX, p.startX + p.moveX, p.startX - p.moveX, p.startX],
+              y: [p.startY, p.startY + p.moveY, p.startY - p.moveY, p.startY],
+              rotate: [p.rotation, p.rotation + 180, p.rotation + 360],
+            }}
+            transition={{
+              duration: p.duration,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
+// 3D Tilt Card Component
+const TiltCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const { mousePosition, isExcluded } = useMousePosition('.mantine-AppShell-header, header, nav');
+
+  useEffect(() => {
+    if (!cardRef.current || isExcluded) {
+      setRotation({ x: 0, y: 0 });
+      return;
+    }
+    
+    const rect = cardRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const rotateY = ((mousePosition.x - centerX) / rect.width) * 10;
+    const rotateX = ((centerY - mousePosition.y) / rect.height) * 10;
+    
+    setRotation({ x: rotateX, y: rotateY });
+  }, [mousePosition, isExcluded]);
+
+  return (
+    <motion.div
+      ref={cardRef}
+      className={`relative ${className}`}
+      style={{
+        transformStyle: 'preserve-3d',
+        transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
+      }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+// Animated Counter with Confetti
+const AnimatedCounter = ({ value, label, icon, suffix = '' }: { value: number; label: string; icon: React.ReactNode; suffix?: string }) => {
+  const counterRef = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#ef4444', '#f97316', '#f59e0b'],
+          });
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (counterRef.current) {
+      observer.observe(counterRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <MotionDiv
+      ref={counterRef}
+      className="text-center"
+      whileHover={{ scale: 1.1 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+    >
+      <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+        {inView && <CountUp end={value} duration={2.5} separator="," suffix={suffix} />}
+      </div>
+      <div className="flex items-center justify-center gap-2 text-lg text-gray-600 dark:text-gray-400">
+        <span>{icon}</span>
+        <span>{label}</span>
+      </div>
+    </MotionDiv>
+  );
+};
+
+// Animated Gradient Border Card
+const GradientBorderCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
+  return (
+    <div className={`relative group ${className}`}>
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-gradient-xy" />
+      <div className="relative bg-white dark:bg-gray-900 rounded-lg p-6">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// Magnetic Button Effect
+// Change this component from using motion.button to motion.div
+const MagneticButton = ({ children, onClick, className = '' }: { children: React.ReactNode; onClick?: () => void; className?: string }) => {
+  const buttonRef = useRef<HTMLDivElement>(null); // Change to HTMLDivElement
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const { mousePosition, isExcluded } = useMousePosition('.mantine-AppShell-header, header, nav');
+
+  useEffect(() => {
+    if (!buttonRef.current || isExcluded) {
+      setPosition({ x: 0, y: 0 });
+      return;
+    }
+    
+    const rect = buttonRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const distance = Math.sqrt(
+      Math.pow(mousePosition.x - centerX, 2) + Math.pow(mousePosition.y - centerY, 2)
+    );
+    
+    if (distance < 100) {
+      const strength = (100 - distance) / 100;
+      const moveX = (mousePosition.x - centerX) * strength * 0.3;
+      const moveY = (mousePosition.y - centerY) * strength * 0.3;
+      setPosition({ x: moveX, y: moveY });
+    } else {
+      setPosition({ x: 0, y: 0 });
+    }
+  }, [mousePosition, isExcluded]);
+
+  return (
+    <motion.div // Change from motion.button to motion.div
+      ref={buttonRef}
+      className={className}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: 'spring', stiffness: 150, damping: 15 }}
+      onClick={onClick}
+      whileTap={{ scale: 0.95 }}
+      style={{ display: 'inline-block', cursor: 'pointer' }} // Add cursor pointer
+    >
+      {children}
+    </motion.div>
+  );
+};
+// Parallax Background
+const ParallaxBackground = () => {
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 1000], [0, 200]);
+  const y2 = useTransform(scrollY, [0, 1000], [0, -200]);
+  const y3 = useTransform(scrollY, [0, 1000], [0, 100]);
+  const opacity = useTransform(scrollY, [0, 500], [1, 0.5]);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <motion.div
+        className="absolute top-20 left-10 w-64 h-64 bg-red-500/10 rounded-full filter blur-3xl"
+        style={{ y: y1, opacity }}
+      />
+      <motion.div
+        className="absolute bottom-20 right-10 w-96 h-96 bg-orange-500/10 rounded-full filter blur-3xl"
+        style={{ y: y2, opacity }}
+      />
+      <motion.div
+        className="absolute top-1/2 left-1/2 w-48 h-48 bg-yellow-500/10 rounded-full filter blur-3xl"
+        style={{ y: y3, opacity }}
+      />
+    </div>
+  );
+};
+
+// 3D Rotating Cube
+const RotatingCube = () => {
+  return (
+    <div className="perspective-1000 w-32 h-32 mx-auto">
+      <motion.div
+        className="relative w-full h-full"
+        animate={{
+          rotateX: [0, 360],
+          rotateY: [0, 360],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: 'linear',
+        }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        {/* Front face */}
+        <div 
+          className="absolute w-full h-full bg-gradient-to-br from-red-500/30 to-orange-500/30 border-2 border-red-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          style={{ transform: 'rotateY(0deg) translateZ(60px)' }}
+        >
+          LUCIA
+        </div>
+        {/* Back face */}
+        <div 
+          className="absolute w-full h-full bg-gradient-to-br from-orange-500/30 to-yellow-500/30 border-2 border-orange-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          style={{ transform: 'rotateY(180deg) translateZ(60px)' }}
+        >
+          PRINTING
+        </div>
+        {/* Right face */}
+        <div 
+          className="absolute w-full h-full bg-gradient-to-br from-yellow-500/30 to-green-500/30 border-2 border-yellow-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          style={{ transform: 'rotateY(90deg) translateZ(60px)' }}
+        >
+          ADVERTISING
+        </div>
+        {/* Left face */}
+        <div 
+          className="absolute w-full h-full bg-gradient-to-br from-green-500/30 to-blue-500/30 border-2 border-green-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          style={{ transform: 'rotateY(-90deg) translateZ(60px)' }}
+        >
+          QUALITY
+        </div>
+        {/* Top face */}
+        <div 
+          className="absolute w-full h-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border-2 border-blue-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          style={{ transform: 'rotateX(90deg) translateZ(60px)' }}
+        >
+          SINCE 2010
+        </div>
+        {/* Bottom face */}
+        <div 
+          className="absolute w-full h-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 border-2 border-purple-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          style={{ transform: 'rotateX(-90deg) translateZ(60px)' }}
+        >
+          PREMIUM
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+export default function HomePage() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [activeTab, setActiveTab] = useState<string | null>('all');
+  const [cursorVariant, setCursorVariant] = useState('default');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
+  const heroBlur = useTransform(scrollYProgress, [0, 0.5], [0, 10]);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springConfig = { damping: 25, stiffness: 700 };
+  const mouseXSpring = useSpring(mouseX, springConfig);
+  const mouseYSpring = useSpring(mouseY, springConfig);
+  
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const { ref: servicesRef, controls: servicesControls } = useScrollAnimation(0.1);
+  const { ref: whyUsRef, controls: whyUsControls } = useScrollAnimation(0.1);
+  const { ref: processRef, controls: processControls } = useScrollAnimation(0.1);
+  const { ref: statsRef, controls: statsControls } = useScrollAnimation(0.1);
+  const { ref: testimonialsRef, controls: testimonialsControls } = useScrollAnimation(0.1);
+  const { ref: worksRef, controls: worksControls } = useScrollAnimation(0.1);
+
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const header = document.querySelector('.mantine-AppShell-header, header, nav');
+      if (header) {
+        const rect = header.getBoundingClientRect();
+        const isOverHeader = 
+          e.clientX >= rect.left && 
+          e.clientX <= rect.right && 
+          e.clientY >= rect.top && 
+          e.clientY <= rect.bottom;
+        
+        if (!isOverHeader) {
+          mouseX.set(e.clientX - 16);
+          mouseY.set(e.clientY - 16);
+        }
+      } else {
+        mouseX.set(e.clientX - 16);
+        mouseY.set(e.clientY - 16);
+      }
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [mouseX, mouseY]);
+
+
+
+// Add proper typing to your variants
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 10, // Optional: add more spring properties
+    },
+  },
+};
+  const stats = [
+    { value: 5000, label: 'Projects Completed', suffix: '+', icon: <CheckCircle size={24} /> },
+    { value: 1200, label: 'Happy Clients', suffix: '+', icon: <Users size={24} /> },
+    { value: 13, label: 'Years Experience', suffix: '', icon: <Clock size={24} /> },
+    { value: 24, label: 'Hour Support', suffix: '/7', icon: <Headphones size={24} /> },
+  ];
+
+  const featuredServices = [
+    {
+      icon: <Megaphone size={32} />,
+      title: 'DTF Printing',
+      desc: 'Vibrant and durable printing for all fabrics with premium quality.',
+      gradient: 'from-purple-500 to-pink-500',
+      badge: 'Most Popular',
+      features: ['High Resolution', 'Vibrant Colors', 'Durable'],
+    },
+    {
+      icon: <Upload size={32} />,
+      title: 'Online Upload',
+      desc: 'Upload your design and get instant measurement with AI analysis.',
+      gradient: 'from-blue-500 to-cyan-500',
+      badge: 'Smart Tool',
+      features: ['AI Powered', 'Instant Quote', 'Size Check'],
+    },
+    {
+      icon: <MessageCircle size={32} />,
+      title: 'Live Chat',
+      desc: 'Talk instantly with our professional support team 24/7.',
+      gradient: 'from-green-500 to-emerald-500',
+      badge: '24/7 Support',
+      features: ['Real-time', 'Expert Help', 'Fast Response'],
+    },
+    {
+      icon: <Palette size={32} />,
+      title: 'Custom Design',
+      desc: 'Professional designers help bring your creative vision to life.',
+      gradient: 'from-orange-500 to-red-500',
+      badge: 'Creative',
+      features: ['Custom Artwork', 'Revisions', 'High Quality'],
+    },
+  ];
+
+  const whyChooseUs = [
+    { icon: <Truck size={28} />, title: 'Lightning Fast', desc: 'Fast & Quality & Services at Affordable', color: 'from-blue-500 to-cyan-500' },
+    { icon: <Award size={28} />, title: 'Premium Quality', desc: 'Permium Digital Printing with Sharp Details & Vibrant Colors', color: 'from-yellow-500 to-orange-500' },
+    { icon: <Headphones size={28} />, title: '24/7 Support', desc: 'Good & Creative Design', color: 'from-green-500 to-emerald-500' },
+    { icon: <DollarSign size={28} />, title: 'Best Price', desc: 'Our Commitment to Quality , Timely Delivery Make us trusted partner for growing brands and established institutions', color: 'from-purple-500 to-pink-500' },
+    { icon: <Shield size={28} />, title: '100% Satisfaction', desc: 'We use High Quality MAterials & Finishes', color: 'from-red-500 to-orange-500' },
+    { icon: <Sparkles size={28} />, title: 'Eco-Friendly', desc: 'Sustainable printing practices', color: 'from-green-500 to-teal-500' },
+  ];
+
+  const processSteps = [
+    { step: 1, title: 'Upload Design', desc: 'Drag & drop your files', icon: <Upload />, color: 'from-blue-500 to-cyan-500' },
+    { step: 2, title: 'Get Quote', desc: 'Instant price calculation', icon: <DollarSign />, color: 'from-green-500 to-emerald-500' },
+    { step: 3, title: 'Approve & Pay', desc: 'Secure payment options', icon: <CheckCircle />, color: 'from-yellow-500 to-orange-500' },
+    { step: 4, title: 'Print & Ship', desc: 'Track your order live', icon: <Truck />, color: 'from-purple-500 to-pink-500' },
+  ];
+
+  const testimonials = [
+    {
+      name: 'Sarah Johnson',
+      role: 'Business Owner',
+      content: 'Best printing service in town! Fast delivery and amazing quality. The team went above and beyond to ensure my order was perfect.',
+      rating: 5,
+      avatar: 'https://i.pravatar.cc/150?img=1',
+      company: 'Sarah\'s Boutique',
+    },
+    {
+      name: 'Michael Chen',
+      role: 'Event Planner',
+      content: 'Their DTF printing is outstanding. Highly recommended for any event needs. They delivered 500 custom t-shirts in just 2 days!',
+      rating: 5,
+      avatar: 'https://i.pravatar.cc/150?img=2',
+      company: 'Elite Events',
+    },
+    {
+      name: 'Emma Williams',
+      role: 'Creative Director',
+      content: 'Professional team and excellent customer service. They helped me create the perfect branding materials for my agency.',
+      rating: 5,
+      avatar: 'https://i.pravatar.cc/150?img=3',
+      company: 'Creative Studio',
+    },
+    {
+      name: 'David Bekele',
+      role: 'Restaurant Owner',
+      content: 'The menu prints and banners are exceptional. My customers always compliment the quality.',
+      rating: 5,
+      avatar: 'https://i.pravatar.cc/150?img=4',
+      company: 'Ethio Spice',
+    },
+    {
+      name: 'Tigist Haile',
+      role: 'Marketing Manager',
+      content: 'Reliable, fast, and high quality. Our go-to printing partner for all marketing materials.',
+      rating: 5,
+      avatar: 'https://i.pravatar.cc/150?img=5',
+      company: 'Tech Solutions',
+    },
+    {
+      name: 'John Smith',
+      role: 'Small Business Owner',
+      content: 'The online upload feature is a game-changer. So easy to use and the results are perfect every time.',
+      rating: 5,
+      avatar: 'https://i.pravatar.cc/150?img=6',
+      company: 'Smith & Co',
+    },
+  ];
+
+  const recentWorks = [
+    { title: 'Corporate Branding', image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400', category: 'branding' },
+    { title: 'Event Banners', image: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?w=400', category: 'banners' },
+    { title: 'Custom T-Shirts', image: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400', category: 'apparel' },
+    { title: 'Product Labels', image: 'https://images.unsplash.com/photo-1622542796254-5b9c46ab0c2f?w=400', category: 'labels' },
+    { title: 'Vehicle Wraps', image: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400', category: 'wraps' },
+    { title: 'Business Cards', image: 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=400', category: 'print' },
+    { title: 'Billboard Design', image: 'https://images.unsplash.com/photo-1563207153-f403bf289096?w=400', category: 'outdoor' },
+    { title: 'Packaging Design', image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400', category: 'packaging' },
+  ];
+
+  const filteredWorks = activeTab === 'all' 
+    ? recentWorks 
+    : recentWorks.filter(work => work.category === activeTab);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const handleCursorEnter = useCallback(() => {
+    setCursorVariant('hover');
+  }, []);
+
+  const handleCursorLeave = useCallback(() => {
+    setCursorVariant('default');
+  }, []);
+
+  return (
+    <>
+      {/* Custom Cursor */}
+      {!isMobile && (
+        <motion.div
+          ref={cursorRef}
+          className="fixed top-0 left-0 w-8 h-8 pointer-events-none z-[9999] mix-blend-difference"
+          style={{
+            x: mouseXSpring,
+            y: mouseYSpring,
+          }}
+        >
+          <motion.div
+            className="w-full h-full rounded-full bg-white"
+            animate={{
+              scale: cursorVariant === 'hover' ? 1.5 : 1,
+            }}
+            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+          />
+        </motion.div>
+      )}
+
+      <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
+        <FloatingParticles />
+        <ParallaxBackground />
+        <AnimatedWaves />
+
+        {/* ================= HERO SECTION ================= */}
+        <MotionSection
+          className="relative min-h-screen flex items-center justify-center overflow-hidden"
+          style={{ opacity: heroOpacity, scale: heroScale, filter: `blur(${heroBlur}px)` }}
+          onMouseEnter={handleCursorEnter}
+          onMouseLeave={handleCursorLeave}
+        >
+          {/* Background Video with Overlay */}
+          <div className="absolute inset-0">
+            <video
+              ref={videoRef}
+              autoPlay
+              loop
+              muted={isMuted}
+              playsInline
+              className="w-full h-full object-cover"
+            >
+              <source src="/images/ad_video.mp4" type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/80 to-transparent" />
+            
+            {/* Video Controls */}
+            <div className="absolute bottom-8 right-8 flex gap-2 z-20">
+              <Tooltip label={isMuted ? "Unmute" : "Mute"}>
+                <ActionIcon
+                  size="lg"
+                  variant="filled"
+                  className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white"
+                  onClick={toggleMute}
+                >
+                  {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                </ActionIcon>
+              </Tooltip>
+              <Tooltip label={isPlaying ? "Pause" : "Play"}>
+                <ActionIcon
+                  size="lg"
+                  variant="filled"
+                  className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white"
+                  onClick={togglePlay}
+                >
+                  {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+                </ActionIcon>
+              </Tooltip>
+            </div>
+          </div>
+
+          <Container size="lg" className="relative z-10">
+            <MotionDiv
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="text-center md:text-left max-w-4xl"
+            >
+              {/* ===== STUNNING WELCOME TEXT ===== */}
+              <StunningWelcomeText />
+
+              <MotionText
+                size="xl"
+                className="text-gray-200 mb-8 max-w-2xl text-lg md:text-xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2, duration: 0.8 }}
+              >
+                From DTF apparel printing to custom signage, we deliver premium quality results 
+                with lightning-fast turnaround. Join <span className="text-red-400 font-bold">5000+</span> satisfied customers.
+              </MotionText>
+
+              <MotionDiv
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.4, duration: 0.8 }}
+                className="flex flex-wrap gap-4 justify-center md:justify-start"
+              >
+                <MagneticButton>
+                  <Button
+                    size="xl"
+                    radius="xl"
+                    variant="gradient"
+                    gradient={{ from: 'red', to: 'orange' }}
+                    className="shadow-2xl hover:shadow-3xl transition-shadow duration-300 px-8 h-14"
+                    rightSection={<ArrowRight size={20} />}
+                  >
+                    Explore Services
+                  </Button>
+                </MagneticButton>
+                <MagneticButton>
+                  <Button
+                    size="xl"
+                    radius="xl"
+                    variant="outline"
+                    className="border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm px-8 h-14"
+                    leftSection={<Upload size={20} />}
+                  >
+                    Upload Design
+                  </Button>
+                </MagneticButton>
+              </MotionDiv>
+
+              {/* Rotating Cube */}
+              <div className="absolute bottom-20 right-0 hidden lg:block">
+                <RotatingCube />
+              </div>
+            </MotionDiv>
+          </Container>
+
+          {/* Scroll Indicator */}
+          <motion.div
+            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer"
+            animate={{ y: [0, 10, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+          >
+            <div className="w-6 h-10 border-2 border-white rounded-full flex justify-center">
+              <motion.div
+                className="w-1 h-2 bg-white rounded-full mt-2"
+                animate={{ y: [0, 4, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+              />
+            </div>
+          </motion.div>
+        </MotionSection>
+
+        {/* ================= FEATURED SERVICES ================= */}
+        <MotionSection
+            ref={servicesRef}  
+          animate={servicesControls}
+          initial="hidden"
+          variants={containerVariants}
+          className="py-32 relative"
+        >
+          <Container size="lg">
+            <MotionDiv variants={itemVariants} className="text-center mb-16">
+              <Badge size="lg" color="red" className="mb-4 animate-pulse">Our Services</Badge>
+              <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+                Premium Printing
+                <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent"> Solutions</span>
+              </Title>
+              <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
+                Discover our comprehensive range of professional printing services
+              </Text>
+            </MotionDiv>
+
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl">
+              {featuredServices.map((service, index) => (
+                <TiltCard key={index}>
+                  <MotionCard
+                    variants={itemVariants}
+                    whileHover={{ y: -10, scale: 1.02 }}
+                    className="relative overflow-hidden group cursor-pointer"
+                    padding="xl"
+                    radius="lg"
+                    withBorder
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                    
+                    {service.badge && (
+                      <Badge
+                        className="absolute top-4 right-4 animate-pulse"
+                        variant="gradient"
+                        gradient={{ from: 'red', to: 'orange' }}
+                      >
+                        {service.badge}
+                      </Badge>
+                    )}
+
+                    <ThemeIcon
+                      size={70}
+                      radius="xl"
+                      variant="gradient"
+                      gradient={{ from: service.gradient.split(' ')[0].replace('from-', ''), to: service.gradient.split(' ')[1].replace('to-', '') }}
+                      className="mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"
+                    >
+                      {service.icon}
+                    </ThemeIcon>
+
+                    <Title order={4} className="mb-2">{service.title}</Title>
+                    <Text size="sm" c="dimmed" className="mb-4">{service.desc}</Text>
+
+                    <div className="space-y-2 mb-4">
+                      {service.features.map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <CheckCircle size={14} className="text-green-500" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button
+                      variant="subtle"
+                      color="red"
+                      size="compact"
+                      rightSection={<ChevronRight size={16} />}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    >
+                      Learn More
+                    </Button>
+                  </MotionCard>
+                </TiltCard>
+              ))}
+            </SimpleGrid>
+          </Container>
+        </MotionSection>
+
+        {/* ================= WHY CHOOSE US ================= */}
+        <MotionSection
+          ref={whyUsRef}
+          animate={whyUsControls}
+          initial="hidden"
+          variants={containerVariants}
+          className="py-32 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden"
+        >
+          <div className="absolute inset-0 opacity-10">
+            <motion.div
+              className="absolute top-0 left-0 w-64 h-64 bg-red-500 rounded-full filter blur-3xl"
+              animate={{
+                x: [0, 100, 0],
+                y: [0, 50, 0],
+              }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
+            <motion.div
+              className="absolute bottom-0 right-0 w-96 h-96 bg-orange-500 rounded-full filter blur-3xl"
+              animate={{
+                x: [0, -100, 0],
+                y: [0, -50, 0],
+              }}
+              transition={{
+                duration: 25,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
+          </div>
+
+          <Container size="lg" className="relative z-10">
+            <MotionDiv variants={itemVariants} className="text-center mb-16">
+              <Badge size="lg" variant="gradient" gradient={{ from: 'red', to: 'orange' }} className="mb-4 animate-pulse">
+                Why Us
+              </Badge>
+              <Title order={2} className="text-4xl md:text-5xl font-bold mb-4 text-white">
+                Why Choose Lucia Printing?
+              </Title>
+              <Text size="xl" className="text-gray-300 max-w-2xl mx-auto">
+                We combine cutting-edge technology with exceptional service
+              </Text>
+            </MotionDiv>
+
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl">
+              {whyChooseUs.map((item, i) => (
+                <TiltCard key={i}>
+                  <MotionCard
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    className="bg-white/10 backdrop-blur-lg border-0 hover:bg-white/20 transition-all duration-300"
+                    padding="xl"
+                    radius="lg"
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                    <Group>
+                      <ThemeIcon size={50} radius="xl" variant="gradient" gradient={{ from: item.color.split(' ')[0].replace('from-', ''), to: item.color.split(' ')[1].replace('to-', '') }}>
+                        {item.icon}
+                      </ThemeIcon>
+                      <div>
+                        <Title order={4} className="text-white mb-1">{item.title}</Title>
+                        <Text size="sm" className="text-gray-300">{item.desc}</Text>
+                      </div>
+                    </Group>
+                  </MotionCard>
+                </TiltCard>
+              ))}
+            </SimpleGrid>
+          </Container>
+        </MotionSection>
+
+        {/* ================= PROCESS SECTION ================= */}
+        <MotionSection
+          ref={processRef}
+          animate={processControls}
+          initial="hidden"
+          variants={containerVariants}
+          className="py-32"
+        >
+          <Container size="lg">
+            <MotionDiv variants={itemVariants} className="text-center mb-16">
+              <Badge size="lg" color="red" className="mb-4 animate-pulse">Simple Process</Badge>
+              <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+                How It Works
+              </Title>
+              <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
+                Four simple steps to bring your ideas to life
+              </Text>
+            </MotionDiv>
+
+            <Grid gutter="xl">
+              {processSteps.map((step, i) => (
+                <Grid.Col key={i} span={{ base: 12, md: 6, lg: 3 }}>
+                  <MotionDiv
+                    variants={itemVariants}
+                    whileHover={{ y: -10 }}
+                    className="relative"
+                  >
+                    <GradientBorderCard>
+                      <div className="text-center">
+                        <div className="relative inline-block mb-6">
+                          <motion.div
+                            className={`w-24 h-24 bg-gradient-to-br ${step.color} rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto`}
+                            animate={{
+                              rotate: [0, 360],
+                            }}
+                            transition={{
+                              duration: 20,
+                              repeat: Infinity,
+                              ease: "linear",
+                            }}
+                          >
+                            {step.step}
+                          </motion.div>
+                          <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
+                            <CheckCircle size={16} className="text-white" />
+                          </div>
+                        </div>
+                        
+                        <ThemeIcon
+                          size={50}
+                          radius="xl"
+                          variant="gradient"
+                          gradient={{ from: step.color.split(' ')[0].replace('from-', ''), to: step.color.split(' ')[1].replace('to-', '') }}
+                          className="mx-auto mb-4"
+                        >
+                          {step.icon}
+                        </ThemeIcon>
+
+                        <Title order={4} className="mb-2">{step.title}</Title>
+                        <Text size="sm" c="dimmed">{step.desc}</Text>
+                      </div>
+                    </GradientBorderCard>
+
+                    {i < processSteps.length - 1 && (
+                      <div className="hidden lg:block absolute top-1/2 -right-12 text-red-500">
+                        <motion.div
+                          animate={{ x: [0, 10, 0] }}
+                          transition={{ repeat: Infinity, duration: 1.5 }}
+                        >
+                          <ChevronRight size={32} />
+                        </motion.div>
+                      </div>
+                    )}
+                  </MotionDiv>
+                </Grid.Col>
+              ))}
+            </Grid>
+          </Container>
+        </MotionSection>
+
+        {/* ================= STATS SECTION ================= */}
+        <MotionSection
+          ref={statsRef}
+          animate={statsControls}
+          initial="hidden"
+          variants={containerVariants}
+          className="py-20 bg-gradient-to-r from-red-600 to-orange-600 text-white relative overflow-hidden"
+        >
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-0 w-full h-full" style={{
+              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+              backgroundSize: '40px 40px',
+            }} />
+          </div>
+
+          <Container size="lg" className="relative z-10">
+            <SimpleGrid cols={{ base: 2, lg: 4 }} spacing="xl">
+              {stats.map((stat, index) => (
+                <AnimatedCounter
+                  key={index}
+                  value={stat.value}
+                  label={stat.label}
+                  icon={stat.icon}
+                  suffix={stat.suffix}
+                />
+              ))}
+            </SimpleGrid>
+          </Container>
+        </MotionSection>
+
+        {/* ================= TESTIMONIALS ================= */}
+        <MotionSection
+          ref={testimonialsRef}
+          animate={testimonialsControls}
+          initial="hidden"
+          variants={containerVariants}
+          className="py-32"
+        >
+          <Container size="lg">
+            <MotionDiv variants={itemVariants} className="text-center mb-16">
+              <Badge size="lg" color="red" className="mb-4 animate-pulse">Testimonials</Badge>
+              <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+                What Our Clients Say
+              </Title>
+              <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
+                Don&apos;t just take our word for it - hear from our satisfied customers
+              </Text>
+            </MotionDiv>
+
+            <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
+              {testimonials.map((testimonial, index) => (
+                <TiltCard key={index}>
+                  <MotionCard
+                    variants={itemVariants}
+                    whileHover={{ y: -10 }}
+                    padding="xl"
+                    radius="lg"
+                    withBorder
+                    className="relative hover:shadow-2xl transition-all duration-300"
+                  >
+                    <div className="absolute top-4 right-4 text-yellow-400 flex">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: i * 0.1 }}
+                        >
+                          <Star size={16} fill="currentColor" />
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <Group mb="md">
+                      <Avatar src={testimonial.avatar} size="lg" radius="xl" />
+                      <div>
+                        <Text fw={600}>{testimonial.name}</Text>
+                        <Text size="sm" c="dimmed">{testimonial.role}</Text>
+                        <Text size="xs" c="dimmed">{testimonial.company}</Text>
+                      </div>
+                    </Group>
+
+                    <Spoiler maxHeight={80} showLabel="Read more" hideLabel="Hide">
+                      <Text size="lg" className="italic">&quot;{testimonial.content}&quot;</Text>
+                    </Spoiler>
+
+                    <div className="absolute bottom-4 left-4 text-red-500 opacity-10">
+                      <Quote size={40} />
+                    </div>
+                  </MotionCard>
+                </TiltCard>
+              ))}
+            </SimpleGrid>
+          </Container>
+        </MotionSection>
+
+        {/* ================= RECENT WORKS ================= */}
+        <MotionSection
+          ref={worksRef}
+          animate={worksControls}
+          initial="hidden"
+          variants={containerVariants}
+          className="py-20 bg-gray-50 dark:bg-gray-900"
+        >
+          <Container size="lg">
+            <MotionDiv variants={itemVariants} className="text-center mb-12">
+              <Badge size="lg" color="red" className="mb-4 animate-pulse">Portfolio</Badge>
+              <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+                Recent Projects
+              </Title>
+              <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
+                Check out some of our latest work
+              </Text>
+            </MotionDiv>
+
+            <Tabs value={activeTab} onChange={setActiveTab} className="mb-8">
+              <Tabs.List grow>
+                <Tabs.Tab value="all">All</Tabs.Tab>
+                <Tabs.Tab value="branding">Branding</Tabs.Tab>
+                <Tabs.Tab value="banners">Banners</Tabs.Tab>
+                <Tabs.Tab value="apparel">Apparel</Tabs.Tab>
+                <Tabs.Tab value="labels">Labels</Tabs.Tab>
+                <Tabs.Tab value="wraps">Wraps</Tabs.Tab>
+              </Tabs.List>
+            </Tabs>
+
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
+              {filteredWorks.map((work, index) => (
+                <TiltCard key={index}>
+                  <MotionDiv
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.05 }}
+                    className="relative group overflow-hidden rounded-xl"
+                  >
+                    <img
+                      src={work.image}
+                      alt={work.title}
+                      className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="absolute bottom-4 left-4 text-white">
+                        <Text fw={600}>{work.title}</Text>
+                        <Badge color="red" size="sm" className="mt-2">{work.category}</Badge>
+                      </div>
+                    </div>
+                  </MotionDiv>
+                </TiltCard>
+              ))}
+            </SimpleGrid>
+          </Container>
+        </MotionSection>
+
+        {/* ================= CTA SECTION ================= */}
+        <section className="py-32 bg-gradient-to-r from-gray-900 to-gray-800 text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-0 w-full h-full" style={{
+              backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+              backgroundSize: '40px 40px',
+            }} />
+          </div>
+
+          <Container size="lg" className="relative z-10 text-center">
+            <MotionDiv
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <Badge size="lg" variant="gradient" gradient={{ from: 'red', to: 'orange' }} className="mb-6 animate-pulse">
+                Limited Time Offer
+              </Badge>
+
+              <Title className="text-5xl md:text-6xl font-bold mb-6">
+                Ready to Print Your Idea?
+              </Title>
+
+              <Text size="xl" className="text-gray-300 mb-10 max-w-2xl mx-auto">
+                Get <span className="text-red-400 font-bold">20% off</span> your first order + free design consultation
+              </Text>
+
+              <Group justify="center" gap="md">
+                <MagneticButton>
+                  <Button
+                    size="xl"
+                    radius="xl"
+                    variant="gradient"
+                    gradient={{ from: 'red', to: 'orange' }}
+                    className="shadow-2xl px-12 h-14"
+                    rightSection={<ArrowRight size={20} />}
+                  >
+                    Start Your Project
+                  </Button>
+                </MagneticButton>
+                <MagneticButton>
+                  <Button
+                    size="xl"
+                    radius="xl"
+                    variant="outline"
+                    className="border-2 border-white text-white hover:bg-white/10 h-14"
+                    leftSection={<Phone size={20} />}
+                  >
+                    Call Us Now
+                  </Button>
+                </MagneticButton>
+              </Group>
+            </MotionDiv>
+          </Container>
+        </section>
+
+        {/* ================= FOOTER ================= */}
+        <Footer />
+
+        {/* ================= FLOATING ACTIONS ================= */}
+        <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+          <Tooltip label="Chat with us" position="left">
+            <MagneticButton>
+              <ActionIcon
+                size="lg"
+                radius="xl"
+                variant="filled"
+                color="blue"
+                className="shadow-lg hover:scale-110 transition-transform"
+              >
+                <MessageCircle size={20} />
+              </ActionIcon>
+            </MagneticButton>
+          </Tooltip>
+
+          <Tooltip label="Get quote" position="left">
+            <MagneticButton>
+              <ActionIcon
+                size="lg"
+                radius="xl"
+                variant="filled"
+                color="green"
+                className="shadow-lg hover:scale-110 transition-transform"
+              >
+                <DollarSign size={20} />
+              </ActionIcon>
+            </MagneticButton>
+          </Tooltip>
+
+          <Tooltip label="Call now" position="left">
+            <MagneticButton>
+              <ActionIcon
+                size="lg"
+                radius="xl"
+                variant="filled"
+                color="red"
+                className="shadow-lg hover:scale-110 transition-transform"
+              >
+                <Phone size={20} />
+              </ActionIcon>
+            </MagneticButton>
+          </Tooltip>
+        </div>
+
+        <style jsx>{`
+          .triangle-shape {
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+          }
+          .perspective-1000 {
+            perspective: 1000px;
+          }
+          @keyframes gradient-xy {
+            0%, 100% {
+              background-size: 400% 400%;
+              background-position: left top;
+            }
+            25% {
+              background-size: 400% 400%;
+              background-position: right top;
+            }
+            50% {
+              background-size: 400% 400%;
+              background-position: right bottom;
+            }
+            75% {
+              background-size: 400% 400%;
+              background-position: left bottom;
+            }
+          }
+          .animate-gradient-xy {
+            animation: gradient-xy 3s ease infinite;
+          }
+        `}</style>
+      </div>
+    </>
   );
 }
