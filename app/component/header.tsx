@@ -16,6 +16,7 @@ import {
   Badge,
   Indicator,
   useMantineColorScheme,
+  ScrollArea,
 } from '@mantine/core';
 import {
   IconMenu2,
@@ -33,6 +34,21 @@ import {
   IconPhone,
   IconBell,
   IconSpeakerphone,
+  IconShirt,
+  IconTags,
+  IconDeviceLaptop,
+  IconCup,
+  IconLamp,
+  IconFlame,
+  IconSnowflake,
+  IconScissors,
+  IconPrinter,
+  IconCar,
+  IconFileText,
+  IconBox,
+  IconGift,
+  IconBrush,
+  IconStar,
 } from '@tabler/icons-react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
@@ -41,30 +57,75 @@ import { usePathname } from 'next/navigation';
 
 const MotionDiv = motion.div;
 
-// Navigation Links (Updated with About and Contact)
-const navLinks = [
-  { href: '/', label: 'Home', icon: IconHome },
-  { href: '/page/services', label: 'Services', icon: IconPackage },
-  { href: '/page/gallery', label: 'Gallery', icon: IconPhoto },
-  { href: '/page/aboutus', label: 'About Us', icon: IconInfoCircle },
-  { href: '/page/announcements', label: 'News', icon: IconBell },
-  
-];
-
-// Services Dropdown Items
-const serviceDropdownItems = [
-  { label: 'DTF Printing', href: '/page/services/dtf', icon: '🖨️' },
-  { label: 'T-Shirt Printing', href: '/page/services/tshirt', icon: '👕' },
-  { label: 'Custom Stickers', href: '/page/services/stickers', icon: '🏷️' },
-  { label: 'Banners & Signage', href: '/page/services/banners', icon: '📋' },
-  { label: 'Vehicle Wraps', href: '/page/services/wraps', icon: '🚗' },
-  { label: 'Business Cards', href: '/page/services/cards', icon: '💳' },
+// Services dropdown items organized by category
+const serviceCategories = [
+  {
+    category: 'Apparel Printing',
+    icon: <IconShirt size={16} />,
+    items: [
+      { label: 'DTF Printing', href: '/page/services/dtf', icon: '🖨️', badge: 'Popular' },
+      { label: 'T-Shirt Printing', href: '/page/services/tshirt', icon: '👕', badge: 'Best Seller' },
+      { label: 'Custom Hats & Caps', href: '/page/services/hats', icon: '🧢', badge: 'Trending' },
+      { label: 'Hoodies & Sweatshirts', href: '/page/services/hoodies', icon: '👚' },
+      { label: 'Screen Printing', href: '/page/services/screen-printing', icon: '🖨️' },
+      { label: 'Embroidery', href: '/page/services/embroidery', icon: '🧵', badge: 'Premium' },
+      { label: 'Tote Bags', href: '/page/services/totes', icon: '👜', badge: 'Eco' },
+    ],
+  },
+  {
+    category: 'Large Format',
+    icon: <IconPrinter size={16} />,
+    items: [
+      { label: 'Banner Printing', href: '/page/services/banners', icon: '📋', badge: 'Popular' },
+      { label: 'Posters', href: '/page/services/posters', icon: '🖼️' },
+      { label: 'Vehicle Wraps', href: '/page/services/wraps', icon: '🚗', badge: 'Professional' },
+      { label: 'Light Box', href: '/page/services/light-box', icon: '💡', badge: 'Premium' },
+      { label: 'Neo Light (LED Neon)', href: '/page/services/neo-light', icon: '✨', badge: 'Trending' },
+      { label: 'Cutout Letters', href: '/page/services/cutout', icon: '✂️' },
+    ],
+  },
+  {
+    category: 'Stickers & Labels',
+    icon: <IconTags size={16} />,
+    items: [
+      { label: 'Custom Stickers', href: '/page/services/stickers', icon: '🏷️', badge: 'Popular' },
+      { label: 'Product Labels', href: '/page/services/labels', icon: '📦', badge: 'Business' },
+      { label: 'Frosted Glass', href: '/page/services/frosted', icon: '❄️', badge: 'Elegant' },
+    ],
+  },
+  {
+    category: 'Drinkware',
+    icon: <IconCup size={16} />,
+    items: [
+      { label: 'Mug Printing', href: '/page/services/mugs', icon: '☕', badge: 'Gift Idea' },
+      { label: 'Bottle Printing', href: '/page/services/bottles', icon: '🧴', badge: 'Eco' },
+    ],
+  },
+  {
+    category: 'Print & Promo',
+    icon: <IconFileText size={16} />,
+    items: [
+      { label: 'Business Cards', href: '/page/services/business-cards', icon: '💳', badge: 'Essential' },
+      { label: 'Flyers & Brochures', href: '/page/services/flyers', icon: '📄' },
+      { label: 'Custom Packaging', href: '/page/services/packaging', icon: '📦', badge: 'Premium' },
+      { label: 'Custom Pens', href: '/page/services/pens', icon: '✒️' },
+      { label: 'Keychains', href: '/page/services/keychains', icon: '🔑' },
+    ],
+  },
+  {
+    category: 'Specialty',
+    icon: <IconStar size={16} />,
+    items: [
+      { label: 'Laser Engraving', href: '/page/services/engraving', icon: '🔥', badge: 'Precision' },
+      { label: 'Graphic Design', href: '/page/services/design', icon: '🎨', badge: 'Creative' },
+    ],
+  },
 ];
 
 // Announcement Items
 const announcementItems = [
   { 
-    label: 'New Year Sale', 
+    label: 'New Year Sale - 20% Off', 
     href: '/page/announcements/new-year-sale', 
     icon: '🎉',
     badge: 'NEW',
@@ -85,9 +146,9 @@ const announcementItems = [
     color: 'blue'
   },
   { 
-    label: '20% Off First Order', 
-    href: '/page/announcements/first-order-discount', 
-    icon: '💰',
+    label: 'Free Delivery on Orders > 1000 ETB', 
+    href: '/page/announcements/free-delivery', 
+    icon: '🚚',
     badge: 'OFFER',
     color: 'green'
   },
@@ -105,6 +166,15 @@ const useAuth = () => {
   }, []);
   return { isLoggedIn, user: isLoggedIn ? { name: 'John Doe' } : null };
 };
+
+// Navigation Links
+const navLinks = [
+  { href: '/', label: 'Home', icon: IconHome },
+  { href: '/page/services', label: 'Services', icon: IconPackage, hasDropdown: true },
+  { href: '/page/gallery', label: 'Gallery', icon: IconPhoto },
+  { href: '/page/aboutus', label: 'About Us', icon: IconInfoCircle },
+  { href: '/page/announcements', label: 'News', icon: IconBell },
+];
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
@@ -140,23 +210,23 @@ export default function Header() {
       services: 'Services',
       gallery: 'Gallery',
       about: 'About',
-      contact: 'Contact',
       announcements: 'Announcements',
       login: 'Login',
       search: 'Search',
       dashboard: 'Dashboard',
       logout: 'Logout',
-      printingServices: 'Printing Services',
+      printingServices: 'Our Printing Services',
       viewAll: 'View All Services',
       viewAllAnnouncements: 'View All Announcements',
       latestAnnouncements: 'Latest Announcements',
+      allServices: 'All Services',
+      categories: 'Categories',
     },
     am: {
       home: 'መነሻ',
       services: 'አገልግሎቶች',
       gallery: 'ማዕከለ-ስዕላት',
       about: 'ስለ እኛ',
-      contact: 'ያግኙን',
       announcements: 'ማስታወቂያዎች',
       login: 'ግባ',
       search: 'ፈልግ',
@@ -166,6 +236,8 @@ export default function Header() {
       viewAll: 'ሁሉንም አገልግሎቶች ተመልከት',
       viewAllAnnouncements: 'ሁሉንም ማስታወቂያዎች ተመልከት',
       latestAnnouncements: 'የቅርብ ጊዜ ማስታወቂያዎች',
+      allServices: 'ሁሉም አገልግሎቶች',
+      categories: 'ምድቦች',
     },
   };
 
@@ -206,7 +278,8 @@ export default function Header() {
                   transition={{ repeat: Infinity, duration: 2 }}
                 />
               </div>
-                 {/* Logo Text - Hidden on mobile, shown on sm and up */}
+
+              {/* Logo Text */}
               <div className="hidden sm:flex flex-col min-w-0">
                 <Text
                   size="lg"
@@ -234,7 +307,7 @@ export default function Header() {
                 </Text>
               </div>
 
-              {/* Mobile: Show only first letter or short name */}
+              {/* Mobile: Short logo */}
               <div className="sm:hidden flex flex-col">
                 <Text
                   size="md"
@@ -251,14 +324,14 @@ export default function Header() {
             </Link>
           </Group>
 
-          {/* Desktop Navigation - All links including About and Contact */}
+          {/* Desktop Navigation */}
           {!isLoggedIn && (
             <Group gap="xl" visibleFrom="md">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const active = isActive(link.href);
                 
-                if (link.label === 'Services') {
+                if (link.hasDropdown) {
                   return (
                     <Menu
                       key={link.label}
@@ -266,8 +339,9 @@ export default function Header() {
                       openDelay={100}
                       closeDelay={400}
                       shadow="lg"
-                      width={280}
+                      width={600}
                       position="bottom"
+                      withinPortal
                     >
                       <Menu.Target>
                         <Button
@@ -294,26 +368,79 @@ export default function Header() {
                       </Menu.Target>
 
                       <Menu.Dropdown>
-                        <Menu.Label>{t.printingServices}</Menu.Label>
-                        {serviceDropdownItems.map((item) => (
-                          <Menu.Item
-                            key={item.href}
-                            component={Link}
-                            href={item.href}
-                            leftSection={<span className="text-xl">{item.icon}</span>}
-                          >
-                            {item.label}
-                          </Menu.Item>
-                        ))}
-                        <Menu.Divider />
-                        <Menu.Item
-                          component={Link}
-                          href="/page/services"
-                          leftSection={<IconPackage size={16} />}
-                          rightSection={<IconChevronDown size={16} />}
-                        >
-                          {t.viewAll}
-                        </Menu.Item>
+                        <ScrollArea.Autosize mah={500} type="scroll">
+                          <div className="p-2">
+                            {/* Header */}
+                            <div className="px-3 py-2 mb-2 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg">
+                              <Text fw={700} size="lg" className="text-red-600 dark:text-red-400">
+                                {t.printingServices}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                Choose from our wide range of professional printing services
+                              </Text>
+                            </div>
+
+                            {/* Services by Category */}
+                            <div className="grid grid-cols-2 gap-4">
+                              {serviceCategories.map((category, idx) => (
+                                <div key={idx} className="space-y-1">
+                                  <div className="flex items-center gap-1 px-3 py-1">
+                                    <span className="text-red-500">{category.icon}</span>
+                                    <Text fw={600} size="sm" className="text-gray-700 dark:text-gray-300">
+                                      {category.category}
+                                    </Text>
+                                  </div>
+                                  <div className="space-y-0.5">
+                                    {category.items.map((item, itemIdx) => (
+                                      <Menu.Item
+                                        key={itemIdx}
+                                        component={Link}
+                                        href={item.href}
+                                        leftSection={<span className="text-lg w-6">{item.icon}</span>}
+                                        rightSection={
+                                          item.badge && (
+                                            <Badge 
+                                              size="xs" 
+                                              variant="light" 
+                                              color={
+                                                item.badge === 'Popular' ? 'red' :
+                                                item.badge === 'Best Seller' ? 'orange' :
+                                                item.badge === 'Trending' ? 'pink' :
+                                                item.badge === 'Premium' ? 'grape' :
+                                                item.badge === 'Eco' ? 'green' :
+                                                item.badge === 'Professional' ? 'blue' :
+                                                item.badge === 'Gift Idea' ? 'yellow' :
+                                                item.badge === 'Essential' ? 'gray' : 'red'
+                                              }
+                                            >
+                                              {item.badge}
+                                            </Badge>
+                                          )
+                                        }
+                                        className="text-sm"
+                                      >
+                                        {item.label}
+                                      </Menu.Item>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Footer Link */}
+                            <div className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                              <Menu.Item
+                                component={Link}
+                                href="/page/services"
+                                leftSection={<IconPackage size={16} />}
+                                rightSection={<IconChevronDown size={16} />}
+                                className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20"
+                              >
+                                <Text fw={600}>{t.viewAll}</Text>
+                              </Menu.Item>
+                            </div>
+                          </div>
+                        </ScrollArea.Autosize>
                       </Menu.Dropdown>
                     </Menu>
                   );
@@ -342,7 +469,7 @@ export default function Header() {
                     {link.label === 'Home' ? t.home : 
                      link.label === 'Gallery' ? t.gallery :
                      link.label === 'About Us' ? t.about :
-                     link.label === 'Contact Us' ? t.contact : 
+                     link.label === 'Announcements' ? t.announcements : 
                      link.label}
                   </Button>
                 );
@@ -350,7 +477,6 @@ export default function Header() {
             </Group>
           )}
 
-          {/* Right Section - Actions */}
           {/* Right Section - Actions */}
           <div className="flex items-center gap-1 sm:gap-2">
             {/* Announcements Button */}
@@ -408,7 +534,7 @@ export default function Header() {
               </Menu.Dropdown>
             </Menu>
 
-            {/* Search Button - Hidden on mobile */}
+            {/* Search Button */}
             <div className="hidden sm:block">
               <Tooltip label={t.search} withArrow position="bottom">
                 <ActionIcon
@@ -439,7 +565,7 @@ export default function Header() {
               </ActionIcon>
             </Tooltip>
 
-            {/* Language Selector - Simplified on mobile */}
+            {/* Language Selector */}
             <Menu shadow="md" width={100} position="bottom-end">
               <Menu.Target>
                 <Button
@@ -538,15 +664,15 @@ export default function Header() {
 
             {/* Mobile Menu Button */}
             <div className="md:hidden">
-            <ActionIcon
-              size="md"
-              variant="subtle"
-              onClick={() => setDrawerOpened(true)}
-              className={`md:hidden ${scrolled ? 'text-gray-700' : 'text-white'}`}
-            >
-              <IconMenu2 size={20} />
-            </ActionIcon>
-        </div>
+              <ActionIcon
+                size="md"
+                variant="subtle"
+                onClick={() => setDrawerOpened(true)}
+                className={`md:hidden ${scrolled ? 'text-gray-700' : 'text-white'}`}
+              >
+                <IconMenu2 size={20} />
+              </ActionIcon>
+            </div>
           </div>
         </Group>
       </Container>
@@ -577,194 +703,205 @@ export default function Header() {
           </Group>
         }
       >
-        <Stack gap="lg">
-          {/* Quick Actions */}
-          <Group grow>
-            <Button 
-              variant="light" 
-              color="red" 
-              leftSection={<IconSearch size={18} />}
-              onClick={() => setDrawerOpened(false)}
-            >
-              {t.search}
-            </Button>
-            <Button 
-              variant="light" 
-              leftSection={<IconLanguage size={18} />}
-              onClick={() => {
-                setLanguage(prev => prev === 'en' ? 'am' : 'en');
-                setDrawerOpened(false);
-              }}
-            >
-              {language === 'en' ? 'አማርኛ' : 'English'}
-            </Button>
-          </Group>
-
-          {/* Announcements Section in Mobile */}
-          <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-            <Group justify="space-between" mb="xs">
-              <Group gap="xs">
-                <IconBell size={18} className="text-red-600" />
-                <Text fw={600} size="sm">{t.announcements}</Text>
-              </Group>
-              <Badge color="red" size="sm">{announcementCount} New</Badge>
-            </Group>
-            <Stack gap="xs">
-              {announcementItems.slice(0, 2).map((item) => (
-                <Button
-                  key={item.href}
-                  variant="subtle"
-                  fullWidth
-                  justify="space-between"
-                  leftSection={<span className="text-xl">{item.icon}</span>}
-                  rightSection={<Badge color={item.color} size="xs">{item.badge}</Badge>}
-                  component={Link}
-                  href={item.href}
-                  onClick={() => setDrawerOpened(false)}
-                  size="sm"
-                >
-                  {item.label}
-                </Button>
-              ))}
-              <Button
-                variant="light"
-                color="red"
-                size="xs"
-                component={Link}
-                href="/page/announcements"
+        <ScrollArea h="calc(100vh - 100px)" type="scroll">
+          <Stack gap="lg" pr="md">
+            {/* Quick Actions */}
+            <Group grow>
+              <Button 
+                variant="light" 
+                color="red" 
+                leftSection={<IconSearch size={18} />}
                 onClick={() => setDrawerOpened(false)}
               >
-                {t.viewAllAnnouncements}
+                {t.search}
               </Button>
-            </Stack>
-          </div>
+              <Button 
+                variant="light" 
+                leftSection={<IconLanguage size={18} />}
+                onClick={() => {
+                  setLanguage(prev => prev === 'en' ? 'am' : 'en');
+                }}
+              >
+                {language === 'en' ? 'አማርኛ' : 'English'}
+              </Button>
+            </Group>
 
-          {/* Navigation Links */}
-          {!isLoggedIn ? (
-            <>
-              <Divider label={t.services} labelPosition="center" />
-              
+            {/* Announcements Section */}
+            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+              <Group justify="space-between" mb="xs">
+                <Group gap="xs">
+                  <IconBell size={18} className="text-red-600" />
+                  <Text fw={600} size="sm">{t.announcements}</Text>
+                </Group>
+                <Badge color="red" size="sm">{announcementCount} New</Badge>
+              </Group>
               <Stack gap="xs">
+                {announcementItems.slice(0, 2).map((item) => (
+                  <Button
+                    key={item.href}
+                    variant="subtle"
+                    fullWidth
+                    justify="space-between"
+                    leftSection={<span className="text-xl">{item.icon}</span>}
+                    rightSection={<Badge color={item.color} size="xs">{item.badge}</Badge>}
+                    component={Link}
+                    href={item.href}
+                    onClick={() => setDrawerOpened(false)}
+                    size="sm"
+                  >
+                    {item.label}
+                  </Button>
+                ))}
                 <Button
-                  variant="subtle"
-                  fullWidth
-                  justify="space-between"
-                  leftSection={<IconHome size={18} />}
+                  variant="light"
+                  color="red"
+                  size="xs"
                   component={Link}
-                  href="/"
+                  href="/page/announcements"
                   onClick={() => setDrawerOpened(false)}
                 >
-                  {t.home}
-                </Button>
-
-                <Menu shadow="lg" width="100%" position="bottom">
-                  <Menu.Target>
-                    <Button
-                      variant="subtle"
-                      fullWidth
-                      justify="space-between"
-                      leftSection={<IconPackage size={18} />}
-                      rightSection={<IconChevronDown size={16} />}
-                    >
-                      {t.services}
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown>
-                    <Menu.Label>{t.printingServices}</Menu.Label>
-                    {serviceDropdownItems.map((item) => (
-                      <Menu.Item
-                        key={item.href}
-                        component={Link}
-                        href={item.href}
-                        leftSection={<span className="text-xl">{item.icon}</span>}
-                        onClick={() => setDrawerOpened(false)}
-                      >
-                        {item.label}
-                      </Menu.Item>
-                    ))}
-                  </Menu.Dropdown>
-                </Menu>
-
-                <Button
-                  variant="subtle"
-                  fullWidth
-                  justify="space-between"
-                  leftSection={<IconPhoto size={18} />}
-                  component={Link}
-                  href="/page/gallery"
-                  onClick={() => setDrawerOpened(false)}
-                >
-                  {t.gallery}
-                </Button>
-
-                <Button
-                  variant="subtle"
-                  fullWidth
-                  justify="space-between"
-                  leftSection={<IconInfoCircle size={18} />}
-                  component={Link}
-                  href="/page/about"
-                  onClick={() => setDrawerOpened(false)}
-                >
-                  {t.about}
-                </Button>
-
-                <Button
-                  variant="subtle"
-                  fullWidth
-                  justify="space-between"
-                  leftSection={<IconPhone size={18} />}
-                  component={Link}
-                  href="/page/contact"
-                  onClick={() => setDrawerOpened(false)}
-                >
-                  {t.contact}
+                  {t.viewAllAnnouncements}
                 </Button>
               </Stack>
+            </div>
 
-              <Divider />
+            {/* Navigation Links */}
+            {!isLoggedIn ? (
+              <>
+                <Divider label={t.services} labelPosition="center" />
+                
+                <Stack gap="xs">
+                  <Button
+                    variant="subtle"
+                    fullWidth
+                    justify="space-between"
+                    leftSection={<IconHome size={18} />}
+                    component={Link}
+                    href="/"
+                    onClick={() => setDrawerOpened(false)}
+                  >
+                    {t.home}
+                  </Button>
 
-              <Button
-                fullWidth
-                variant="filled"
-                color="red"
-                size="lg"
-                leftSection={<IconUser size={18} />}
-                component={Link}
-                href="/page/login"
-                onClick={() => setDrawerOpened(false)}
-              >
-                {t.login}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Divider label={t.dashboard} labelPosition="center" />
-              <Button
-                fullWidth
-                variant="light"
-                color="red"
-                size="lg"
-                leftSection={<IconPackage size={18} />}
-                component={Link}
-                href="/dashboard"
-                onClick={() => setDrawerOpened(false)}
-              >
-                {t.dashboard}
-              </Button>
-              <Button
-                fullWidth
-                variant="outline"
-                color="red"
-                size="lg"
-                leftSection={<IconLogout size={18} />}
-                onClick={() => setDrawerOpened(false)}
-              >
-                {t.logout}
-              </Button>
-            </>
-          )}
-        </Stack>
+                  {/* Services with nested menu */}
+                  <Menu shadow="lg" width="100%" position="bottom">
+                    <Menu.Target>
+                      <Button
+                        variant="subtle"
+                        fullWidth
+                        justify="space-between"
+                        leftSection={<IconPackage size={18} />}
+                        rightSection={<IconChevronDown size={16} />}
+                      >
+                        {t.services}
+                      </Button>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <ScrollArea.Autosize mah={400} type="scroll">
+                        {serviceCategories.map((category, idx) => (
+                          <div key={idx}>
+                            <Menu.Label>{category.category}</Menu.Label>
+                            {category.items.map((item, itemIdx) => (
+                              <Menu.Item
+                                key={itemIdx}
+                                component={Link}
+                                href={item.href}
+                                leftSection={<span className="text-lg">{item.icon}</span>}
+                                rightSection={
+                                  item.badge && (
+                                    <Badge size="xs" variant="light">{item.badge}</Badge>
+                                  )
+                                }
+                                onClick={() => setDrawerOpened(false)}
+                              >
+                                {item.label}
+                              </Menu.Item>
+                            ))}
+                            {idx < serviceCategories.length - 1 && <Menu.Divider />}
+                          </div>
+                        ))}
+                      </ScrollArea.Autosize>
+                      <Menu.Divider />
+                      <Menu.Item
+                        component={Link}
+                        href="/page/services"
+                        leftSection={<IconPackage size={16} />}
+                        onClick={() => setDrawerOpened(false)}
+                      >
+                        {t.viewAll}
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+
+                  <Button
+                    variant="subtle"
+                    fullWidth
+                    justify="space-between"
+                    leftSection={<IconPhoto size={18} />}
+                    component={Link}
+                    href="/page/gallery"
+                    onClick={() => setDrawerOpened(false)}
+                  >
+                    {t.gallery}
+                  </Button>
+
+                  <Button
+                    variant="subtle"
+                    fullWidth
+                    justify="space-between"
+                    leftSection={<IconInfoCircle size={18} />}
+                    component={Link}
+                    href="/page/aboutus"
+                    onClick={() => setDrawerOpened(false)}
+                  >
+                    {t.about}
+                  </Button>
+                </Stack>
+
+                <Divider />
+
+                <Button
+                  fullWidth
+                  variant="filled"
+                  color="red"
+                  size="lg"
+                  leftSection={<IconUser size={18} />}
+                  component={Link}
+                  href="/page/login"
+                  onClick={() => setDrawerOpened(false)}
+                >
+                  {t.login}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Divider label={t.dashboard} labelPosition="center" />
+                <Button
+                  fullWidth
+                  variant="light"
+                  color="red"
+                  size="lg"
+                  leftSection={<IconPackage size={18} />}
+                  component={Link}
+                  href="/dashboard"
+                  onClick={() => setDrawerOpened(false)}
+                >
+                  {t.dashboard}
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outline"
+                  color="red"
+                  size="lg"
+                  leftSection={<IconLogout size={18} />}
+                  onClick={() => setDrawerOpened(false)}
+                >
+                  {t.logout}
+                </Button>
+              </>
+            )}
+          </Stack>
+        </ScrollArea>
       </Drawer>
     </MotionDiv>
   );

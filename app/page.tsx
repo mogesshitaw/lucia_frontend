@@ -4,9 +4,9 @@
 'use client';
 
 import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, Avatar, SimpleGrid, ActionIcon, Tooltip, Image, Spoiler, Tabs } from '@mantine/core';
-import { motion, useScroll, useTransform, useAnimation, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Megaphone,
   Upload,
@@ -42,37 +42,15 @@ import { Variants } from 'framer-motion';
 
 const MotionDiv = motion.div;
 const MotionSection = motion.section;
-
-
-// const MotionContainer = motion(Container as any);
-// const MotionTitle = motion(Title as any);
 const MotionText = motion(Text as any);
 const MotionCard = motion(Card as any);
-// const MotionButton = motion(Button as any);
 
 // ==================== STUNNING WELCOME TEXT COMPONENT ====================
 const StunningWelcomeText = () => {
   const [isHovered, setIsHovered] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const textRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (textRef.current) {
-        const rect = textRef.current.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100;
-        const y = ((e.clientY - rect.top) / rect.height) * 100;
-        setMousePosition({ x, y });
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   return (
     <MotionDiv
-      ref={textRef}
       className="relative mb-12"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -80,25 +58,9 @@ const StunningWelcomeText = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
     >
-      {/* Animated Gradient Orbs */}
-      <motion.div
-        className="absolute -top-20 -left-20 w-64 h-64 bg-gradient-to-r from-red-500/30 to-orange-500/30 rounded-full blur-3xl"
-        animate={{
-          x: mousePosition.x * 2,
-          y: mousePosition.y * 2,
-          scale: [1, 1.2, 1],
-        }}
-        transition={{ duration: 0.5 }}
-      />
-      <motion.div
-        className="absolute -bottom-20 -right-20 w-64 h-64 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-3xl"
-        animate={{
-          x: -mousePosition.x * 2,
-          y: -mousePosition.y * 2,
-          scale: [1, 1.2, 1],
-        }}
-        transition={{ duration: 0.5 }}
-      />
+      {/* Static Gradient Orbs */}
+      <div className="absolute -top-20 -left-20 w-64 h-64 bg-gradient-to-r from-red-500/30 to-orange-500/30 rounded-full blur-3xl" />
+      <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-3xl" />
 
       {/* Main Welcome Text */}
       <div className="relative text-center">
@@ -146,18 +108,12 @@ const StunningWelcomeText = () => {
           </motion.div>
         </motion.div>
 
-        {/* Main Brand Name with 3D Effect */}
-        <motion.div
-          className="relative perspective-1000"
-          style={{
-            transformStyle: 'preserve-3d',
-          }}
-        >
+        {/* Main Brand Name */}
+        <div className="relative perspective-1000">
           <motion.h1
             className="text-5xl md:text-7xl lg:text-8xl font-black mb-6"
             style={{
               fontFamily: 'Montserrat, sans-serif',
-              transform: `rotateX(${mousePosition.y * 0.1}deg) rotateY(${mousePosition.x * 0.1}deg)`,
             }}
           >
             <span className="relative inline-block">
@@ -212,7 +168,7 @@ const StunningWelcomeText = () => {
               </motion.span>
             </Title>
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* Animated Underline with Glow */}
         <motion.div
@@ -348,50 +304,11 @@ const useScrollAnimation = (threshold = 0.1) => {
     }
   }, [controls, inView]);
 
-  // Return ref as the ref object, and controls separately
   return { 
-    ref,      // This is the ref to attach to elements
-    controls, // This is for animations
+    ref,
+    controls,
     inView 
   };
-};
-
-
-// Custom hook for mouse position tracking
-const useMousePosition = (excludeSelector?: string) => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isExcluded, setIsExcluded] = useState(false);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (excludeSelector) {
-        const excludedElement = document.querySelector(excludeSelector);
-        if (excludedElement) {
-          const rect = excludedElement.getBoundingClientRect();
-          const isOverExcluded = 
-            e.clientX >= rect.left && 
-            e.clientX <= rect.right && 
-            e.clientY >= rect.top && 
-            e.clientY <= rect.bottom;
-          
-          setIsExcluded(isOverExcluded);
-          
-          if (!isOverExcluded) {
-            setMousePosition({ x: e.clientX, y: e.clientY });
-          }
-        } else {
-          setMousePosition({ x: e.clientX, y: e.clientY });
-        }
-      } else {
-        setMousePosition({ x: e.clientX, y: e.clientY });
-      }
-    };
-    
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [excludeSelector]);
-
-  return { mousePosition, isExcluded };
 };
 
 // Floating particles animation
@@ -492,43 +409,6 @@ const FloatingParticles = () => {
   );
 };
 
-// 3D Tilt Card Component
-const TiltCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [rotation, setRotation] = useState({ x: 0, y: 0 });
-  const { mousePosition, isExcluded } = useMousePosition('.mantine-AppShell-header, header, nav');
-
-  useEffect(() => {
-    if (!cardRef.current || isExcluded) {
-      setRotation({ x: 0, y: 0 });
-      return;
-    }
-    
-    const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    const rotateY = ((mousePosition.x - centerX) / rect.width) * 10;
-    const rotateX = ((centerY - mousePosition.y) / rect.height) * 10;
-    
-    setRotation({ x: rotateX, y: rotateY });
-  }, [mousePosition, isExcluded]);
-
-  return (
-    <motion.div
-      ref={cardRef}
-      className={`relative ${className}`}
-      style={{
-        transformStyle: 'preserve-3d',
-        transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`,
-      }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
 // Animated Counter with Confetti
 const AnimatedCounter = ({ value, label, icon, suffix = '' }: { value: number; label: string; icon: React.ReactNode; suffix?: string }) => {
   const counterRef = useRef<HTMLDivElement>(null);
@@ -587,51 +467,6 @@ const GradientBorderCard = ({ children, className = '' }: { children: React.Reac
   );
 };
 
-// Magnetic Button Effect
-// Change this component from using motion.button to motion.div
-const MagneticButton = ({ children, onClick, className = '' }: { children: React.ReactNode; onClick?: () => void; className?: string }) => {
-  const buttonRef = useRef<HTMLDivElement>(null); // Change to HTMLDivElement
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const { mousePosition, isExcluded } = useMousePosition('.mantine-AppShell-header, header, nav');
-
-  useEffect(() => {
-    if (!buttonRef.current || isExcluded) {
-      setPosition({ x: 0, y: 0 });
-      return;
-    }
-    
-    const rect = buttonRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    const distance = Math.sqrt(
-      Math.pow(mousePosition.x - centerX, 2) + Math.pow(mousePosition.y - centerY, 2)
-    );
-    
-    if (distance < 100) {
-      const strength = (100 - distance) / 100;
-      const moveX = (mousePosition.x - centerX) * strength * 0.3;
-      const moveY = (mousePosition.y - centerY) * strength * 0.3;
-      setPosition({ x: moveX, y: moveY });
-    } else {
-      setPosition({ x: 0, y: 0 });
-    }
-  }, [mousePosition, isExcluded]);
-
-  return (
-    <motion.div // Change from motion.button to motion.div
-      ref={buttonRef}
-      className={className}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: 'spring', stiffness: 150, damping: 15 }}
-      onClick={onClick}
-      whileTap={{ scale: 0.95 }}
-      style={{ display: 'inline-block', cursor: 'pointer' }} // Add cursor pointer
-    >
-      {children}
-    </motion.div>
-  );
-};
 // Parallax Background
 const ParallaxBackground = () => {
   const { scrollY } = useScroll();
@@ -726,20 +561,12 @@ export default function HomePage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [activeTab, setActiveTab] = useState<string | null>('all');
-  const [cursorVariant, setCursorVariant] = useState('default');
   const videoRef = useRef<HTMLVideoElement>(null);
-  const cursorRef = useRef<HTMLDivElement>(null);
   
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
   const heroBlur = useTransform(scrollYProgress, [0, 0.5], [0, 10]);
-  
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const springConfig = { damping: 25, stiffness: 700 };
-  const mouseXSpring = useSpring(mouseX, springConfig);
-  const mouseYSpring = useSpring(mouseY, springConfig);
   
   const isMobile = useMediaQuery('(max-width: 768px)');
   const { ref: servicesRef, controls: servicesControls } = useScrollAnimation(0.1);
@@ -749,58 +576,31 @@ export default function HomePage() {
   const { ref: testimonialsRef, controls: testimonialsControls } = useScrollAnimation(0.1);
   const { ref: worksRef, controls: worksControls } = useScrollAnimation(0.1);
 
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const header = document.querySelector('.mantine-AppShell-header, header, nav');
-      if (header) {
-        const rect = header.getBoundingClientRect();
-        const isOverHeader = 
-          e.clientX >= rect.left && 
-          e.clientX <= rect.right && 
-          e.clientY >= rect.top && 
-          e.clientY <= rect.bottom;
-        
-        if (!isOverHeader) {
-          mouseX.set(e.clientX - 16);
-          mouseY.set(e.clientY - 16);
-        }
-      } else {
-        mouseX.set(e.clientX - 16);
-        mouseY.set(e.clientY - 16);
-      }
-    };
-    
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [mouseX, mouseY]);
-
-
-
-// Add proper typing to your variants
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3,
+  // Add proper typing to your variants
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.3,
+      },
     },
-  },
-};
+  };
 
-const itemVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 10, // Optional: add more spring properties
+  const itemVariants: Variants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 10,
+      },
     },
-  },
-};
+  };
+
   const stats = [
     { value: 5000, label: 'Projects Completed', suffix: '+', icon: <CheckCircle size={24} /> },
     { value: 1200, label: 'Happy Clients', suffix: '+', icon: <Users size={24} /> },
@@ -943,36 +743,8 @@ const itemVariants: Variants = {
     }
   };
 
-  const handleCursorEnter = useCallback(() => {
-    setCursorVariant('hover');
-  }, []);
-
-  const handleCursorLeave = useCallback(() => {
-    setCursorVariant('default');
-  }, []);
-
   return (
     <>
-      {/* Custom Cursor */}
-      {!isMobile && (
-        <motion.div
-          ref={cursorRef}
-          className="fixed top-0 left-0 w-8 h-8 pointer-events-none z-[9999] mix-blend-difference"
-          style={{
-            x: mouseXSpring,
-            y: mouseYSpring,
-          }}
-        >
-          <motion.div
-            className="w-full h-full rounded-full bg-white"
-            animate={{
-              scale: cursorVariant === 'hover' ? 1.5 : 1,
-            }}
-            transition={{ type: 'spring', stiffness: 500, damping: 28 }}
-          />
-        </motion.div>
-      )}
-
       <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
         <FloatingParticles />
         <ParallaxBackground />
@@ -982,8 +754,6 @@ const itemVariants: Variants = {
         <MotionSection
           className="relative min-h-screen flex items-center justify-center overflow-hidden"
           style={{ opacity: heroOpacity, scale: heroScale, filter: `blur(${heroBlur}px)` }}
-          onMouseEnter={handleCursorEnter}
-          onMouseLeave={handleCursorLeave}
         >
           {/* Background Video with Overlay */}
           <div className="absolute inset-0">
@@ -1051,29 +821,25 @@ const itemVariants: Variants = {
                 transition={{ delay: 1.4, duration: 0.8 }}
                 className="flex flex-wrap gap-4 justify-center md:justify-start"
               >
-                <MagneticButton>
-                  <Button
-                    size="xl"
-                    radius="xl"
-                    variant="gradient"
-                    gradient={{ from: 'red', to: 'orange' }}
-                    className="shadow-2xl hover:shadow-3xl transition-shadow duration-300 px-8 h-14"
-                    rightSection={<ArrowRight size={20} />}
-                  >
-                    Explore Services
-                  </Button>
-                </MagneticButton>
-                <MagneticButton>
-                  <Button
-                    size="xl"
-                    radius="xl"
-                    variant="outline"
-                    className="border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm px-8 h-14"
-                    leftSection={<Upload size={20} />}
-                  >
-                    Upload Design
-                  </Button>
-                </MagneticButton>
+                <Button
+                  size="xl"
+                  radius="xl"
+                  variant="gradient"
+                  gradient={{ from: 'red', to: 'orange' }}
+                  className="shadow-2xl hover:shadow-3xl transition-shadow duration-300 px-8 h-14"
+                  rightSection={<ArrowRight size={20} />}
+                >
+                  Explore Services
+                </Button>
+                <Button
+                  size="xl"
+                  radius="xl"
+                  variant="outline"
+                  className="border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm px-8 h-14"
+                  leftSection={<Upload size={20} />}
+                >
+                  Upload Design
+                </Button>
               </MotionDiv>
 
               {/* Rotating Cube */}
@@ -1102,7 +868,7 @@ const itemVariants: Variants = {
 
         {/* ================= FEATURED SERVICES ================= */}
         <MotionSection
-            ref={servicesRef}  
+          ref={servicesRef}  
           animate={servicesControls}
           initial="hidden"
           variants={containerVariants}
@@ -1122,60 +888,59 @@ const itemVariants: Variants = {
 
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl">
               {featuredServices.map((service, index) => (
-                <TiltCard key={index}>
-                  <MotionCard
-                    variants={itemVariants}
-                    whileHover={{ y: -10, scale: 1.02 }}
-                    className="relative overflow-hidden group cursor-pointer"
-                    padding="xl"
-                    radius="lg"
-                    withBorder
-                  >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-                    
-                    {service.badge && (
-                      <Badge
-                        className="absolute top-4 right-4 animate-pulse"
-                        variant="gradient"
-                        gradient={{ from: 'red', to: 'orange' }}
-                      >
-                        {service.badge}
-                      </Badge>
-                    )}
-
-                    <ThemeIcon
-                      size={70}
-                      radius="xl"
+                <MotionCard
+                  key={index}
+                  variants={itemVariants}
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="relative overflow-hidden group cursor-pointer"
+                  padding="xl"
+                  radius="lg"
+                  withBorder
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                  
+                  {service.badge && (
+                    <Badge
+                      className="absolute top-4 right-4 animate-pulse"
                       variant="gradient"
-                      gradient={{ from: service.gradient.split(' ')[0].replace('from-', ''), to: service.gradient.split(' ')[1].replace('to-', '') }}
-                      className="mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"
+                      gradient={{ from: 'red', to: 'orange' }}
                     >
-                      {service.icon}
-                    </ThemeIcon>
+                      {service.badge}
+                    </Badge>
+                  )}
 
-                    <Title order={4} className="mb-2">{service.title}</Title>
-                    <Text size="sm" c="dimmed" className="mb-4">{service.desc}</Text>
+                  <ThemeIcon
+                    size={70}
+                    radius="xl"
+                    variant="gradient"
+                    gradient={{ from: service.gradient.split(' ')[0].replace('from-', ''), to: service.gradient.split(' ')[1].replace('to-', '') }}
+                    className="mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"
+                  >
+                    {service.icon}
+                  </ThemeIcon>
 
-                    <div className="space-y-2 mb-4">
-                      {service.features.map((feature, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                          <CheckCircle size={14} className="text-green-500" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
-                    </div>
+                  <Title order={4} className="mb-2">{service.title}</Title>
+                  <Text size="sm" c="dimmed" className="mb-4">{service.desc}</Text>
 
-                    <Button
-                      variant="subtle"
-                      color="red"
-                      size="compact"
-                      rightSection={<ChevronRight size={16} />}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    >
-                      Learn More
-                    </Button>
-                  </MotionCard>
-                </TiltCard>
+                  <div className="space-y-2 mb-4">
+                    {service.features.map((feature, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <CheckCircle size={14} className="text-green-500" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    variant="subtle"
+                    color="red"
+                    size="compact"
+                    rightSection={<ChevronRight size={16} />}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  >
+                    Learn More
+                  </Button>
+                </MotionCard>
               ))}
             </SimpleGrid>
           </Container>
@@ -1231,26 +996,25 @@ const itemVariants: Variants = {
 
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="xl">
               {whyChooseUs.map((item, i) => (
-                <TiltCard key={i}>
-                  <MotionCard
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    className="bg-white/10 backdrop-blur-lg border-0 hover:bg-white/20 transition-all duration-300"
-                    padding="xl"
-                    radius="lg"
-                  >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-                    <Group>
-                      <ThemeIcon size={50} radius="xl" variant="gradient" gradient={{ from: item.color.split(' ')[0].replace('from-', ''), to: item.color.split(' ')[1].replace('to-', '') }}>
-                        {item.icon}
-                      </ThemeIcon>
-                      <div>
-                        <Title order={4} className="text-white mb-1">{item.title}</Title>
-                        <Text size="sm" className="text-gray-300">{item.desc}</Text>
-                      </div>
-                    </Group>
-                  </MotionCard>
-                </TiltCard>
+                <MotionCard
+                  key={i}
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className="bg-white/10 backdrop-blur-lg border-0 hover:bg-white/20 transition-all duration-300"
+                  padding="xl"
+                  radius="lg"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                  <Group>
+                    <ThemeIcon size={50} radius="xl" variant="gradient" gradient={{ from: item.color.split(' ')[0].replace('from-', ''), to: item.color.split(' ')[1].replace('to-', '') }}>
+                      {item.icon}
+                    </ThemeIcon>
+                    <div>
+                      <Title order={4} className="text-white mb-1">{item.title}</Title>
+                      <Text size="sm" className="text-gray-300">{item.desc}</Text>
+                    </div>
+                  </Group>
+                </MotionCard>
               ))}
             </SimpleGrid>
           </Container>
@@ -1387,46 +1151,45 @@ const itemVariants: Variants = {
 
             <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
               {testimonials.map((testimonial, index) => (
-                <TiltCard key={index}>
-                  <MotionCard
-                    variants={itemVariants}
-                    whileHover={{ y: -10 }}
-                    padding="xl"
-                    radius="lg"
-                    withBorder
-                    className="relative hover:shadow-2xl transition-all duration-300"
-                  >
-                    <div className="absolute top-4 right-4 text-yellow-400 flex">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: i * 0.1 }}
-                        >
-                          <Star size={16} fill="currentColor" />
-                        </motion.div>
-                      ))}
+                <MotionCard
+                  key={index}
+                  variants={itemVariants}
+                  whileHover={{ y: -10 }}
+                  padding="xl"
+                  radius="lg"
+                  withBorder
+                  className="relative hover:shadow-2xl transition-all duration-300"
+                >
+                  <div className="absolute top-4 right-4 text-yellow-400 flex">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: i * 0.1 }}
+                      >
+                        <Star size={16} fill="currentColor" />
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <Group mb="md">
+                    <Avatar src={testimonial.avatar} size="lg" radius="xl" />
+                    <div>
+                      <Text fw={600}>{testimonial.name}</Text>
+                      <Text size="sm" c="dimmed">{testimonial.role}</Text>
+                      <Text size="xs" c="dimmed">{testimonial.company}</Text>
                     </div>
+                  </Group>
 
-                    <Group mb="md">
-                      <Avatar src={testimonial.avatar} size="lg" radius="xl" />
-                      <div>
-                        <Text fw={600}>{testimonial.name}</Text>
-                        <Text size="sm" c="dimmed">{testimonial.role}</Text>
-                        <Text size="xs" c="dimmed">{testimonial.company}</Text>
-                      </div>
-                    </Group>
+                  <Spoiler maxHeight={80} showLabel="Read more" hideLabel="Hide">
+                    <Text size="lg" className="italic">&quot;{testimonial.content}&quot;</Text>
+                  </Spoiler>
 
-                    <Spoiler maxHeight={80} showLabel="Read more" hideLabel="Hide">
-                      <Text size="lg" className="italic">&quot;{testimonial.content}&quot;</Text>
-                    </Spoiler>
-
-                    <div className="absolute bottom-4 left-4 text-red-500 opacity-10">
-                      <Quote size={40} />
-                    </div>
-                  </MotionCard>
-                </TiltCard>
+                  <div className="absolute bottom-4 left-4 text-red-500 opacity-10">
+                    <Quote size={40} />
+                  </div>
+                </MotionCard>
               ))}
             </SimpleGrid>
           </Container>
@@ -1464,25 +1227,24 @@ const itemVariants: Variants = {
 
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
               {filteredWorks.map((work, index) => (
-                <TiltCard key={index}>
-                  <MotionDiv
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.05 }}
-                    className="relative group overflow-hidden rounded-xl"
-                  >
-                    <img
-                      src={work.image}
-                      alt={work.title}
-                      className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="absolute bottom-4 left-4 text-white">
-                        <Text fw={600}>{work.title}</Text>
-                        <Badge color="red" size="sm" className="mt-2">{work.category}</Badge>
-                      </div>
+                <MotionDiv
+                  key={index}
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.05 }}
+                  className="relative group overflow-hidden rounded-xl"
+                >
+                  <img
+                    src={work.image}
+                    alt={work.title}
+                    className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-4 left-4 text-white">
+                      <Text fw={600}>{work.title}</Text>
+                      <Badge color="red" size="sm" className="mt-2">{work.category}</Badge>
                     </div>
-                  </MotionDiv>
-                </TiltCard>
+                  </div>
+                </MotionDiv>
               ))}
             </SimpleGrid>
           </Container>
@@ -1516,29 +1278,25 @@ const itemVariants: Variants = {
               </Text>
 
               <Group justify="center" gap="md">
-                <MagneticButton>
-                  <Button
-                    size="xl"
-                    radius="xl"
-                    variant="gradient"
-                    gradient={{ from: 'red', to: 'orange' }}
-                    className="shadow-2xl px-12 h-14"
-                    rightSection={<ArrowRight size={20} />}
-                  >
-                    Start Your Project
-                  </Button>
-                </MagneticButton>
-                <MagneticButton>
-                  <Button
-                    size="xl"
-                    radius="xl"
-                    variant="outline"
-                    className="border-2 border-white text-white hover:bg-white/10 h-14"
-                    leftSection={<Phone size={20} />}
-                  >
-                    Call Us Now
-                  </Button>
-                </MagneticButton>
+                <Button
+                  size="xl"
+                  radius="xl"
+                  variant="gradient"
+                  gradient={{ from: 'red', to: 'orange' }}
+                  className="shadow-2xl px-12 h-14"
+                  rightSection={<ArrowRight size={20} />}
+                >
+                  Start Your Project
+                </Button>
+                <Button
+                  size="xl"
+                  radius="xl"
+                  variant="outline"
+                  className="border-2 border-white text-white hover:bg-white/10 h-14"
+                  leftSection={<Phone size={20} />}
+                >
+                  Call Us Now
+                </Button>
               </Group>
             </MotionDiv>
           </Container>
@@ -1550,45 +1308,39 @@ const itemVariants: Variants = {
         {/* ================= FLOATING ACTIONS ================= */}
         <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
           <Tooltip label="Chat with us" position="left">
-            <MagneticButton>
-              <ActionIcon
-                size="lg"
-                radius="xl"
-                variant="filled"
-                color="blue"
-                className="shadow-lg hover:scale-110 transition-transform"
-              >
-                <MessageCircle size={20} />
-              </ActionIcon>
-            </MagneticButton>
+            <ActionIcon
+              size="lg"
+              radius="xl"
+              variant="filled"
+              color="blue"
+              className="shadow-lg hover:scale-110 transition-transform"
+            >
+              <MessageCircle size={20} />
+            </ActionIcon>
           </Tooltip>
 
           <Tooltip label="Get quote" position="left">
-            <MagneticButton>
-              <ActionIcon
-                size="lg"
-                radius="xl"
-                variant="filled"
-                color="green"
-                className="shadow-lg hover:scale-110 transition-transform"
-              >
-                <DollarSign size={20} />
-              </ActionIcon>
-            </MagneticButton>
+            <ActionIcon
+              size="lg"
+              radius="xl"
+              variant="filled"
+              color="green"
+              className="shadow-lg hover:scale-110 transition-transform"
+            >
+              <DollarSign size={20} />
+            </ActionIcon>
           </Tooltip>
 
           <Tooltip label="Call now" position="left">
-            <MagneticButton>
-              <ActionIcon
-                size="lg"
-                radius="xl"
-                variant="filled"
-                color="red"
-                className="shadow-lg hover:scale-110 transition-transform"
-              >
-                <Phone size={20} />
-              </ActionIcon>
-            </MagneticButton>
+            <ActionIcon
+              size="lg"
+              radius="xl"
+              variant="filled"
+              color="red"
+              className="shadow-lg hover:scale-110 transition-transform"
+            >
+              <Phone size={20} />
+            </ActionIcon>
           </Tooltip>
         </div>
 
