@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, SimpleGrid, Stack, Divider, ActionIcon, Tooltip, Paper, Alert, Pagination, Timeline, TextInput } from '@mantine/core';
+import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, SimpleGrid, Stack, Divider, ActionIcon, Tooltip, Paper, Alert, Pagination, Timeline, TextInput, Loader, Center, Skeleton } from '@mantine/core';
 import { motion, useScroll, useTransform, useAnimation, useInView } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
 import {
@@ -30,23 +30,56 @@ import {
   Twitter,
   Instagram,
   Send,
+  X,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import CountUp from 'react-countup';
+import { notifications } from '@mantine/notifications';
 
 const MotionDiv = motion.div;
 const MotionSection = motion.section;
-const MotionCard = motion(Card as any );
-// const MotionContainer = motion(Container);
-// const MotionTitle = motion(Title);
-// const MotionText = motion(Text as any);
-// const MotionButton = motion(Button as any );
+const MotionCard = motion(Card as any);
 
+// API URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-// Floating particles animation - FIXED VERSION
+// Types
+interface Announcement {
+  id: string;
+  title: string;
+  description: string;
+  detailed_content: string | null;
+  bullet_points: string[];
+  cta: string | null;
+  cta_link: string | null;
+  date: string;
+  read_time: number;
+  type: string;
+  priority: string;
+  image: string | null;
+  tags: string[];
+  views: number;
+  likes: number;
+  comments: number;
+  is_featured: boolean;
+}
+
+interface Stats {
+  icon?: string;
+  label: string;
+  value: number;
+  color: string;
+}
+
+interface TimelineEvent {
+  date: string;
+  title: string;
+  type: string;
+}
+
+// Floating particles animation
 const FloatingParticles = () => {
-  // Generate particles directly in useState initializer
   const [particles] = useState(() => {
     const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
     
@@ -61,7 +94,6 @@ const FloatingParticles = () => {
     }));
   });
 
-  // No need for mounted check - if particles array is empty (it won't be), render nothing
   if (particles.length === 0) return null;
 
   return (
@@ -97,13 +129,14 @@ const FloatingParticles = () => {
 };
 
 // Announcement Card Component
-const AnnouncementCard = ({ announcement, index }: { announcement: any; index: number }) => {
+const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Announcement; index: number; onLike: (id: string) => void }) => {
   const [isSaved, setIsSaved] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [likeCount, setLikeCount] = useState(announcement.likes);
 
   const getTypeIcon = (type: string) => {
-    switch(type) {
+    switch(type.toLowerCase()) {
       case 'promotion': return <Gift size={24} />;
       case 'event': return <Calendar size={24} />;
       case 'news': return <Newspaper size={24} />;
@@ -115,7 +148,7 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
   };
 
   const getTypeColor = (type: string) => {
-    switch(type) {
+    switch(type.toLowerCase()) {
       case 'promotion': return 'from-green-500 to-emerald-500';
       case 'event': return 'from-blue-500 to-cyan-500';
       case 'news': return 'from-purple-500 to-pink-500';
@@ -127,11 +160,52 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
   };
 
   const getPriorityBadge = (priority: string) => {
-    switch(priority) {
+    switch(priority.toLowerCase()) {
       case 'high': return <Badge color="red" variant="filled">High Priority</Badge>;
       case 'medium': return <Badge color="yellow" variant="filled">Medium Priority</Badge>;
       case 'low': return <Badge color="blue" variant="filled">Low Priority</Badge>;
       default: return null;
+    }
+  };
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(`${API_URL}/api/announcements/${announcement.id}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-session-id': localStorage.getItem('sessionId') || Math.random().toString(36).substring(7),
+        },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setIsLiked(data.liked);
+        setLikeCount(prev => data.liked ? prev + 1 : prev - 1);
+        if (data.sessionId) {
+          localStorage.setItem('sessionId', data.sessionId);
+        }
+      }
+    } catch (error) {
+      console.error('Error liking announcement:', error);
+    }
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (navigator.share) {
+      navigator.share({
+        title: announcement.title,
+        text: announcement.description,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      notifications.show({
+        title: 'Link Copied',
+        message: 'Announcement link copied to clipboard',
+        color: 'blue',
+      });
     }
   };
 
@@ -199,9 +273,9 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
                 <div>
                   <Title order={3} className="mb-1">{announcement.title}</Title>
                   <Group gap="xs">
-                    <Text size="sm" c="dimmed">{announcement.date}</Text>
+                    <Text size="sm" c="dimmed">{new Date(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
                     <Text size="sm" c="dimmed">•</Text>
-                    <Text size="sm" c="dimmed">{announcement.readTime} min read</Text>
+                    <Text size="sm" c="dimmed">{announcement.read_time} min read</Text>
                   </Group>
                 </div>
               </Group>
@@ -213,13 +287,15 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
             </Text>
 
             {/* Tags */}
-            <Group gap="xs">
-              {announcement.tags.map((tag: string, i: number) => (
-                <Badge key={i} variant="light" color="gray" size="sm">
-                  #{tag}
-                </Badge>
-              ))}
-            </Group>
+            {announcement.tags && announcement.tags.length > 0 && (
+              <Group gap="xs">
+                {announcement.tags.map((tag: string, i: number) => (
+                  <Badge key={i} variant="light" color="gray" size="sm">
+                    #{tag}
+                  </Badge>
+                ))}
+              </Group>
+            )}
 
             {/* Stats */}
             <Group gap="lg">
@@ -229,7 +305,7 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
               </Group>
               <Group gap={4}>
                 <Heart size={16} className="text-gray-500" />
-                <Text size="sm" c="dimmed">{announcement.likes} likes</Text>
+                <Text size="sm" c="dimmed">{likeCount} likes</Text>
               </Group>
               <Group gap={4}>
                 <MessageCircle size={16} className="text-gray-500" />
@@ -256,10 +332,7 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
                 color="pink"
                 size="sm"
                 leftSection={<Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsLiked(!isLiked);
-                }}
+                onClick={handleLike}
               >
                 {isLiked ? 'Liked' : 'Like'}
               </Button>
@@ -268,7 +341,7 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
                 color="blue"
                 size="sm"
                 leftSection={<Share2 size={16} />}
-                onClick={(e) => e.stopPropagation()}
+                onClick={handleShare}
               >
                 Share
               </Button>
@@ -298,11 +371,11 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
                 <Divider my="md" />
                 
                 <Stack gap="md">
-                  <Text>{announcement.detailedContent}</Text>
+                  <Text>{announcement.detailed_content}</Text>
 
-                  {announcement.bulletPoints && (
+                  {announcement.bullet_points && announcement.bullet_points.length > 0 && (
                     <ul className="list-disc list-inside space-y-2">
-                      {announcement.bulletPoints.map((point: string, i: number) => (
+                      {announcement.bullet_points.map((point: string, i: number) => (
                         <li key={i} className="text-gray-700 dark:text-gray-300">{point}</li>
                       ))}
                     </ul>
@@ -313,7 +386,7 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
                       variant="gradient"
                       gradient={{ from: 'red', to: 'orange' }}
                       component={Link}
-                      href={announcement.ctaLink}
+                      href={announcement.cta_link || '#'}
                       className="mt-2"
                     >
                       {announcement.cta}
@@ -330,7 +403,9 @@ const AnnouncementCard = ({ announcement, index }: { announcement: any; index: n
 };
 
 // Featured Announcement Component
-const FeaturedAnnouncement = ({ announcement }: { announcement: any }) => {
+const FeaturedAnnouncement = ({ announcement }: { announcement: Announcement | null }) => {
+  if (!announcement) return null;
+
   return (
     <MotionCard
       initial={{ opacity: 0, scale: 0.95 }}
@@ -342,14 +417,14 @@ const FeaturedAnnouncement = ({ announcement }: { announcement: any }) => {
       radius="lg"
       withBorder
     >
-     <div className="relative h-[400px] w-full">
-  <Image
-    src={announcement.image}
-    alt={announcement.title}
-    fill
-    className="object-cover"
-    priority
-  />
+      <div className="relative h-[400px] w-full">
+        <Image
+          src={announcement.image || '/images/placeholder.jpg'}
+          alt={announcement.title}
+          fill
+          className="object-cover"
+          priority
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
         
         {/* Featured Badge */}
@@ -366,10 +441,10 @@ const FeaturedAnnouncement = ({ announcement }: { announcement: any }) => {
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white z-10">
           <Group gap="xs" className="mb-4">
             <Calendar size={18} />
-            <Text size="sm">{announcement.date}</Text>
+            <Text size="sm">{new Date(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
             <Text size="sm">•</Text>
             <Clock size={18} />
-            <Text size="sm">{announcement.readTime} min read</Text>
+            <Text size="sm">{announcement.read_time} min read</Text>
           </Group>
 
           <Title order={2} className="text-3xl md:text-4xl font-bold mb-4">
@@ -386,7 +461,7 @@ const FeaturedAnnouncement = ({ announcement }: { announcement: any }) => {
               variant="gradient"
               gradient={{ from: 'red', to: 'orange' }}
               component={Link}
-              href={announcement.link || '#'}
+              href={`/announcements/${announcement.id}`}
             >
               Learn More
             </Button>
@@ -405,7 +480,19 @@ const FeaturedAnnouncement = ({ announcement }: { announcement: any }) => {
 };
 
 // Category Filter Component
-const CategoryFilter = ({ categories, activeCategory, setActiveCategory }: { categories: string[]; activeCategory: string; setActiveCategory: (category: string) => void }) => {
+const CategoryFilter = ({ categories, activeCategory, setActiveCategory, onSearch }: { 
+  categories: string[]; 
+  activeCategory: string; 
+  setActiveCategory: (category: string) => void;
+  onSearch: (query: string) => void;
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    onSearch(e.target.value);
+  };
+
   return (
     <Paper p="md" radius="lg" withBorder className="sticky top-20 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
       <Group justify="space-between">
@@ -444,6 +531,12 @@ const CategoryFilter = ({ categories, activeCategory, setActiveCategory }: { cat
             leftSection={<Search size={16} />}
             size="sm"
             className="w-64"
+            value={searchQuery}
+            onChange={handleSearch}
+            rightSection={searchQuery ? <X size={16} className="cursor-pointer" onClick={() => {
+              setSearchQuery('');
+              onSearch('');
+            }} /> : null}
           />
         </Group>
       </Group>
@@ -454,14 +547,44 @@ const CategoryFilter = ({ categories, activeCategory, setActiveCategory }: { cat
 // Newsletter Subscription Component
 const NewsletterSubscribe = () => {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      setSubscribed(true);
-      setTimeout(() => setSubscribed(false), 3000);
-      setEmail('');
+    if (!email) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/announcements/newsletter/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSubscribed(true);
+        setEmail('');
+        setTimeout(() => setSubscribed(false), 3000);
+        notifications.show({
+          title: 'Success!',
+          message: data.message,
+          color: 'green',
+        });
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error: any) {
+      notifications.show({
+        title: 'Error',
+        message: error.message || 'Failed to subscribe',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -509,6 +632,7 @@ const NewsletterSubscribe = () => {
               size="lg"
               variant="white"
               color="red"
+              loading={loading}
             >
               Subscribe
             </Button>
@@ -526,13 +650,16 @@ const NewsletterSubscribe = () => {
 };
 
 // Announcement Stats Component
-const AnnouncementStats = () => {
-  const stats = [
-    { icon: <Bell size={24} />, value: 156, label: 'Total Announcements', color: 'from-blue-500 to-cyan-500' },
-    { icon: <Gift size={24} />, value: 45, label: 'Active Offers', color: 'from-green-500 to-emerald-500' },
-    { icon: <Calendar size={24} />, value: 12, label: 'Upcoming Events', color: 'from-purple-500 to-pink-500' },
-    { icon: <Users size={24} />, value: 2500, label: 'Subscribers', color: 'from-orange-500 to-red-500' },
-  ];
+const AnnouncementStats = ({ stats }: { stats: Stats[] }) => {
+  const getIcon = (iconName?: string) => {
+    switch(iconName) {
+      case 'Bell': return <Bell size={24} />;
+      case 'Gift': return <Gift size={24} />;
+      case 'Calendar': return <Calendar size={24} />;
+      case 'Users': return <Users size={24} />;
+      default: return <Bell size={24} />;
+    }
+  };
 
   return (
     <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
@@ -555,10 +682,10 @@ const AnnouncementStats = () => {
             gradient={{ from: stat.color.split(' ')[0].replace('from-', ''), to: stat.color.split(' ')[1].replace('to-', '') }}
             className="mx-auto mb-3"
           >
-            {stat.icon}
+            {getIcon(stat.icon)}
           </ThemeIcon>
           <Title order={3} className="text-2xl font-bold">
-            {typeof stat.value === 'number' ? <CountUp end={stat.value} duration={2} /> : stat.value}
+            <CountUp end={stat.value} duration={2} />
           </Title>
           <Text size="sm" c="dimmed">{stat.label}</Text>
         </MotionCard>
@@ -568,15 +695,7 @@ const AnnouncementStats = () => {
 };
 
 // Timeline Component
-const AnnouncementTimeline = () => {
-  const events = [
-    { date: '2024-03-15', title: 'New DTF Printing Service Launch', type: 'launch' },
-    { date: '2024-03-10', title: 'Spring Sale - 20% Off', type: 'sale' },
-    { date: '2024-03-05', title: 'Holiday Hours Announcement', type: 'info' },
-    { date: '2024-02-28', title: 'New Website Feature', type: 'update' },
-    { date: '2024-02-20', title: 'Customer Appreciation Day', type: 'event' },
-  ];
-
+const AnnouncementTimeline = ({ events }: { events: TimelineEvent[] }) => {
   return (
     <MotionCard
       initial={{ opacity: 0, x: -30 }}
@@ -615,7 +734,7 @@ const AnnouncementTimeline = () => {
               </ThemeIcon>
             }
           >
-            <Text c="dimmed" size="sm">{event.date}</Text>
+            <Text c="dimmed" size="sm">{new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
           </Timeline.Item>
         ))}
       </Timeline>
@@ -634,223 +753,135 @@ export default function AnnouncementsPage() {
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 100]);
 
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [stats, setStats] = useState<Stats[]>([]);
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [timelineLoading, setTimelineLoading] = useState(true);
+
   const [activeCategory, setActiveCategory] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [showSearch, setShowSearch] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [itemsPerPage] = useState(5);
 
-  const categories = ['Promotion', 'Event', 'News', 'Offer', 'Update', 'Alert'];
+  // Fetch announcements
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: itemsPerPage.toString(),
+          ...(activeCategory !== 'all' && { type: activeCategory.toLowerCase() }),
+          ...(searchQuery && { search: searchQuery }),
+        });
 
-  // Announcements data
-  const announcements = [
-    {
-      id: 1,
-      title: '🎉 Grand Opening: New DTF Printing Service',
-      description: 'We are excited to announce the launch of our new DTF (Direct to Film) printing service. Get vibrant, durable prints on any fabric!',
-      detailedContent: 'Direct to Film (DTF) printing is revolutionizing the apparel industry. Unlike traditional methods, DTF allows for printing on any fabric type with exceptional vibrancy and durability. Our new service includes:',
-      bulletPoints: [
-        'Print on cotton, polyester, blends, and more',
-        'No minimum order quantity',
-        '24-hour turnaround available',
-        'Free design consultation',
-        'Bulk discounts for orders over 50 pieces'
-      ],
-      cta: 'Get Started Today',
-      ctaLink: '/services/dtf',
-      date: 'March 15, 2024',
-      readTime: 3,
-      type: 'promotion',
-      priority: 'high',
-      image: '/images/service1.jpg',
-      tags: ['DTF', 'NewService', 'Printing'],
-      views: 1245,
-      likes: 89,
-      comments: 23,
-    },
-    {
-      id: 2,
-      title: '🎪 Spring Sale Extravaganza - 20% Off Everything!',
-      description: 'Spring has sprung and we\'re celebrating with our biggest sale of the year! Enjoy 20% off all printing services for a limited time.',
-      detailedContent: 'Our Spring Sale runs from March 20th to April 15th. This is the perfect time to stock up on all your printing needs. Whether you need custom t-shirts for your team, banners for an event, or business cards for your company, now is the time to order!',
-      bulletPoints: [
-        '20% off all printing services',
-        'Free shipping on orders over $100',
-        'Buy 5 t-shirts, get 1 free',
-        'Free design consultation with every order',
-        'Extended hours for in-person consultations'
-      ],
-      cta: 'Shop Now',
-      ctaLink: '/services',
-      date: 'March 10, 2024',
-      readTime: 2,
-      type: 'offer',
-      priority: 'high',
-      image: '/images/service1.jpg',
-      tags: ['Sale', 'Discount', 'Spring'],
-      views: 2341,
-      likes: 156,
-      comments: 34,
-    },
-    {
-      id: 3,
-      title: '⏰ Holiday Hours: Easter Weekend',
-      description: 'Please note our modified hours during the Easter holiday weekend. Plan your visits and orders accordingly.',
-      detailedContent: 'Our offices will be operating on modified hours during the Easter weekend. Here\'s our schedule:',
-      bulletPoints: [
-        'Good Friday (March 29): 9:00 AM - 2:00 PM',
-        'Holy Saturday (March 30): CLOSED',
-        'Easter Sunday (March 31): CLOSED',
-        'Easter Monday (April 1): 10:00 AM - 4:00 PM',
-        'Regular hours resume Tuesday, April 2'
-      ],
-      cta: 'View Full Schedule',
-      ctaLink: '/contact',
-      date: 'March 5, 2024',
-      readTime: 1,
-      type: 'alert',
-      priority: 'medium',
-      image: '/images/service1.jpg',
-      tags: ['Holiday', 'Hours', 'Easter'],
-      views: 876,
-      likes: 45,
-      comments: 12,
-    },
-    {
-      id: 4,
-      title: '🏆 Customer Appreciation Day - March 25th',
-      description: 'Join us for a day of celebration, refreshments, and exclusive discounts as we thank our amazing customers!',
-      detailedContent: 'We\'re throwing a party and you\'re invited! Come celebrate with us at our Addis Ababa location for a day of fun, food, and fantastic deals.',
-      bulletPoints: [
-        'Free refreshments and snacks',
-        'Live printing demonstrations',
-        'Exclusive one-day-only discounts',
-        'Meet our design team',
-        'Raffle prizes including free printing packages'
-      ],
-      cta: 'RSVP Now',
-      ctaLink: '/events/customer-appreciation',
-      date: 'February 28, 2024',
-      readTime: 2,
-      type: 'event',
-      priority: 'medium',
-      image: '/images/service1.jpg',
-      tags: ['Event', 'Customer', 'Appreciation'],
-      views: 654,
-      likes: 78,
-      comments: 15,
-    },
-    {
-      id: 5,
-      title: '✨ New Website Features: Real-Time Order Tracking',
-      description: 'We\'ve enhanced our website with new features including real-time order tracking, instant chat support, and a faster upload system.',
-      detailedContent: 'We\'re constantly working to improve your experience. Our latest updates include:',
-      bulletPoints: [
-        'Real-time order tracking - know exactly where your order is at any time',
-        'Instant chat support - get answers immediately',
-        'Faster file upload system - upload large files in seconds',
-        'New design preview tool - see your design before printing',
-        'Mobile app coming soon!'
-      ],
-      cta: 'Try It Now',
-      ctaLink: '/features',
-      date: 'February 20, 2024',
-      readTime: 2,
-      type: 'update',
-      priority: 'low',
-      image: '/images/service1.jpg',
-      tags: ['Website', 'Update', 'Features'],
-      views: 543,
-      likes: 67,
-      comments: 8,
-    },
-    {
-      id: 6,
-      title: '🎨 Free Design Workshop: March 30th',
-      description: 'Learn the basics of design for print in our free workshop. Perfect for small business owners and marketing professionals.',
-      detailedContent: 'Join our lead designer for a 2-hour workshop covering essential design principles for print materials. You\'ll learn:',
-      bulletPoints: [
-        'Understanding resolution and DPI',
-        'Color modes: RGB vs CMYK',
-        'File formats and when to use them',
-        'Designing for different materials',
-        'Common mistakes to avoid'
-      ],
-      cta: 'Reserve Your Spot',
-      ctaLink: '/workshops',
-      date: 'February 15, 2024',
-      readTime: 2,
-      type: 'event',
-      priority: 'low',
-      image: '/images/service1.jpg',
-      tags: ['Workshop', 'Design', 'Free'],
-      views: 432,
-      likes: 56,
-      comments: 9,
-    },
-    {
-      id: 7,
-      title: '🌿 Eco-Friendly Printing Initiative',
-      description: 'We\'re proud to announce our new eco-friendly printing options, using sustainable materials and environmentally conscious processes.',
-      detailedContent: 'As part of our commitment to sustainability, we\'re introducing new eco-friendly options for all our services.',
-      bulletPoints: [
-        'Recycled paper options for all print jobs',
-        'Soy-based inks available',
-        'Carbon-neutral shipping',
-        'Eco-friendly packaging materials',
-        'Tree planted for every order over $100'
-      ],
-      cta: 'Learn More',
-      ctaLink: '/eco-friendly',
-      date: 'February 10, 2024',
-      readTime: 2,
-      type: 'news',
-      priority: 'medium',
-      image: '/images/service1.jpg',
-      tags: ['Eco', 'Sustainability', 'Green'],
-      views: 789,
-      likes: 98,
-      comments: 14,
-    },
-    {
-      id: 8,
-      title: '🚀 New Location Opening in Adama',
-      description: 'We\'re expanding! Our new branch in Adama opens April 1st, bringing our quality printing services closer to you.',
-      detailedContent: 'We\'re thrilled to announce the opening of our second location in Adama. This expansion allows us to serve our customers in the Oromia region more effectively.',
-      bulletPoints: [
-        'Convenient location in downtown Adama',
-        'Same great services and quality',
-        'Local team ready to help',
-        'Grand opening specials available',
-        'Free consultations throughout April'
-      ],
-      cta: 'Get Directions',
-      ctaLink: '/locations/adama',
-      date: 'February 5, 2024',
-      readTime: 2,
-      type: 'news',
-      priority: 'high',
-      image: '/images/service1.jpg',
-      tags: ['Expansion', 'NewLocation', 'Adama'],
-      views: 1023,
-      likes: 134,
-      comments: 21,
-    },
-  ];
+        const response = await fetch(`${API_URL}/api/announcements?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          setAnnouncements(data.data.announcements);
+          setTotalPages(data.data.pagination.pages);
+        }
+      } catch (error) {
+        console.error('Failed to fetch announcements:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to load announcements',
+          color: 'red',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Filtered announcements
-  const filteredAnnouncements = activeCategory === 'all' 
-    ? announcements 
-    : announcements.filter(a => a.type.toLowerCase() === activeCategory.toLowerCase());
+    fetchAnnouncements();
+  }, [activeCategory, currentPage, searchQuery, itemsPerPage]);
 
-  // Featured announcement (first one)
-  const featuredAnnouncement = announcements[0];
+  // Fetch stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      setStatsLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/api/announcements/stats`);
+        const data = await response.json();
+        if (data.success) {
+          setStats(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
 
-  // Pagination
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(filteredAnnouncements.length / itemsPerPage);
-  const paginatedAnnouncements = filteredAnnouncements.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    fetchStats();
+  }, []);
+
+  // Fetch timeline
+  useEffect(() => {
+    const fetchTimeline = async () => {
+      setTimelineLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/api/announcements/timeline`);
+        const data = await response.json();
+        if (data.success) {
+          setTimelineEvents(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch timeline:', error);
+      } finally {
+        setTimelineLoading(false);
+      }
+    };
+
+    fetchTimeline();
+  }, []);
+
+  // Fetch types for filter
+  useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/announcements/types`);
+        const data = await response.json();
+        if (data.success) {
+          setTypes(data.data.map((t: any) => t.type));
+        }
+      } catch (error) {
+        console.error('Failed to fetch types:', error);
+      }
+    };
+
+    fetchTypes();
+  }, []);
+
+  const handleLike = async (id: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/announcements/${id}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-session-id': localStorage.getItem('sessionId') || Math.random().toString(36).substring(7),
+        },
+      });
+      const data = await response.json();
+      if (data.success && data.sessionId) {
+        localStorage.setItem('sessionId', data.sessionId);
+      }
+    } catch (error) {
+      console.error('Error liking announcement:', error);
+    }
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const featuredAnnouncement = announcements.find(a => a.is_featured) || announcements[0];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
@@ -862,7 +893,6 @@ export default function AnnouncementsPage() {
         className="relative min-h-[40vh] flex items-center justify-center overflow-hidden"
         style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
       >
-        {/* Background Image Container - FIXED */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/80 z-10" />
           <div className="relative w-full h-full">
@@ -915,13 +945,23 @@ export default function AnnouncementsPage() {
 
       {/* Stats Section */}
       <Container size="lg" className="py-12">
-        <AnnouncementStats />
+        {statsLoading ? (
+          <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} height={120} radius="lg" />
+            ))}
+          </SimpleGrid>
+        ) : (
+          <AnnouncementStats stats={stats} />
+        )}
       </Container>
 
       {/* Featured Announcement */}
-      <Container size="lg" className="pb-12">
-        <FeaturedAnnouncement announcement={featuredAnnouncement} />
-      </Container>
+      {!loading && featuredAnnouncement && (
+        <Container size="lg" className="pb-12">
+          <FeaturedAnnouncement announcement={featuredAnnouncement} />
+        </Container>
+      )}
 
       {/* Main Content */}
       <Container size="lg" className="pb-20">
@@ -931,17 +971,51 @@ export default function AnnouncementsPage() {
             <Stack gap="xl">
               {/* Category Filter */}
               <CategoryFilter
-                categories={categories}
+                categories={['Promotion', 'Event', 'News', 'Offer', 'Update', 'Alert']}
                 activeCategory={activeCategory}
                 setActiveCategory={setActiveCategory}
+                onSearch={handleSearch}
               />
 
               {/* Announcements List */}
-              <Stack gap="md">
-                {paginatedAnnouncements.map((announcement, index) => (
-                  <AnnouncementCard key={announcement.id} announcement={announcement} index={index} />
-                ))}
-              </Stack>
+              {loading ? (
+                <Stack gap="md">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} height={300} radius="lg" />
+                  ))}
+                </Stack>
+              ) : announcements.length === 0 ? (
+                <Paper p="xl" radius="lg" withBorder>
+                  <Center>
+                    <Stack align="center">
+                      <Bell size={48} className="text-gray-400" />
+                      <Text size="lg" c="dimmed">No announcements found</Text>
+                      <Button
+                        variant="light"
+                        color="red"
+                        onClick={() => {
+                          setActiveCategory('all');
+                          setSearchQuery('');
+                          setCurrentPage(1);
+                        }}
+                      >
+                        Clear Filters
+                      </Button>
+                    </Stack>
+                  </Center>
+                </Paper>
+              ) : (
+                <Stack gap="md">
+                  {announcements.map((announcement, index) => (
+                    <AnnouncementCard 
+                      key={announcement.id} 
+                      announcement={announcement} 
+                      index={index}
+                      onLike={handleLike}
+                    />
+                  ))}
+                </Stack>
+              )}
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -967,7 +1041,11 @@ export default function AnnouncementsPage() {
               <NewsletterSubscribe />
 
               {/* Timeline */}
-              <AnnouncementTimeline />
+              {timelineLoading ? (
+                <Skeleton height={300} radius="lg" />
+              ) : (
+                <AnnouncementTimeline events={timelineEvents} />
+              )}
 
               {/* Quick Links */}
               <MotionCard
@@ -1014,17 +1092,6 @@ export default function AnnouncementsPage() {
                   >
                     Announcement Archive
                   </Button>
-                  <Button
-                    variant="light"
-                    color="purple"
-                    fullWidth
-                    justify="space-between"
-                    rightSection={<ChevronRight size={16} />}
-                    component={Link}
-                    href="/rss"
-                  >
-                    RSS Feed
-                  </Button>
                 </Stack>
               </MotionCard>
 
@@ -1047,6 +1114,7 @@ export default function AnnouncementsPage() {
                       color="red"
                       size="lg"
                       className="cursor-pointer hover:bg-red-100 transition-colors"
+                      onClick={() => handleSearch(tag)}
                     >
                       #{tag}
                     </Badge>
@@ -1088,8 +1156,9 @@ export default function AnnouncementsPage() {
                 size="xl"
                 variant="white"
                 color="red"
-                component={Link}
-                href="https://facebook.com/luciaprinting"
+                component="a"
+                href="https://facebook.com"
+                target="_blank"
                 leftSection={<Facebook size={20} />}
               >
                 Facebook
@@ -1098,8 +1167,9 @@ export default function AnnouncementsPage() {
                 size="xl"
                 variant="white"
                 color="red"
-                component={Link}
-                href="https://twitter.com/luciaprinting"
+                component="a"
+                href="https://twitter.com"
+                target="_blank"
                 leftSection={<Twitter size={20} />}
               >
                 Twitter
@@ -1108,8 +1178,9 @@ export default function AnnouncementsPage() {
                 size="xl"
                 variant="white"
                 color="red"
-                component={Link}
-                href="https://instagram.com/luciaprinting"
+                component="a"
+                href="https://instagram.com"
+                target="_blank"
                 leftSection={<Instagram size={20} />}
               >
                 Instagram
@@ -1118,8 +1189,9 @@ export default function AnnouncementsPage() {
                 size="xl"
                 variant="white"
                 color="red"
-                component={Link}
-                href="https://t.me/luciaprinting"
+                component="a"
+                href="https://t.me"
+                target="_blank"
                 leftSection={<Send size={20} />}
               >
                 Telegram
@@ -1156,8 +1228,8 @@ export default function AnnouncementsPage() {
             variant="filled"
             color="red"
             className="shadow-lg hover:scale-110 transition-transform"
-            component={Link}
-            href="#subscribe"
+            component="a"
+            href="#newsletter"
           >
             <Bell size={20} />
           </ActionIcon>

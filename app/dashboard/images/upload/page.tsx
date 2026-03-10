@@ -38,6 +38,10 @@ import {
   Collapse,
   lighten,
   useMantineTheme,
+  NumberInput,
+  Radio,
+  Checkbox,
+  Slider,
 } from '@mantine/core';
 import {
   IconUpload,
@@ -70,6 +74,13 @@ import {
   IconDeviceFloppy,
   IconHeart,
   IconHeartFilled,
+  IconRuler,
+  IconDimensions,
+  IconPalette,
+  IconStack,
+  IconBrush,
+  IconLayoutGrid,
+  IconTypography,
 } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
@@ -84,6 +95,77 @@ dayjs.extend(relativeTime);
 // API URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+// Service categories based on your printing services
+const SERVICE_CATEGORIES = [
+  // Apparel
+  { value: 'dtf', label: 'DTF Printing', group: 'Apparel', icon: '🖨️', sizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'] },
+  { value: 'tshirt', label: 'T-Shirt Printing', group: 'Apparel', icon: '👕', sizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'] },
+  { value: 'hoodies', label: 'Hoodies & Sweatshirts', group: 'Apparel', icon: '👚', sizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'] },
+  { value: 'hats', label: 'Custom Hats & Caps', group: 'Apparel', icon: '🧢', sizes: ['One Size', 'S/M', 'L/XL', 'Adjustable'] },
+  { value: 'totes', label: 'Tote Bags', group: 'Apparel', icon: '👜', sizes: ['Small', 'Medium', 'Large', 'Extra Large'] },
+  
+  // Large Format
+  { value: 'banners', label: 'Banner Printing', group: 'Large Format', icon: '📋', sizes: ['A3', 'A2', 'A1', 'A0', '2x3ft', '3x5ft', '4x6ft', 'Custom'] },
+  { value: 'posters', label: 'Posters', group: 'Large Format', icon: '🖼️', sizes: ['A3', 'A2', 'A1', 'A0', '18x24in', '24x36in', 'Custom'] },
+  { value: 'vehicle-wraps', label: 'Vehicle Wraps', group: 'Large Format', icon: '🚗', sizes: ['Partial', 'Full Sedan', 'Full SUV', 'Full Van', 'Custom'] },
+  { value: 'light-box', label: 'Light Box', group: 'Large Format', icon: '💡', sizes: ['20x20cm', '30x40cm', '50x70cm', '60x90cm', 'Custom'] },
+  { value: 'neo-light', label: 'Neo Light', group: 'Large Format', icon: '✨', sizes: ['30cm', '50cm', '80cm', '100cm', 'Custom'] },
+  
+  // Stickers & Labels
+  { value: 'stickers', label: 'Custom Stickers', group: 'Stickers & Labels', icon: '🏷️', sizes: ['2x2in', '3x3in', '4x4in', '5x5in', 'Custom Shape'] },
+  { value: 'labels', label: 'Product Labels', group: 'Stickers & Labels', icon: '📦', sizes: ['1x2in', '2x3in', '3x4in', '4x6in', 'Roll'] },
+  { value: 'frosted', label: 'Frosted Glass', group: 'Stickers & Labels', icon: '❄️', sizes: ['A4', 'A3', 'Custom Panel'] },
+  
+  // Drinkware
+  { value: 'mugs', label: 'Mug Printing', group: 'Drinkware', icon: '☕', sizes: ['11oz', '15oz', 'Espresso', 'Travel Mug'] },
+  { value: 'bottles', label: 'Bottle Printing', group: 'Drinkware', icon: '🧴', sizes: ['12oz', '16oz', '20oz', '32oz', '64oz'] },
+  
+  // Print & Promo
+  { value: 'business-cards', label: 'Business Cards', group: 'Print & Promo', icon: '💳', sizes: ['Standard', 'Square', 'Mini', 'Foldable'] },
+  { value: 'flyers', label: 'Flyers & Brochures', group: 'Print & Promo', icon: '📄', sizes: ['A5', 'A4', 'A3', 'DL', 'Half-Fold', 'Tri-Fold'] },
+  { value: 'packaging', label: 'Custom Packaging', group: 'Print & Promo', icon: '📦', sizes: ['Small Box', 'Medium Box', 'Large Box', 'Custom'] },
+  { value: 'pens', label: 'Custom Pens', group: 'Print & Promo', icon: '✒️', sizes: ['Standard', 'Slim', 'Stretch', 'Metal'] },
+  { value: 'keychains', label: 'Keychains', group: 'Print & Promo', icon: '🔑', sizes: ['1.5in', '2in', '2.5in', '3in'] },
+  
+  // Specialty
+  { value: 'engraving', label: 'Laser Engraving', group: 'Specialty', icon: '🔥', sizes: ['Small', 'Medium', 'Large', 'Custom'] },
+  { value: 'design', label: 'Graphic Design', group: 'Specialty', icon: '🎨', sizes: ['Logo', 'Branding', 'Print Ready'] },
+  { value: 'cutout', label: 'Custom Cutout', group: 'Specialty', icon: '✂️', sizes: ['Vinyl', 'Cardboard', 'Acrylic', 'Foam'] },
+  { value: 'screen-printing', label: 'Screen Printing', group: 'Apparel', icon: '🖨️', sizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'] },
+  { value: 'embroidery', label: 'Embroidery', group: 'Apparel', icon: '🧵', sizes: ['Left Chest', 'Full Front', 'Back', 'Sleeve'] },
+];
+
+// Print sizes by category
+const PRINT_SIZES: Record<string, string[]> = {
+  'banners': ['A3', 'A2', 'A1', 'A0', '2x3ft', '3x5ft', '4x6ft', 'Custom'],
+  'posters': ['A3', 'A2', 'A1', 'A0', '18x24in', '24x36in', 'Custom'],
+  'business-cards': ['Standard (85x55mm)', 'Square (55x55mm)', 'Mini (70x40mm)', 'Foldable'],
+  'flyers': ['A5 (148x210mm)', 'A4 (210x297mm)', 'A3 (297x420mm)', 'DL (99x210mm)'],
+  'stickers': ['2x2in', '3x3in', '4x4in', '5x5in', 'Custom Shape'],
+  'mugs': ['11oz (Standard)', '15oz (Large)', 'Espresso', 'Travel Mug'],
+  'bottles': ['12oz', '16oz', '20oz', '32oz', '64oz'],
+  'light-box': ['20x20cm', '30x40cm', '50x70cm', '60x90cm', 'Custom'],
+  'neo-light': ['30cm', '50cm', '80cm', '100cm', 'Custom'],
+};
+
+// Paper types by category
+const PAPER_TYPES: Record<string, string[]> = {
+  'banners': ['Vinyl Banner', 'Mesh Banner', 'Fabric Banner', 'Backlit Film'],
+  'posters': ['Gloss Paper', 'Matte Paper', 'Photo Paper', 'Canvas'],
+  'business-cards': ['Matte Cardstock', 'Gloss Cardstock', 'Kraft Paper', 'Plastic', 'Soft-touch'],
+  'flyers': ['Gloss Paper', 'Matte Paper', 'Recycled Paper', 'Kraft Paper'],
+  'stickers': ['White Vinyl', 'Clear Vinyl', 'Matte Paper', 'Glossy Paper', 'Weatherproof'],
+};
+
+// Finishes by category
+const FINISHES: Record<string, string[]> = {
+  'banners': ['Standard', 'Hemmed', 'Grommets', 'Pole Pockets'],
+  'posters': ['Matte', 'Gloss', 'Laminated', 'Framed'],
+  'business-cards': ['Matte', 'Gloss', 'Soft-touch', 'Spot UV', 'Foil Stamping'],
+  'flyers': ['Matte', 'Gloss', 'Uncoated'],
+  'stickers': ['Matte', 'Glossy', 'Clear', 'Holographic'],
+};
+
 // Types
 interface UploadedFile extends File {
   id: string;
@@ -94,6 +176,14 @@ interface UploadedFile extends File {
   tags?: string[];
   description?: string;
   category?: string;
+  serviceCategory?: string;
+  printSize?: string;
+  quantity?: number;
+  paperType?: string;
+  finish?: string;
+  colorMode?: 'cmyk' | 'rgb' | 'black-white';
+  instructions?: string;
+  proofRequired?: boolean;
 }
 
 interface ImageItem {
@@ -107,16 +197,33 @@ interface ImageItem {
   mime_type: string;
   width: number;
   height: number;
+  dpi?: number;
+  color_mode?: string;
   status: 'pending' | 'approved' | 'rejected' | 'in_progress' | 'completed';
   tags: string[];
   uploaded_by: string;
   uploader_name: string;
-  created_at: string;
-  is_favorite: boolean;
+  customer_id?: string;
+  order_id?: string;
+  title?: string;
   description?: string;
   category?: string;
+  service_category?: string;
+  print_size?: string;
+  quantity?: number;
+  paper_type?: string;
+  finish?: string;
+  color_mode_req?: string;
+  instructions?: string;
+  requires_proof?: boolean;
+  proof_approved?: boolean;
+  is_favorite: boolean;
   download_count?: number;
   print_count?: number;
+  viewed_by_printer?: boolean;
+  created_at: string;
+  updated_at: string;
+  metadata?: any;
 }
 
 interface Category {
@@ -124,7 +231,8 @@ interface Category {
   label: string;
   count?: number;
   color?: string;
-  icon?: React.ReactNode;
+  icon?: string;
+  group?: string;
 }
 
 interface Tag {
@@ -171,14 +279,14 @@ const getFileIcon = (file: UploadedFile | null | undefined) => {
 };
 
 const getStatusColor = (status: string) => {
-  const colors = {
+  const colors: Record<string, string> = {
     pending: 'yellow',
     approved: 'green',
     rejected: 'red',
     in_progress: 'blue',
     completed: 'teal',
   };
-  return colors[status as keyof typeof colors] || 'gray';
+  return colors[status] || 'gray';
 };
 
 const getStatusIcon = (status: string) => {
@@ -204,6 +312,204 @@ const MotionBox = motion(Box as any);
 const MotionGroup = motion(Group);
 const MotionStack = motion(Stack);
 
+// Service Category Selector Component
+const ServiceCategorySelector = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string, service: any) => void;
+}) => {
+  const [opened, setOpened] = useState(false);
+  
+  // Group services by category
+  const groupedServices = SERVICE_CATEGORIES.reduce((acc, service) => {
+    if (!acc[service.group]) {
+      acc[service.group] = [];
+    }
+    acc[service.group].push(service);
+    return acc;
+  }, {} as Record<string, typeof SERVICE_CATEGORIES>);
+
+  const selectedService = SERVICE_CATEGORIES.find(s => s.value === value);
+
+  return (
+    <Menu
+      opened={opened}
+      onChange={setOpened}
+      shadow="lg"
+      width={400}
+      position="bottom"
+      withinPortal
+    >
+      <Menu.Target>
+        <Button
+          variant="light"
+          color="blue"
+          fullWidth
+          style={{ justifyContent: 'space-between' }}
+          rightSection={<IconChevronDown size={16} />}
+          radius="md"
+        >
+          {selectedService ? (
+            <Group gap="xs">
+              <Text span>{selectedService.icon}</Text>
+              <Text span>{selectedService.label}</Text>
+            </Group>
+          ) : (
+            'Select Service Category'
+          )}
+        </Button>
+      </Menu.Target>
+
+      <Menu.Dropdown>
+        <ScrollArea h={400} type="hover">
+          {Object.entries(groupedServices).map(([group, services]) => (
+            <div key={group}>
+              <Menu.Label>{group}</Menu.Label>
+              {services.map((service) => (
+                <Menu.Item
+                  key={service.value}
+                  onClick={() => {
+                    onChange(service.value, service);
+                    setOpened(false);
+                  }}
+                  leftSection={<Text span>{service.icon}</Text>}
+                  rightSection={
+                    value === service.value ? (
+                      <IconCheck size={16} color="green" />
+                    ) : null
+                  }
+                >
+                  {service.label}
+                </Menu.Item>
+              ))}
+              <Menu.Divider />
+            </div>
+          ))}
+        </ScrollArea>
+      </Menu.Dropdown>
+    </Menu>
+  );
+};
+
+// Print Specifications Component
+const PrintSpecifications = ({
+  serviceCategory,
+  values,
+  onChange,
+}: {
+  serviceCategory: string;
+  values: any;
+  onChange: (field: string, value: any) => void;
+}) => {
+  const service = SERVICE_CATEGORIES.find(s => s.value === serviceCategory);
+  
+  if (!service) return null;
+
+  const sizes = PRINT_SIZES[serviceCategory] || service.sizes || ['Standard'];
+  const paperTypes = PAPER_TYPES[serviceCategory] || [];
+  const finishes = FINISHES[serviceCategory] || [];
+
+  return (
+    <Paper withBorder p="md" radius="lg" bg="gray.0">
+      <Group gap="xs" mb="md">
+        <ThemeIcon size="sm" radius="xl" color="blue" variant="light">
+          <IconRuler size={14} />
+        </ThemeIcon>
+        <Text fw={600}>Print Specifications</Text>
+        <Badge size="sm" color="blue" variant="light">
+          {service.label}
+        </Badge>
+      </Group>
+
+      <Stack gap="md">
+        {/* Size Selection */}
+        <Select
+          label="Select Size"
+          placeholder="Choose size"
+          data={sizes.map(s => ({ value: s, label: s }))}
+          value={values.printSize}
+          onChange={(val) => onChange('printSize', val)}
+          leftSection={<IconDimensions size={16} />}
+          searchable
+          clearable
+          radius="md"
+        />
+
+        {/* Quantity */}
+        <NumberInput
+          label="Quantity"
+          placeholder="Enter quantity"
+          value={values.quantity}
+          onChange={(val) => onChange('quantity', val)}
+          min={1}
+          max={10000}
+          leftSection={<IconStack size={16} />}
+          radius="md"
+        />
+
+        {/* Paper Type (if available) */}
+        {paperTypes.length > 0 && (
+          <Select
+            label="Paper Type / Material"
+            placeholder="Select material"
+            data={paperTypes.map(p => ({ value: p, label: p }))}
+            value={values.paperType}
+            onChange={(val) => onChange('paperType', val)}
+            leftSection={<IconFileText size={16} />}
+            radius="md"
+          />
+        )}
+
+        {/* Finish (if available) */}
+        {finishes.length > 0 && (
+          <Select
+            label="Finish / Coating"
+            placeholder="Select finish"
+            data={finishes.map(f => ({ value: f, label: f }))}
+            value={values.finish}
+            onChange={(val) => onChange('finish', val)}
+            leftSection={<IconBrush size={16} />}
+            radius="md"
+          />
+        )}
+
+        {/* Color Mode */}
+        <Radio.Group
+          label="Color Mode"
+          value={values.colorMode}
+          onChange={(val) => onChange('colorMode', val)}
+        >
+          <Group mt="xs">
+            <Radio value="cmyk" label="CMYK (Print)" />
+            <Radio value="rgb" label="RGB (Digital)" />
+            <Radio value="black-white" label="Black & White" />
+          </Group>
+        </Radio.Group>
+
+        {/* Proof Required */}
+        <Checkbox
+          label="I need a proof before printing"
+          checked={values.proofRequired}
+          onChange={(e) => onChange('proofRequired', e.currentTarget.checked)}
+        />
+
+        {/* Special Instructions */}
+        <Textarea
+          label="Special Instructions"
+          placeholder="Any special requirements? (colors, finishing, etc.)"
+          value={values.instructions}
+          onChange={(e) => onChange('instructions', e.target.value)}
+          minRows={2}
+          radius="md"
+        />
+      </Stack>
+    </Paper>
+  );
+};
+
+
 // Edit Image Modal Component
 const EditImageModal = ({
   opened,
@@ -219,6 +525,14 @@ const EditImageModal = ({
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [category, setCategory] = useState('');
+  const [serviceCategory, setServiceCategory] = useState('');
+  const [printSize, setPrintSize] = useState('');
+  const [quantity, setQuantity] = useState<number>(1);
+  const [paperType, setPaperType] = useState('');
+  const [finish, setFinish] = useState('');
+  const [colorMode, setColorMode] = useState('cmyk');
+  const [instructions, setInstructions] = useState('');
+  const [proofRequired, setProofRequired] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -226,6 +540,14 @@ const EditImageModal = ({
       setDescription(image.description || '');
       setTags(image.tags || []);
       setCategory(image.category || '');
+      setServiceCategory(image.service_category || '');
+      setPrintSize(image.print_size || '');
+      setQuantity(image.quantity || 1);
+      setPaperType(image.paper_type || '');
+      setFinish(image.finish || '');
+      setColorMode(image.color_mode_req || 'cmyk');
+      setInstructions(image.instructions || '');
+      setProofRequired(image.requires_proof || false);
     }
   }, [image]);
 
@@ -233,7 +555,19 @@ const EditImageModal = ({
     if (!image) return;
     setSaving(true);
     try {
-      await onSave(image.id, { description, tags, category });
+      await onSave(image.id, {
+        description,
+        tags,
+        category,
+        service_category: serviceCategory,
+        print_size: printSize,
+        quantity,
+        paper_type: paperType,
+        finish,
+        color_mode_req: colorMode,
+        instructions,
+        requires_proof: proofRequired,
+      });
       notifications.show({
         title: 'Success',
         message: 'Image updated successfully',
@@ -250,6 +584,14 @@ const EditImageModal = ({
       setSaving(false);
     }
   };
+
+  // Find the service - with null check
+  const service = SERVICE_CATEGORIES.find(s => s.value === serviceCategory);
+  
+  // Prepare data for selects with safe fallbacks
+  const sizeOptions = service?.sizes?.map(s => ({ value: s, label: s })) || [];
+  const paperTypeOptions = PAPER_TYPES[serviceCategory]?.map(p => ({ value: p, label: p })) || [];
+  const finishOptions = FINISHES[serviceCategory]?.map(f => ({ value: f, label: f })) || [];
 
   return (
     <Modal opened={opened} onClose={onClose} title="Edit Image Details" size="lg" radius="lg">
@@ -290,21 +632,115 @@ const EditImageModal = ({
           />
 
           <Select
-            label="Category"
+            label="Service Category"
             placeholder="Select a category"
-            data={[
-              { value: 'DTF', label: ' DTF print' },
-              { value: 'T-shirt', label: ' T-shirt print' },
-              { value: 'Banner', label: 'Banner $ signing' },
-              { value: 'Sticker', label: 'Sticker' },
-              { value: 'card', label: 'Busines Card' },
-              { value: 'other', label: 'Other' },
-            ]}
-            value={category}
-            onChange={(value) => setCategory(value || '')}
+            data={SERVICE_CATEGORIES.map(s => ({
+              value: s.value,
+              label: `${s.icon || '📄'} ${s.label}`,
+              group: s.group,
+            }))}
+            value={serviceCategory}
+            onChange={(value) => {
+              setServiceCategory(value || '');
+              // Reset dependent fields when category changes
+              setPrintSize('');
+              setPaperType('');
+              setFinish('');
+              
+              // Set default size if available
+              const newService = SERVICE_CATEGORIES.find(s => s.value === value);
+              if (newService && newService.sizes && newService.sizes.length > 0) {
+                setPrintSize(newService.sizes[0]);
+              }
+            }}
             radius="md"
             clearable
+            searchable
           />
+
+          {/* Only show print options if a service is selected and has options */}
+          {serviceCategory && (
+            <>
+              {/* Print Size - with safe fallback */}
+              {sizeOptions.length > 0 && (
+                <Select
+                  label="Print Size"
+                  placeholder="Select size"
+                  data={sizeOptions}
+                  value={printSize}
+                  onChange={(value) => setPrintSize(value || '')}
+                  radius="md"
+                  clearable
+                />
+              )}
+
+              {/* Quantity */}
+              <NumberInput
+                label="Quantity"
+                placeholder="Enter quantity"
+                value={quantity}
+                onChange={(val) => setQuantity(typeof val === 'number' ? val : parseInt(val) || 1)}
+                min={1}
+                radius="md"
+              />
+
+              {/* Paper Type - if available */}
+              {paperTypeOptions.length > 0 && (
+                <Select
+                  label="Paper Type / Material"
+                  placeholder="Select material"
+                  data={paperTypeOptions}
+                  value={paperType}
+                  onChange={(value) => setPaperType(value || '')}
+                  radius="md"
+                  clearable
+                />
+              )}
+
+              {/* Finish - if available */}
+              {finishOptions.length > 0 && (
+                <Select
+                  label="Finish"
+                  placeholder="Select finish"
+                  data={finishOptions}
+                  value={finish}
+                  onChange={(value) => setFinish(value || '')}
+                  radius="md"
+                  clearable
+                />
+              )}
+
+              {/* Color Mode */}
+              <Radio.Group
+                label="Color Mode"
+                value={colorMode}
+                onChange={setColorMode}
+              >
+                <Group mt="xs">
+                  <Radio value="cmyk" label="CMYK (Print)" />
+                  <Radio value="rgb" label="RGB (Digital)" />
+                  <Radio value="black-white" label="Black & White" />
+                </Group>
+              </Radio.Group>
+
+              {/* Proof Required */}
+              <Checkbox
+                label="I need a proof before printing"
+                checked={proofRequired}
+                onChange={(e) => setProofRequired(e.currentTarget.checked)}
+              />
+
+              {/* Special Instructions */}
+              <Textarea
+                label="Special Instructions"
+                placeholder="Any special requirements? (colors, finishing, etc.)"
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                minRows={2}
+                radius="md"
+              />
+            </>
+          )}
 
           <Group justify="flex-end">
             <Button variant="light" onClick={onClose} radius="xl">
@@ -530,6 +966,18 @@ const ElegantFileCard = ({
             </Group>
           </Group>
 
+          {/* Service Category Badge */}
+          {file.serviceCategory && (
+            <Badge
+              size="sm"
+              variant="light"
+              color="blue"
+              leftSection={<IconPrinter size={12} />}
+            >
+              {SERVICE_CATEGORIES.find(s => s.value === file.serviceCategory)?.label || file.serviceCategory}
+            </Badge>
+          )}
+
           {/* Upload Progress */}
           {file.uploadStatus === 'uploading' && (
             <Box mt={4}>
@@ -571,6 +1019,32 @@ const ElegantFileCard = ({
               }}
             >
               <Stack gap="md">
+                <ServiceCategorySelector
+                  value={file.serviceCategory || ''}
+                  onChange={(value, service) => {
+                    onUpdate(file.id, { 
+                      serviceCategory: value,
+                      printSize: service.sizes?.[0] || ''
+                    });
+                  }}
+                />
+
+                {file.serviceCategory && (
+                  <PrintSpecifications
+                    serviceCategory={file.serviceCategory}
+                    values={{
+                      printSize: file.printSize,
+                      quantity: file.quantity,
+                      paperType: file.paperType,
+                      finish: file.finish,
+                      colorMode: file.colorMode,
+                      proofRequired: file.proofRequired,
+                      instructions: file.instructions,
+                    }}
+                    onChange={(field, value) => onUpdate(file.id, { [field]: value })}
+                  />
+                )}
+
                 <TextInput
                   size="sm"
                   placeholder="Add a description..."
@@ -591,24 +1065,6 @@ const ElegantFileCard = ({
                   variant="filled"
                   clearable
                 />
-
-                <Select
-                  size="sm"
-                  placeholder="Select category"
-                  data={[
-                    { value: 'business', label: '💼 Business' },
-                    { value: 'personal', label: '👤 Personal' },
-                    { value: 'design', label: '🎨 Design' },
-                    { value: 'marketing', label: '📊 Marketing' },
-                    { value: 'other', label: '📁 Other' },
-                  ]}
-                  value={file.category || ''}
-                  onChange={(value) => onUpdate(file.id, { category: value || undefined })}
-                  leftSection={<IconFolder size={16} />}
-                  radius="md"
-                  variant="filled"
-                  clearable
-                />
               </Stack>
             </Paper>
           </Collapse>
@@ -616,7 +1072,7 @@ const ElegantFileCard = ({
       </Group>
     </MotionCard>
   );
-};
+}; 
 
 // Beautiful Dropzone Component
 const BeautifulDropzone = ({ onDrop, loading }: { onDrop: (files: FileWithPath[]) => void; loading: boolean }) => {
@@ -717,6 +1173,8 @@ const ElegantGalleryCard = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const theme = useMantineTheme();
+
+  const service = SERVICE_CATEGORIES.find(s => s.value === image.service_category);
 
   return (
     <MotionCard
@@ -859,6 +1317,24 @@ const ElegantGalleryCard = ({
             </Menu>
           </Group>
 
+          {/* Service Badge */}
+          {service && (
+            <Badge
+              size="sm"
+              variant="filled"
+              color="blue"
+              style={{
+                position: 'absolute',
+                top: 10,
+                left: 10,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              }}
+              leftSection={<Text span>{service.icon}</Text>}
+            >
+              {service.label}
+            </Badge>
+          )}
+
           {/* Status Badge */}
           <Badge
             size="lg"
@@ -892,6 +1368,33 @@ const ElegantGalleryCard = ({
           <Text size="xs" c="dimmed">•</Text>
           <Text size="xs" c="dimmed">{dayjs(image.created_at).fromNow()}</Text>
         </Group>
+
+        {/* Print Specifications */}
+        {image.service_category && (
+          <Paper withBorder p="xs" radius="md" mt="xs" bg="gray.0">
+            <Group gap="xs">
+              <IconPrinter size={12} />
+              <Text size="xs" fw={500}>{service?.label}</Text>
+            </Group>
+            <Group gap="xs" mt={4}>
+              {image.print_size && (
+                <Badge size="xs" variant="light" leftSection={<IconRuler size={10} />}>
+                  {image.print_size}
+                </Badge>
+              )}
+              {image.quantity && (
+                <Badge size="xs" variant="light" leftSection={<IconStack size={10} />}>
+                  Qty: {image.quantity}
+                </Badge>
+              )}
+              {image.color_mode_req && (
+                <Badge size="xs" variant="light">
+                  {image.color_mode_req.toUpperCase()}
+                </Badge>
+              )}
+            </Group>
+          </Paper>
+        )}
 
         {image.description && (
           <Text size="xs" c="dimmed" lineClamp={2} mt={4}>
@@ -968,7 +1471,8 @@ export default function UploadPage() {
       }
     }
   }, []);
-  const fetchRecentUploads =useCallback(async () => {
+
+  const fetchRecentUploads = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
@@ -1007,7 +1511,7 @@ export default function UploadPage() {
     } finally {
       setLoading(false);
     }
-  },[page, router, searchQuery]);
+  }, [page, router, searchQuery]);
 
   // Load data on mount
   useEffect(() => {
@@ -1018,7 +1522,6 @@ export default function UploadPage() {
     fetchCategories();
     fetchPopularTags();
   }, [activeTab, fetchRecentUploads, page, searchQuery]);
-
 
   const fetchStats = async () => {
     try {
@@ -1055,7 +1558,7 @@ export default function UploadPage() {
       
       const data = await response.json();
       if (data.success && data.data) {
-        setCategories(data.data);
+        setCategories(data.data.categories || []);
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
@@ -1089,7 +1592,12 @@ export default function UploadPage() {
       customFile.uploadProgress = 0;
       customFile.tags = [];
       customFile.description = '';
-      customFile.category = '';
+      customFile.serviceCategory = '';
+      customFile.printSize = '';
+      customFile.quantity = 1;
+      customFile.colorMode = 'cmyk';
+      customFile.proofRequired = false;
+      customFile.instructions = '';
       return customFile;
     });
     
@@ -1132,7 +1640,14 @@ export default function UploadPage() {
       metadata.push({
         description: file.description || '',
         tags: file.tags || [],
-        category: file.category || '',
+        service_category: file.serviceCategory || '',
+        print_size: file.printSize || '',
+        quantity: file.quantity || 1,
+        paper_type: file.paperType || '',
+        finish: file.finish || '',
+        color_mode_req: file.colorMode || 'cmyk',
+        instructions: file.instructions || '',
+        requires_proof: file.proofRequired || false,
       });
     });
 
@@ -1270,37 +1785,76 @@ export default function UploadPage() {
     }
   };
 
-  const handleEditImage = async (id: string, data: any) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/images/${id}`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-      const result = await response.json();
-      if (result.success) {
-        setRecentUploads(prev =>
-          prev.map(img => (img.id === id ? { ...img, ...data } : img))
-        );
-        notifications.show({
-          title: 'Success',
-          message: 'Image updated successfully',
-          color: 'green',
-        });
-      }
-    } catch (error) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+const handleEditImage = async (id: string, data: any) => {
+  // Prevent multiple submissions
+  if (editingId === id) return;
+  
+  setEditingId(id);
+  
+  try {
+    const token = localStorage.getItem('accessToken');
+    
+    if (!token) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to update image',
+        title: 'Authentication Error',
+        message: 'Please log in again',
         color: 'red',
       });
-      throw error;
+      return;
     }
-  };
+
+    const response = await fetch(`${API_URL}/api/images/${id}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Check content type first
+    const contentType = response.headers.get('content-type');
+    
+    if (!response.ok) {
+      if (contentType?.includes('application/json')) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}`);
+      } else {
+        throw new Error(`Server error (${response.status})`);
+      }
+    }
+
+    if (!contentType?.includes('application/json')) {
+      throw new Error('Invalid response from server');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      setRecentUploads(prev =>
+        prev.map(img => (img.id === id ? { ...img, ...data } : img))
+      );
+      
+      notifications.show({
+        title: 'Success',
+        message: 'Image updated successfully',
+        color: 'green',
+      });
+    } else {
+      throw new Error(result.message || 'Update failed');
+    }
+  } catch (error: any) {
+    notifications.show({
+      title: 'Error',
+      message: error.message || 'Failed to update image',
+      color: 'red',
+    });
+  } finally {
+    setEditingId(null);
+  }
+};
 
   const handleDeleteImage = async (id: string) => {
     try {
@@ -1516,25 +2070,20 @@ export default function UploadPage() {
                 </Paper>
               </SimpleGrid>
 
-              {/* Categories */}
-              {categories.length > 0 && (
-                <>
-                  <Divider label="Categories" />
-                  <Stack gap="xs">
-                    {categories.map((cat) => (
-                      <Group key={cat.value} justify="space-between">
-                        <Group gap="xs">
-                          <ThemeIcon size="sm" variant="light" color={cat.color || 'blue'} radius="xl">
-                            {cat.icon || <IconFolder size={12} />}
-                          </ThemeIcon>
-                          <Text size="sm">{cat.label}</Text>
-                        </Group>
-                        <Badge size="sm" variant="light">{cat.count || 0}</Badge>
-                      </Group>
-                    ))}
-                  </Stack>
-                </>
-              )}
+              {/* Service Categories */}
+              <Divider label="Service Categories" />
+              <Stack gap="xs">
+                {SERVICE_CATEGORIES.slice(0, 10).map((cat) => (
+                  <Group key={cat.value} justify="space-between">
+                    <Group gap="xs">
+                      <ThemeIcon size="sm" variant="light" color="blue" radius="xl">
+                        <Text span>{cat.icon}</Text>
+                      </ThemeIcon>
+                      <Text size="sm">{cat.label}</Text>
+                    </Group>
+                  </Group>
+                ))}
+              </Stack>
 
               {/* Popular Tags */}
               {popularTags.length > 0 && (
@@ -1807,11 +2356,18 @@ export default function UploadPage() {
                 <Text size="sm"><strong>Filename:</strong> {previewImage.original_filename}</Text>
                 <Text size="sm"><strong>Size:</strong> {formatFileSize(previewImage.file_size)}</Text>
                 <Text size="sm"><strong>Dimensions:</strong> {previewImage.width} x {previewImage.height}</Text>
+                {previewImage.dpi && <Text size="sm"><strong>DPI:</strong> {previewImage.dpi}</Text>}
+                {previewImage.color_mode && <Text size="sm"><strong>Color Mode:</strong> {previewImage.color_mode}</Text>}
               </Grid.Col>
               <Grid.Col span={6}>
                 <Text size="sm"><strong>Uploaded by:</strong> {previewImage.uploader_name}</Text>
                 <Text size="sm"><strong>Uploaded:</strong> {dayjs(previewImage.created_at).format('MMM D, YYYY')}</Text>
                 <Text size="sm"><strong>Status:</strong> {previewImage.status}</Text>
+                {previewImage.service_category && (
+                  <Text size="sm"><strong>Service:</strong> {SERVICE_CATEGORIES.find(s => s.value === previewImage.service_category)?.label}</Text>
+                )}
+                {previewImage.print_size && <Text size="sm"><strong>Size:</strong> {previewImage.print_size}</Text>}
+                {previewImage.quantity && <Text size="sm"><strong>Quantity:</strong> {previewImage.quantity}</Text>}
               </Grid.Col>
             </Grid>
             <Group justify="flex-end">
@@ -1860,7 +2416,7 @@ export default function UploadPage() {
             <Button variant="light" onClick={closeReject} radius="xl">
               Cancel
             </Button>
-            <Button color=" red" onClick={handleReject} radius="xl">
+            <Button color="red" onClick={handleReject} radius="xl">
               Reject
             </Button>
           </Group>

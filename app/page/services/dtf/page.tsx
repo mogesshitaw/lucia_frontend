@@ -44,8 +44,8 @@ const service = {
     { label: 'Color Mode', value: 'CMYK + White' },
     { label: 'Washability', value: '50+ washes' },
   ],
-  priceRange: 'ETB 150 - 500',
-  minOrder: '1 piece',
+  priceRange: 'ETB 150',
+  minOrder: '1 A4',
   turnaround: '2-3 days',
   materials: [
     'Cotton',

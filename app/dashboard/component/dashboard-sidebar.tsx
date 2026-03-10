@@ -358,16 +358,16 @@ export default function DashboardSidebar({ opened }: SidebarProps) {
       ],
     },
     {
-      id: 'analytics',
-      label: 'Analytics',
+      id: 'Announcement',
+      label: 'Announcement',
       icon: <IconChartBar size={20} />,
-      href: '/dashboard/analytics',
+      href: '/dashboard/announcements'
     },
     {
-      id: 'messages',
-      label: 'Messages',
+      id: 'Testmonia',
+      label: 'Testmonia',
       icon: <IconMessage size={20} />,
-      href: '/dashboard/chat',
+      href: '/dashboard/testimonials',
       badge: 3,
     },
     {

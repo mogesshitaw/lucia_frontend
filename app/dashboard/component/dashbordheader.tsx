@@ -11,8 +11,9 @@ import {
   Indicator,
   TextInput,
   Drawer,
- Burger,
+  Burger,
   Title,
+  LoadingOverlay,
 } from '@mantine/core';
 import {
   IconChevronDown,
@@ -24,19 +25,29 @@ import {
   IconCreditCard,
 } from '@tabler/icons-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { useAuth } from '@/app/hooks/useAuth';
+import { notifications } from '@mantine/notifications';
 
 interface HeaderProps {
   toggleSidebar: () => void;
   isSidebarOpen: boolean;
+  user?: {
+    name: string;
+    email: string;
+    role: string;
+    avatar?: string;
+  } | null;
 }
 
-export default function Header({ toggleSidebar, isSidebarOpen }: HeaderProps) {
+export default function Header({ toggleSidebar, isSidebarOpen, user }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpened, setSearchOpened] = useState(false);
+  const { logout, isLoading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,6 +57,23 @@ export default function Header({ toggleSidebar, isSidebarOpen }: HeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      notifications.show({
+        title: 'Success',
+        message: 'Logged out successfully',
+        color: 'green',
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to logout',
+        color: 'red',
+      });
+    }
+  };
+
   // Get current page title
   const getPageTitle = () => {
     const path = pathname.split('/').pop();
@@ -53,12 +81,25 @@ export default function Header({ toggleSidebar, isSidebarOpen }: HeaderProps) {
     return path.charAt(0).toUpperCase() + path.slice(1);
   };
 
+  // Get user initials for avatar fallback
+  const getUserInitials = () => {
+    if (!user?.name) return 'JD';
+    return user.name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <header
-      className={`w-full h-full flex items-center px-4 md:px-6 transition-all duration-300 ${
+      className={`w-full h-full flex items-center px-4 md:px-6 transition-all duration-300 relative ${
         scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'
       }`}
     >
+      {isLoading && <LoadingOverlay visible />}
+      
       <Group justify="space-between" className="w-full">
         <Group>
           <Burger
@@ -68,7 +109,8 @@ export default function Header({ toggleSidebar, isSidebarOpen }: HeaderProps) {
             className="md:hidden"
             aria-label="Toggle navigation"
           />
-             {/* Logo Section */}
+          
+          {/* Logo Section */}
           <Group gap="xs">
             <Link href="/dashboard" className="flex items-center gap-2 no-underline">
               <div className="relative">
@@ -88,7 +130,8 @@ export default function Header({ toggleSidebar, isSidebarOpen }: HeaderProps) {
                   transition={{ repeat: Infinity, duration: 2 }}
                 />
               </div>
-                 {/* Logo Text - Hidden on mobile, shown on sm and up */}
+              
+              {/* Logo Text - Hidden on mobile, shown on sm and up */}
               <div className="hidden sm:flex flex-col min-w-0">
                 <Text
                   size="lg"
@@ -112,7 +155,7 @@ export default function Header({ toggleSidebar, isSidebarOpen }: HeaderProps) {
                   }`}
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                Printing & Advertising
+                  Printing & Advertising
                 </Text>
               </div>
 
@@ -132,8 +175,6 @@ export default function Header({ toggleSidebar, isSidebarOpen }: HeaderProps) {
               </div>
             </Link>
           </Group>
-
-          {/* <Title order={3} className="hidden md:block">{getPageTitle()}</Title> */}
         </Group>
 
         <Group gap="lg">
@@ -170,29 +211,56 @@ export default function Header({ toggleSidebar, isSidebarOpen }: HeaderProps) {
           {/* User Menu */}
           <Menu shadow="lg" width={200} position="bottom-end">
             <Menu.Target>
-              <Group gap="xs" className="cursor-pointer">
-                <Avatar src="https://i.pravatar.cc/150?img=7" size="md" radius="xl" />
+              <Group gap="xs" className="cursor-pointer hover:opacity-80 transition-opacity">
+                <Avatar 
+                  src={user?.avatar || "https://i.pravatar.cc/150?img=7"} 
+                  size="md" 
+                  radius="xl"
+                  color="red"
+                >
+                  {getUserInitials()}
+                </Avatar>
                 <div className="hidden md:block">
-                  <Text size="sm" fw={500}>John Doe</Text>
-                  <Text size="xs" c="dimmed">Administrator</Text>
+                  <Text size="sm" fw={500}>{user?.name || 'John Doe'}</Text>
+                  <Text size="xs" c="dimmed">{user?.role || 'Administrator'}</Text>
                 </div>
                 <IconChevronDown size={14} className="hidden md:block" />
               </Group>
             </Menu.Target>
+            
             <Menu.Dropdown>
               <Menu.Label>Account</Menu.Label>
-              <Menu.Item leftSection={<IconUser size={14} />} component={Link} href="/dashboard/profile">
+              <Menu.Item 
+                leftSection={<IconUser size={14} />} 
+                component={Link} 
+                href="/dashboard/profile"
+              >
                 Profile
               </Menu.Item>
-              <Menu.Item leftSection={<IconSettings size={14} />} component={Link} href="/dashboard/settings">
+              <Menu.Item 
+                leftSection={<IconSettings size={14} />} 
+                component={Link} 
+                href="/dashboard/settings"
+              >
                 Settings
               </Menu.Item>
-              <Menu.Item leftSection={<IconCreditCard size={14} />} component={Link} href="/dashboard/billing">
+              <Menu.Item 
+                leftSection={<IconCreditCard size={14} />} 
+                component={Link} 
+                href="/dashboard/billing"
+              >
                 Billing
               </Menu.Item>
+              
               <Menu.Divider />
-              <Menu.Item leftSection={<IconLogout size={14} />} color="red">
-                Logout
+              
+              <Menu.Item 
+                leftSection={<IconLogout size={14} />} 
+                color="red"
+                onClick={handleLogout}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Logging out...' : 'Logout'}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -218,5 +286,3 @@ export default function Header({ toggleSidebar, isSidebarOpen }: HeaderProps) {
     </header>
   );
 }
-
-// Missing Title import

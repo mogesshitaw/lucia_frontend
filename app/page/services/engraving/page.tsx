@@ -44,7 +44,7 @@ const service = {
     { label: 'Materials', value: 'Wood, Acrylic, Metal, Glass, Leather' },
     { label: 'Laser Type', value: 'CO2 & Fiber' },
   ],
-  priceRange: 'ETB 150 - 1000',
+  priceRange: 'ETB 10,000 - 11,000',
   minOrder: '1 piece',
   turnaround: '2-3 days',
   materials: [
