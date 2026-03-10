@@ -39,7 +39,7 @@ const service = {
     { step: 6, title: 'Packaging', description: 'Shipped on sheets or rolls' },
   ],
   specs: [
-    { label: 'Max Size', value: '12" x 24"' },
+    { label: 'Max Size', value: '1.5m' },
     { label: 'Materials', value: 'Vinyl, Paper, Clear' },
     { label: 'Finishes', value: 'Matte, Glossy' },
     { label: 'Cut Type', value: 'Die-cut, Kiss-cut' },

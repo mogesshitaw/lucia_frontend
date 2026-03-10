@@ -44,7 +44,7 @@ const service = {
     { label: 'Print Area', value: 'Full wrap' },
     { label: 'Care', value: 'Dishwasher safe' },
   ],
-  priceRange: 'ETB 120 - 350',
+  priceRange: 'ETB White(120) , Magic(700)',
   minOrder: '6 pieces',
   turnaround: '3-4 days',
   materials: [

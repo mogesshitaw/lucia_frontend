@@ -44,8 +44,8 @@ const service = {
     { label: 'Thickness', value: 'Up to 10mm' },
     { label: 'Tolerance', value: '±0.1mm' },
   ],
-  priceRange: 'ETB 100 - 1500',
-  minOrder: '1 piece',
+  priceRange: 'ETB 250 - 300',
+  minOrder: '1 A4',
   turnaround: '2-3 days',
   materials: [
     'Adhesive Vinyl',

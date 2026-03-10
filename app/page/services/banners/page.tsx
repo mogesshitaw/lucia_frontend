@@ -12,7 +12,7 @@ const service = {
   badge: 'Popular',
   features: [
     'Indoor/outdoor options',
-    'Multiple sizes up to 5m',
+    'Multiple sizes up to 3m',
     'Grommets included',
     'Weather resistant',
     'UV protection',
@@ -39,13 +39,13 @@ const service = {
     { step: 6, title: 'Delivery', description: 'Shipped or ready for pickup' },
   ],
   specs: [
-    { label: 'Max Width', value: '5 meters' },
+    { label: 'Max Width', value: '3 meters' },
     { label: 'Resolution', value: '720 DPI' },
     { label: 'Material Options', value: 'Vinyl, Mesh, Fabric' },
     { label: 'Finishing', value: 'Grommets, Hems, Pockets' },
   ],
-  priceRange: 'ETB 250 - 2000',
-  minOrder: '1 piece',
+  priceRange: 'ETB 300 - 310',
+  minOrder: '1 care',
   turnaround: '1-2 days',
   materials: [
     'Vinyl Banner',

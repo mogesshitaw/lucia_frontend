@@ -3,7 +3,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, Avatar, SimpleGrid, ActionIcon, Tooltip, Image, Spoiler, Tabs } from '@mantine/core';
+import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, Avatar, SimpleGrid, ActionIcon, Tooltip, Image, Spoiler, Tabs, Center, Paper, Skeleton, Stack } from '@mantine/core';
 import { motion, useScroll, useTransform, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useEffect, useState, useRef } from 'react';
@@ -33,13 +33,46 @@ import {
   Printer,
   Zap,
   Gem,
+  Link as LinkIcon,
+  Bookmark,
+  Camera,
+  Car,
+  Coffee,
+  FileText,
+  Flame,
+  Key,
+  Layers,
+  Lightbulb,
+  Package,
+  Pen,
+  Scissors,
+  Shirt,
+  ShoppingBag,
+  Tag,
+  Wine,
 } from 'lucide-react';
 import CountUp from 'react-countup';
 import Footer from './component/footer';
 import { useMediaQuery } from '@mantine/hooks';
 import confetti from 'canvas-confetti';
 import { Variants } from 'framer-motion';
+import { TestimonialForm } from './component/TestimonialForm';
+import { IconStar } from '@tabler/icons-react';
+import Link from 'next/link';
 
+// ==================== TYPES ====================
+interface Testimonial {
+  id: string;
+  customer_name: string;
+  customer_role: string | null;
+  company: string | null;
+  content: string;
+  rating: number;
+  avatar: string | null;
+  created_at: string;
+}
+
+// ==================== COMPONENTS ====================
 const MotionDiv = motion.div;
 const MotionSection = motion.section;
 const MotionText = motion(Text as any);
@@ -575,6 +608,33 @@ export default function HomePage() {
   const { ref: statsRef, controls: statsControls } = useScrollAnimation(0.1);
   const { ref: testimonialsRef, controls: testimonialsControls } = useScrollAnimation(0.1);
   const { ref: worksRef, controls: worksControls } = useScrollAnimation(0.1);
+  
+  // FIXED: Properly typed testimonials state
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [testimonialsLoading, setTestimonialsLoading] = useState(true);
+  const [testimonialFormOpened, setTestimonialFormOpened] = useState(false);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+  // Fetch testimonials from API
+  const fetchTestimonials = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/testimonials/public?limit=6&featured=true`);
+      const data = await response.json();
+      if (data.success) {
+        setTestimonials(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch testimonials:', error);
+    } finally {
+      setTestimonialsLoading(false);
+    }
+  };
+
+  // Call it in useEffect
+  useEffect(() => {
+    fetchTestimonials();
+  }, []);
 
   // Add proper typing to your variants
   const containerVariants: Variants = {
@@ -609,37 +669,223 @@ export default function HomePage() {
   ];
 
   const featuredServices = [
+    // Apparel Printing
     {
-      icon: <Megaphone size={32} />,
+      icon: <Printer size={32} />,
       title: 'DTF Printing',
-      desc: 'Vibrant and durable printing for all fabrics with premium quality.',
+      desc: 'Direct to Film printing for vibrant, durable designs on any fabric. Perfect for custom apparel and promotional items.',
       gradient: 'from-purple-500 to-pink-500',
       badge: 'Most Popular',
-      features: ['High Resolution', 'Vibrant Colors', 'Durable'],
+      features: ['Any Fabric Type', 'Vibrant Colors', 'Wash Durable', 'No Minimum'],
+      link: '/page/services/dtf',
     },
     {
-      icon: <Upload size={32} />,
-      title: 'Online Upload',
-      desc: 'Upload your design and get instant measurement with AI analysis.',
+      icon: <Shirt size={32} />,
+      title: 'T-Shirt Printing',
+      desc: 'Custom t-shirts using DTF, screen printing, and DTG methods for any occasion.',
+      gradient: 'from-red-500 to-pink-500',
+      badge: 'Best Seller',
+      features: ['Multiple Methods', 'All Colors', 'Bulk Discounts', 'Fast Delivery'],
+      link: '/page/services/tshirt',
+    },
+    {
+      icon: <Shirt size={32} />,
+      title: 'Hoodies & Sweatshirts',
+      desc: 'Comfortable custom hoodies for teams, events, and corporate wear.',
+      gradient: 'from-blue-500 to-purple-500',
+      badge: 'Comfort',
+      features: ['Premium Blanks', 'All Sizes', 'Embroidery Option', 'Bulk Pricing'],
+      link: '/page/services/hoodies',
+    },
+    {
+      icon: <Shirt size={32} />,
+      title: 'Custom Hats & Caps',
+      desc: 'Personalized headwear with embroidery or printed designs.',
       gradient: 'from-blue-500 to-cyan-500',
-      badge: 'Smart Tool',
-      features: ['AI Powered', 'Instant Quote', 'Size Check'],
+      badge: 'Trending',
+      features: ['Embroidery', 'Printed Options', 'Adjustable', 'Bulk Orders'],
+      link: '/page/services/hats',
+    },
+    
+    // Large Format
+    {
+      icon: <Megaphone size={32} />,
+      title: 'Banner Printing',
+      desc: 'Large format banners for indoor and outdoor advertising.',
+      gradient: 'from-red-500 to-orange-500',
+      badge: 'Popular',
+      features: ['Indoor/Outdoor', 'Multiple Sizes', 'Weather Resistant', 'Fast Production'],
+      link: '/page/services/banners',
     },
     {
-      icon: <MessageCircle size={32} />,
-      title: 'Live Chat',
-      desc: 'Talk instantly with our professional support team 24/7.',
+      icon: <Camera size={32} />,
+      title: 'Posters',
+      desc: 'High-quality posters for events, advertising, and art prints.',
+      gradient: 'from-purple-500 to-pink-500',
+      badge: 'Popular',
+      features: ['Multiple Sizes', 'High Resolution', 'UV Resistant', 'Lamination'],
+      link: '/page/services/posters',
+    },
+    {
+      icon: <Car size={32} />,
+      title: 'Vehicle Wraps',
+      desc: 'Full and partial vehicle wraps for mobile advertising.',
+      gradient: 'from-blue-500 to-indigo-500',
+      badge: 'Professional',
+      features: ['Full/Partial Wraps', 'Commercial Vehicles', 'Professional Install', '5-Year Durability'],
+      link: '/page/services/wraps',
+    },
+    {
+      icon: <Lightbulb size={32} />,
+      title: 'Light Box',
+      desc: 'LED illuminated signs for eye-catching displays.',
+      gradient: 'from-yellow-500 to-amber-500',
+      badge: 'Premium',
+      features: ['LED Illumination', 'Custom Sizes', 'Energy Efficient', 'Long Lifespan'],
+      link: '/page/services/light-box',
+    },
+    
+    // Stickers & Labels
+    {
+      icon: <Tag size={32} />,
+      title: 'Custom Stickers',
+      desc: 'Die-cut and kiss-cut stickers in various finishes.',
+      gradient: 'from-yellow-500 to-orange-500',
+      badge: 'Popular',
+      features: ['Custom Shapes', 'Weather Resistant', 'Matte/Glossy', 'Bulk Orders'],
+      link: '/page/services/stickers',
+    },
+    {
+      icon: <Bookmark size={32} />,
+      title: 'Product Labels',
+      desc: 'Custom labels for packaging, branding, and products.',
+      gradient: 'from-green-500 to-teal-500',
+      badge: 'Business',
+      features: ['Barcode Ready', 'Water Resistant', 'Custom Sizes', 'Bulk Rolls'],
+      link: '/page/services/labels',
+    },
+    
+    // Drinkware
+    {
+      icon: <Coffee size={32} />,
+      title: 'Mug Printing',
+      desc: 'Custom printed mugs for gifts, events, and promotions.',
+      gradient: 'from-orange-500 to-red-500',
+      badge: 'Gift Idea',
+      features: ['Full Color', 'Dishwasher Safe', 'Various Sizes', 'Bulk Pricing'],
+      link: '/page/services/mugs',
+    },
+    {
+      icon: <Wine size={32} />,
+      title: 'Bottle Printing',
+      desc: 'Custom printed water bottles, tumblers, and glassware.',
+      gradient: 'from-blue-500 to-indigo-500',
+      badge: 'Eco-Friendly',
+      features: ['Stainless Steel', 'Glass Options', 'Insulated', 'Dishwasher Safe'],
+      link: '/page/services/bottles',
+    },
+    
+    // Print & Promo
+    {
+      icon: <FileText size={32} />,
+      title: 'Business Cards',
+      desc: 'Premium business cards with various finishes and effects.',
+      gradient: 'from-gray-500 to-gray-700',
+      badge: 'Essential',
+      features: ['Premium Paper', 'Foil Options', 'Spot UV', 'Embossing'],
+      link: '/page/services/business-cards',
+    },
+    {
+      icon: <FileText size={32} />,
+      title: 'Flyers & Brochures',
+      desc: 'Marketing materials for your business promotions.',
+      gradient: 'from-blue-500 to-cyan-500',
+      badge: 'Marketing',
+      features: ['Multiple Sizes', 'Folding Options', 'Glossy/Matte', 'Bulk Pricing'],
+      link: '/page/services/flyers',
+    },
+    {
+      icon: <Package size={32} />,
+      title: 'Custom Packaging',
+      desc: 'Custom boxes and packaging for your products.',
+      gradient: 'from-blue-500 to-indigo-500',
+      badge: 'Premium',
+      features: ['Custom Sizes', 'Full Color', 'Structural Design', 'Eco Options'],
+      link: '/page/services/packaging',
+    },
+    {
+      icon: <Pen size={32} />,
+      title: 'Custom Pens',
+      desc: 'Promotional pens with your logo for giveaways.',
+      gradient: 'from-yellow-500 to-orange-500',
+      badge: 'Budget Friendly',
+      features: ['Custom Logo', 'Multiple Colors', 'Bulk Pricing', 'Fast Delivery'],
+      link: '/page/services/pens',
+    },
+    {
+      icon: <Key size={32} />,
+      title: 'Custom Keychains',
+      desc: 'Custom keychains for lasting brand impressions.',
+      gradient: 'from-purple-500 to-pink-500',
+      badge: 'Popular',
+      features: ['Custom Shapes', 'Multiple Materials', 'Bulk Pricing', 'Fast Turnaround'],
+      link: '/page/services/keychains',
+    },
+    
+    // Specialty Services
+    {
+      icon: <Layers size={32} />,
+      title: 'Screen Printing',
+      desc: 'Traditional screen printing for bulk orders.',
+      gradient: 'from-blue-500 to-cyan-500',
+      badge: 'Best for Bulk',
+      features: ['Bulk Orders', 'Spot Colors', 'Pantone Matching', 'Cost Effective'],
+      link: '/page/services/screen-printing',
+    },
+    {
+      icon: <Sparkles size={32} />,
+      title: 'Embroidery',
+      desc: 'Professional embroidery for a premium, textured look.',
       gradient: 'from-green-500 to-emerald-500',
-      badge: '24/7 Support',
-      features: ['Real-time', 'Expert Help', 'Fast Response'],
+      badge: 'Premium',
+      features: ['3D Puff Option', 'Thread Matching', 'Digitizing', 'Bulk Discounts'],
+      link: '/page/services/embroidery',
+    },
+    {
+      icon: <ShoppingBag size={32} />,
+      title: 'Tote Bags',
+      desc: 'Eco-friendly custom tote bags for retail and events.',
+      gradient: 'from-green-500 to-emerald-500',
+      badge: 'Eco-Friendly',
+      features: ['Eco Materials', 'Reusable', 'Custom Printing', 'Bulk Pricing'],
+      link: '/page/services/totes',
+    },
+    {
+      icon: <Flame size={32} />,
+      title: 'Laser Engraving',
+      desc: 'Precision laser engraving on various materials.',
+      gradient: 'from-gray-500 to-gray-700',
+      badge: 'Precision',
+      features: ['Multiple Materials', 'High Precision', 'Permanent Marking', 'Photos Possible'],
+      link: '/page/services/engraving',
+    },
+    {
+      icon: <Scissors size={32} />,
+      title: 'Custom Cutout',
+      desc: 'Precision die-cut shapes, letters, and designs.',
+      gradient: 'from-green-500 to-teal-500',
+      badge: 'Versatile',
+      features: ['Custom Shapes', 'Multiple Materials', 'Precision Cutting', 'Small to Bulk'],
+      link: '/page/services/cutout',
     },
     {
       icon: <Palette size={32} />,
-      title: 'Custom Design',
-      desc: 'Professional designers help bring your creative vision to life.',
+      title: 'Graphic Design',
+      desc: 'Professional design services for all your needs.',
       gradient: 'from-orange-500 to-red-500',
       badge: 'Creative',
-      features: ['Custom Artwork', 'Revisions', 'High Quality'],
+      features: ['Logo Design', 'Brand Identity', 'Print Ready Files', 'Revisions'],
+      link: '/page/services/design',
     },
   ];
 
@@ -657,57 +903,6 @@ export default function HomePage() {
     { step: 2, title: 'Get Quote', desc: 'Instant price calculation', icon: <DollarSign />, color: 'from-green-500 to-emerald-500' },
     { step: 3, title: 'Approve & Pay', desc: 'Secure payment options', icon: <CheckCircle />, color: 'from-yellow-500 to-orange-500' },
     { step: 4, title: 'Print & Ship', desc: 'Track your order live', icon: <Truck />, color: 'from-purple-500 to-pink-500' },
-  ];
-
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'Business Owner',
-      content: 'Best printing service in town! Fast delivery and amazing quality. The team went above and beyond to ensure my order was perfect.',
-      rating: 5,
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      company: 'Sarah\'s Boutique',
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Event Planner',
-      content: 'Their DTF printing is outstanding. Highly recommended for any event needs. They delivered 500 custom t-shirts in just 2 days!',
-      rating: 5,
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      company: 'Elite Events',
-    },
-    {
-      name: 'Emma Williams',
-      role: 'Creative Director',
-      content: 'Professional team and excellent customer service. They helped me create the perfect branding materials for my agency.',
-      rating: 5,
-      avatar: 'https://i.pravatar.cc/150?img=3',
-      company: 'Creative Studio',
-    },
-    {
-      name: 'David Bekele',
-      role: 'Restaurant Owner',
-      content: 'The menu prints and banners are exceptional. My customers always compliment the quality.',
-      rating: 5,
-      avatar: 'https://i.pravatar.cc/150?img=4',
-      company: 'Ethio Spice',
-    },
-    {
-      name: 'Tigist Haile',
-      role: 'Marketing Manager',
-      content: 'Reliable, fast, and high quality. Our go-to printing partner for all marketing materials.',
-      rating: 5,
-      avatar: 'https://i.pravatar.cc/150?img=5',
-      company: 'Tech Solutions',
-    },
-    {
-      name: 'John Smith',
-      role: 'Small Business Owner',
-      content: 'The online upload feature is a game-changer. So easy to use and the results are perfect every time.',
-      rating: 5,
-      avatar: 'https://i.pravatar.cc/150?img=6',
-      company: 'Smith & Co',
-    },
   ];
 
   const recentWorks = [
@@ -1139,59 +1334,102 @@ export default function HomePage() {
           className="py-32"
         >
           <Container size="lg">
-            <MotionDiv variants={itemVariants} className="text-center mb-16">
-              <Badge size="lg" color="red" className="mb-4 animate-pulse">Testimonials</Badge>
-              <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
-                What Our Clients Say
-              </Title>
-              <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
-                Don&apos;t just take our word for it - hear from our satisfied customers
-              </Text>
-            </MotionDiv>
+            <Group justify="space-between" align="center" mb="xl">
+              <MotionDiv variants={itemVariants}>
+                <Badge size="lg" color="red" className="mb-4 animate-pulse">Testimonials</Badge>
+                <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+                  What Our Clients Say
+                </Title>
+                <Text size="xl" c="dimmed" className="max-w-2xl">
+                  Don&apos;t just take our word for it - hear from our satisfied customers
+                </Text>
+              </MotionDiv>
+              
+              <Button
+                variant="light"
+                color="blue"
+                onClick={() => setTestimonialFormOpened(true)}
+                radius="xl"
+              >
+                Share Your Experience
+              </Button>
+            </Group>
 
-            <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
-              {testimonials.map((testimonial, index) => (
-                <MotionCard
-                  key={index}
-                  variants={itemVariants}
-                  whileHover={{ y: -10 }}
-                  padding="xl"
-                  radius="lg"
-                  withBorder
-                  className="relative hover:shadow-2xl transition-all duration-300"
-                >
-                  <div className="absolute top-4 right-4 text-yellow-400 flex">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: i * 0.1 }}
-                      >
-                        <Star size={16} fill="currentColor" />
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  <Group mb="md">
-                    <Avatar src={testimonial.avatar} size="lg" radius="xl" />
-                    <div>
-                      <Text fw={600}>{testimonial.name}</Text>
-                      <Text size="sm" c="dimmed">{testimonial.role}</Text>
-                      <Text size="xs" c="dimmed">{testimonial.company}</Text>
+            {testimonialsLoading ? (
+              <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} height={300} radius="lg" />
+                ))}
+              </SimpleGrid>
+            ) : testimonials.length > 0 ? (
+              <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
+                {testimonials.map((testimonial) => (
+                  <MotionCard
+                    key={testimonial.id}
+                    variants={itemVariants}
+                    whileHover={{ y: -10 }}
+                    padding="xl"
+                    radius="lg"
+                    withBorder
+                    className="relative hover:shadow-2xl transition-all duration-300"
+                  >
+                    <div className="absolute top-4 right-4 text-yellow-400 flex">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: i * 0.1 }}
+                        >
+                          <Star size={16} fill="currentColor" />
+                        </motion.div>
+                      ))}
                     </div>
-                  </Group>
 
-                  <Spoiler maxHeight={80} showLabel="Read more" hideLabel="Hide">
-                    <Text size="lg" className="italic">&quot;{testimonial.content}&quot;</Text>
-                  </Spoiler>
+                    <Group mb="md">
+                      <Avatar 
+                        src={testimonial.avatar || undefined} 
+                        size="lg" 
+                        radius="xl"
+                        color="blue"
+                      >
+                        {testimonial.customer_name?.charAt(0)}
+                      </Avatar>
+                      <div>
+                        <Text fw={600}>{testimonial.customer_name}</Text>
+                        <Text size="sm" c="dimmed">{testimonial.customer_role || 'Customer'}</Text>
+                        {testimonial.company && (
+                          <Text size="xs" c="dimmed">{testimonial.company}</Text>
+                        )}
+                      </div>
+                    </Group>
 
-                  <div className="absolute bottom-4 left-4 text-red-500 opacity-10">
-                    <Quote size={40} />
-                  </div>
-                </MotionCard>
-              ))}
-            </SimpleGrid>
+                    <Spoiler maxHeight={80} showLabel="Read more" hideLabel="Hide">
+                      <Text size="lg" className="italic">&quot;{testimonial.content}&quot;</Text>
+                    </Spoiler>
+
+                    <div className="absolute bottom-4 left-4 text-red-500 opacity-10">
+                      <Quote size={40} />
+                    </div>
+                  </MotionCard>
+                ))}
+              </SimpleGrid>
+            ) : (
+              <Paper p="xl" radius="lg" withBorder>
+                <Center>
+                  <Stack align="center">
+                    <Text size="lg" c="dimmed">No testimonials yet</Text>
+                    <Button
+                      variant="light"
+                      color="blue"
+                      onClick={() => setTestimonialFormOpened(true)}
+                    >
+                      Be the first to share your experience
+                    </Button>
+                  </Stack>
+                </Center>
+              </Paper>
+            )}
           </Container>
         </MotionSection>
 
@@ -1344,6 +1582,13 @@ export default function HomePage() {
           </Tooltip>
         </div>
 
+        {/* Testimonial Form Modal */}
+        <TestimonialForm
+          opened={testimonialFormOpened}
+          onClose={() => setTestimonialFormOpened(false)}
+          onSuccess={fetchTestimonials}
+        />
+    
         <style jsx>{`
           .triangle-shape {
             clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
@@ -1371,6 +1616,12 @@ export default function HomePage() {
           }
           .animate-gradient-xy {
             animation: gradient-xy 3s ease infinite;
+          }
+          .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
           }
         `}</style>
       </div>
