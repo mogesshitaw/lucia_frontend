@@ -184,13 +184,13 @@ export default function DashboardSidebar({ opened }: SidebarProps) {
     const path = pathname.split('/').pop() || 'dashboard';
     setActiveItem(path);
   }, [pathname]);
-
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
   // Fetch image stats
   useEffect(() => {
     const fetchImageStats = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/images/stats`, {
+        const response = await fetch(`${API_URL}/api/images/stats`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -205,7 +205,7 @@ export default function DashboardSidebar({ opened }: SidebarProps) {
     };
 
     fetchImageStats();
-  }, []);
+  }, [API_URL]);
 
   const sidebarItems: SidebarItem[] = [
     {

@@ -296,6 +296,7 @@ const SocialButton: React.FC<SocialButtonProps> = ({ icon, label, onClick, color
     </MagneticButton>
   );
 };
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -350,8 +351,6 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
   setIsLoading(true);
 
   try {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    
     console.log('Attempting login with:', { email, rememberMe });
     
     const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -407,7 +406,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         localStorage.setItem('tokenExpiry', expiryTime.toString());
       }
 
-      setSuccess('Login successful! Redirecting...');
+      setSuccess('Login successfull! Redirecting...');
       
       // Redirect to dashboard
       setTimeout(() => {
@@ -419,16 +418,17 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 
   } catch (err: any) {
     console.error('Login error:', err);
-    setError(err.message || 'An error occurred during login');
+    setError(err.message || 'An error occurred during login ');
   } finally {
     setIsLoading(false);
   }
-};
+  };
+
   const handleSocialLogin = async (provider: string): Promise<void> => {
     setSocialLoading(provider);
     
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
       // Redirect to OAuth provider
       window.location.href = `${API_URL}/api/auth/${provider.toLowerCase()}`;
     } catch (err: any) {
@@ -445,7 +445,6 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 
     setIsLoading(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       
       const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
         method: 'POST',

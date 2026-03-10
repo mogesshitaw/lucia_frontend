@@ -110,39 +110,39 @@ const MotionDiv = motion.div;
 const quickLinks: Record<Language, QuickLink[]> = {
   en: [
     { label: 'Home', href: '/' },
-    { label: 'About Us', href: '/about' },
-    { label: 'Services', href: '/services' },
-    { label: 'Gallery', href: '/gallery' },
-    { label: 'Announcements', href: '/announcements' },
-    { label: 'Contact Us', href: '/contact' },
+    { label: 'About Us', href: '/page/aboutus' },
+    { label: 'Services', href: '/page/services' },
+    { label: 'Gallery', href: '/page/gallery' },
+    { label: 'Announcements', href: '/page/announcements' },
+    { label: 'Contact Us', href: '/page/contact' },
   ],
   am: [
     { label: 'መነሻ', href: '/' },
-    { label: 'ስለ እኛ', href: '/about' },
-    { label: 'አገልግሎቶች', href: '/services' },
-    { label: 'ማዕከለ-ስዕላት', href: '/gallery' },
-    { label: 'ማስታወቂያዎች', href: '/announcements' },
-    { label: 'ያግኙን', href: '/contact' },
+    { label: 'ስለ እኛ', href: '/page/aboutus' },
+    { label: 'አገልግሎቶች', href: '/page/services' },
+    { label: 'ማዕከለ-ስዕላት', href: '/page/gallery' },
+    { label: 'ማስታወቂያዎች', href: '/page/announcements' },
+    { label: 'ያግኙን', href: '/page/contact' },
   ],
 };
 
 // Services data
 const services: Record<Language, ServiceItem[]> = {
   en: [
-    { label: 'DTF Printing', href: '/services/dtf', icon: '🖨️' },
-    { label: 'T-Shirt Printing', href: '/services/tshirt', icon: '👕' },
-    { label: 'Custom Stickers', href: '/services/stickers', icon: '🏷️' },
-    { label: 'Banners & Signage', href: '/services/banners', icon: '📋' },
-    { label: 'Vehicle Wraps', href: '/services/wraps', icon: '🚗' },
-    { label: 'Business Cards', href: '/services/cards', icon: '💳' },
+    { label: 'DTF Printing', href: '/page/services/dtf', icon: '🖨️' },
+    { label: 'T-Shirt Printing', href: '/page/services/tshirt', icon: '👕' },
+    { label: 'Custom Stickers', href: '/page/services/stickers', icon: '🏷️' },
+    { label: 'Banners & Signage', href: '/page/services/banners', icon: '📋' },
+    { label: 'Vehicle Wraps', href: '/page/services/wraps', icon: '🚗' },
+    { label: 'Business Cards', href: '/page/services/cards', icon: '💳' },
   ],
   am: [
-    { label: 'ዲቲኤፍ ህትመት', href: '/services/dtf', icon: '🖨️' },
-    { label: 'ቲሸርት ህትመት', href: '/services/tshirt', icon: '👕' },
-    { label: 'ስቲከር', href: '/services/stickers', icon: '🏷️' },
-    { label: 'ባነር እና ምልክቶች', href: '/services/banners', icon: '📋' },
-    { label: 'የመኪና መሸፈኛ', href: '/services/wraps', icon: '🚗' },
-    { label: 'ቢዝነስ ካርድ', href: '/services/cards', icon: '💳' },
+    { label: 'ዲቲኤፍ ህትመት', href: '/page/services/dtf', icon: '🖨️' },
+    { label: 'ቲሸርት ህትመት', href: '/page/services/tshirt', icon: '👕' },
+    { label: 'ስቲከር', href: '/page/services/stickers', icon: '🏷️' },
+    { label: 'ባነር እና ምልክቶች', href: '/page/services/banners', icon: '📋' },
+    { label: 'የመኪና መሸፈኛ', href: '/page/services/wraps', icon: '🚗' },
+    { label: 'ቢዝነስ ካርድ', href: '/page/services/cards', icon: '💳' },
   ],
 };
 

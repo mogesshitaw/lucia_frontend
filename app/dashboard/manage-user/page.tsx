@@ -314,8 +314,6 @@ export default function UserManagementPage() {
     }
     return null;
   };
-
-  // Helper function to make authenticated requests
   // Helper function to make authenticated requests
 const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
   const token = getAuthToken();
@@ -370,7 +368,7 @@ const fetchWithAuth = async (endpoint: string, options: RequestInit = {}) => {
 
     if (response.status === 403) {
       console.log('Permission denied - User may not be admin');
-      throw new Error('You do not have permission to access this resource. Admin access required.');
+    console.log('You do not have permission to access this resource. Admin access required.');
     }
 
     if (!response.ok) {
@@ -546,7 +544,7 @@ const fetchUsers = async (page = pagination.page) => {
 
   // Navigate to user registration
   const goToRegistration = () => {
-    router.push('/page/register');
+    router.push('/dashboard/manage-user/add_new_user');
   };
 
   // Open add employee modal
