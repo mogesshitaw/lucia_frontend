@@ -1,0 +1,7 @@
+All Service category must be 
+        1,Apparel Printing : consists  DTF Printing, T-Shirt Printing, Custom Hats, Screen Printing, Embroidery, Hoodies, Tote Bags
+        2, Large Format: consists Banner Printing,Posters ,Vehicle Wraps, Light Box,Neo Light ,Cutout'
+        3,Stickers & Labels:consists Custom Stickers,Product Labels ,Frosted Glass
+        4,Drinkware: consists Mug Printing, Bottle Printing
+        5,Print & Promo: consists Business Cards, Flyers & Brochures, Custom Packaging, Custom Pens, Keychains
+        6,Specialty: consists Laser Engraving, Graphic Design

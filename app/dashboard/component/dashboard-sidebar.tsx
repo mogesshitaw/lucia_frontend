@@ -381,6 +381,20 @@ export default function DashboardSidebar({ opened }: SidebarProps) {
       label: 'Service',
       icon: <IconLayoutDashboard size={20} />,
       href: '/dashboard/service',
+      children: [
+        {
+          id: 'Catagory',
+          label: 'Catagories',
+          icon: <IconClock size={16} />,
+          href: '/dashboard/service/categories',
+        },
+        {
+          id: 'Service',
+          label: 'Service',
+          icon: <IconLayoutDashboard size={20} />,
+          href: '/dashboard/service',
+        }
+      ]
     },
     {
       id: 'settings',

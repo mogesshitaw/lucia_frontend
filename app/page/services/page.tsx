@@ -1,7 +1,21 @@
-// app/page/services/page.tsx
 'use client';
 
-import { Container, Title, Text, SimpleGrid, Card, ThemeIcon, Badge, Button, Group } from '@mantine/core';
+import { useState, useEffect } from 'react';
+import {
+  Container,
+  Title,
+  Text,
+  SimpleGrid,
+  Card,
+  ThemeIcon,
+  Badge,
+  Button,
+  Group,
+  Loader,
+  Center,
+  Paper,
+  Stack,
+} from '@mantine/core';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -32,82 +46,231 @@ import {
   Award,
   Phone,
   ArrowRight,
+  Star,
 } from 'lucide-react';
 
 const MotionDiv = motion.div;
 
-// All services data
-const services = [
-  {
-    category: 'Apparel Printing',
-    icon: <Shirt size={24} />,
-    color: 'red',
-    items: [
-      { title: 'DTF Printing', href: '/page/services/dtf', icon: <Printer size={20} />, badge: 'Popular', description: 'Direct to Film printing for any fabric' },
-      { title: 'T-Shirt Printing', href: '/page/services/tshirt', icon: <Shirt size={20} />, badge: 'Best Seller', description: 'Custom t-shirts for any occasion' },
-      { title: 'Custom Hats', href: '/page/services/hats', icon: <Shirt size={20} />, badge: 'Trending', description: 'Personalized caps and beanies' },
-      { title: 'Screen Printing', href: '/page/services/screen-printing', icon: <Layers size={20} />, description: 'Bulk orders with spot colors' },
-      { title: 'Embroidery', href: '/page/services/embroidery', icon: <Sparkles size={20} />, badge: 'Premium', description: 'Professional embroidered logos' },
-      { title: 'Hoodies', href: '/page/services/hoodies', icon: <Shirt size={20} />, description: 'Custom hoodies & sweatshirts' },
-      { title: 'Tote Bags', href: '/page/services/totes', icon: <ShoppingBag size={20} />, badge: 'Eco', description: 'Eco-friendly custom bags' },
-    ],
-  },
-  {
-    category: 'Large Format',
-    icon: <Megaphone size={24} />,
-    color: 'orange',
-    items: [
-      { title: 'Banner Printing', href: '/page/services/banners', icon: <Megaphone size={20} />, badge: 'Popular', description: 'Indoor/outdoor banners' },
-      { title: 'Posters', href: '/page/services/posters', icon: <Camera size={20} />, description: 'High-quality poster printing' },
-      { title: 'Vehicle Wraps', href: '/page/services/wraps', icon: <Car size={20} />, badge: 'Professional', description: 'Full & partial vehicle wraps' },
-      { title: 'Light Box', href: '/page/services/light-box', icon: <Lightbulb size={20} />, badge: 'Premium', description: 'LED illuminated signs' },
-      { title: 'Neo Light', href: '/page/services/neo-light', icon: <Sparkle size={20} />, badge: 'Trending', description: 'Flexible LED neon signs' },
-      { title: 'Cutout', href: '/page/services/cutout', icon: <Scissors size={20} />, description: 'Custom die-cut shapes' },
-    ],
-  },
-  {
-    category: 'Stickers & Labels',
-    icon: <Tag size={24} />,
-    color: 'yellow',
-    items: [
-      { title: 'Custom Stickers', href: '/page/services/stickers', icon: <Tag size={20} />, badge: 'Popular', description: 'Die-cut & kiss-cut stickers' },
-      { title: 'Product Labels', href: '/page/services/labels', icon: <Bookmark size={20} />, badge: 'Business', description: 'Custom product labels' },
-      { title: 'Frosted Glass', href: '/page/services/frosted', icon: <Snowflake size={20} />, badge: 'Elegant', description: 'Privacy & decorative glass' },
-    ],
-  },
-  {
-    category: 'Drinkware',
-    icon: <Coffee size={24} />,
-    color: 'orange',
-    items: [
-      { title: 'Mug Printing', href: '/page/services/mugs', icon: <Coffee size={20} />, badge: 'Gift Idea', description: 'Custom ceramic mugs' },
-      { title: 'Bottle Printing', href: '/page/services/bottles', icon: <Wine size={20} />, badge: 'Eco', description: 'Custom water bottles & tumblers' },
-    ],
-  },
-  {
-    category: 'Print & Promo',
-    icon: <FileText size={24} />,
-    color: 'blue',
-    items: [
-      { title: 'Business Cards', href: '/page/services/business-cards', icon: <FileText size={20} />, badge: 'Essential', description: 'Premium business cards' },
-      { title: 'Flyers & Brochures', href: '/page/services/flyers', icon: <FileText size={20} />, description: 'Marketing materials' },
-      { title: 'Custom Packaging', href: '/page/services/packaging', icon: <Package size={20} />, badge: 'Premium', description: 'Custom boxes & packaging' },
-      { title: 'Custom Pens', href: '/page/services/pens', icon: <Pen size={20} />, description: 'Promotional pens' },
-      { title: 'Keychains', href: '/page/services/keychains', icon: <Key size={20} />, description: 'Custom keychains' },
-    ],
-  },
-  {
-    category: 'Specialty',
-    icon: <Award size={24} />,
-    color: 'purple',
-    items: [
-      { title: 'Laser Engraving', href: '/page/services/engraving', icon: <Flame size={20} />, badge: 'Precision', description: 'Engraving on various materials' },
-      { title: 'Graphic Design', href: '/page/services/design', icon: <Palette size={20} />, badge: 'Creative', description: 'Professional design services' },
-    ],
-  },
-];
+// Icon mapping
+const iconMap: Record<string, any> = {
+  Printer, Shirt, Megaphone, Tag, Coffee, Wine, Lightbulb, Sparkle, Flame,
+  Snowflake, Scissors, Layers, Car, FileText, Package, Gift, PenTool, Key,
+  Pen, ShoppingBag, Camera, Palette, Bookmark, Sparkles, Award, Star,
+};
+
+// API URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// Types
+interface Service {
+  id: string;
+  title: string;
+  slug: string;
+  short_description: string;
+  icon_name: string;
+  badge: string | null;
+  category: string;
+  category_name?: string;
+  gradient_from: string;
+  gradient_to: string;
+  price_range: string;
+  is_featured: boolean;
+  is_popular: boolean;
+  is_new: boolean;
+}
+
+interface Category {
+  name: string;
+  slug: string;
+  icon_name: string;
+  services: Service[];
+}
 
 export default function ServicesMainPage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_URL}/api/public/services?limit=100`);
+        const data = await response.json();
+        
+        if (data.success) {
+          const services = data.data;
+          
+          // Group services by category
+          const grouped = services.reduce((acc: Record<string, Category>, service: Service) => {
+            const categorySlug = service.category || 'uncategorized';
+            const categoryName = service.category_name || 
+              (service.category ? service.category.split('-').map((word: string) => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+              ).join(' ') : 'Other Services');
+            
+            if (!acc[categorySlug]) {
+              acc[categorySlug] = {
+                name: categoryName,
+                slug: categorySlug,
+                icon_name: getCategoryIcon(categorySlug),
+                services: [],
+              };
+            }
+            acc[categorySlug].services.push(service);
+            return acc;
+          }, {});
+          
+          // Convert to array and sort
+          const categoryList = Object.values(grouped).sort((a, b) => {
+            const order: Record<string, number> = {
+              'apparel': 1,
+              'tshirts': 2,
+              'hoodies': 3,
+              'hats': 4,
+              'banners': 5,
+              'posters': 6,
+              'vehicle-wraps': 7,
+              'light-boxes': 8,
+              'neon-signs': 9,
+              'stickers': 10,
+              'labels': 11,
+              'frosted-glass': 12,
+              'mugs': 13,
+              'bottles': 14,
+              'business-cards': 15,
+              'flyers': 16,
+              'packaging': 17,
+              'pens': 18,
+              'keychains': 19,
+              'engraving': 20,
+              'screen-printing': 21,
+              'embroidery': 22,
+              'cutouts': 23,
+              'graphic-design': 24,
+            };
+            return (order[a.slug] || 999) - (order[b.slug] || 999);
+          });
+          
+          setCategories(categoryList);
+        } else {
+          setError('Failed to load services');
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        setError('Failed to load services');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  // Get category icon based on slug
+  const getCategoryIcon = (slug: string): string => {
+    const icons: Record<string, string> = {
+      'apparel': 'Shirt',
+      'tshirts': 'Shirt',
+      'hoodies': 'ShoppingBag',
+      'hats': 'Shirt',
+      'banners': 'Megaphone',
+      'posters': 'Camera',
+      'vehicle-wraps': 'Car',
+      'light-boxes': 'Lightbulb',
+      'neon-signs': 'Sparkle',
+      'stickers': 'Tag',
+      'labels': 'Bookmark',
+      'frosted-glass': 'Snowflake',
+      'mugs': 'Coffee',
+      'bottles': 'Wine',
+      'business-cards': 'FileText',
+      'flyers': 'FileText',
+      'packaging': 'Package',
+      'pens': 'Pen',
+      'keychains': 'Key',
+      'engraving': 'Flame',
+      'screen-printing': 'Layers',
+      'embroidery': 'Sparkles',
+      'cutouts': 'Scissors',
+      'graphic-design': 'Palette',
+    };
+    return icons[slug] || 'Star';
+  };
+
+  // Get color based on category
+  const getCategoryColor = (slug: string): string => {
+    const colors: Record<string, string> = {
+      'apparel': 'red',
+      'tshirts': 'red',
+      'hoodies': 'pink',
+      'hats': 'blue',
+      'banners': 'orange',
+      'posters': 'purple',
+      'vehicle-wraps': 'indigo',
+      'light-boxes': 'yellow',
+      'neon-signs': 'grape',
+      'stickers': 'yellow',
+      'labels': 'teal',
+      'frosted-glass': 'cyan',
+      'mugs': 'orange',
+      'bottles': 'blue',
+      'business-cards': 'gray',
+      'flyers': 'cyan',
+      'packaging': 'indigo',
+      'pens': 'orange',
+      'keychains': 'grape',
+      'engraving': 'gray',
+      'screen-printing': 'blue',
+      'embroidery': 'green',
+      'cutouts': 'teal',
+      'graphic-design': 'orange',
+    };
+    return colors[slug] || 'red';
+  };
+
+  // Get icon component from name
+  const getIconComponent = (iconName: string, size: number = 24) => {
+    const Icon = iconMap[iconName] || Star;
+    return <Icon size={size} />;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+        <Container size="lg" className="py-20">
+          <Center>
+            <Stack align="center">
+              <Loader size="lg" color="red" />
+              <Text c="dimmed">Loading services...</Text>
+            </Stack>
+          </Center>
+        </Container>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+        <Container size="lg" className="py-20">
+          <Paper withBorder p="xl" radius="lg" className="text-center">
+            <Text c="red" size="lg" fw={600}>Error</Text>
+            <Text c="dimmed" mt="xs">{error}</Text>
+            <Button
+              variant="light"
+              color="red"
+              onClick={() => window.location.reload()}
+              className="mt-4"
+            >
+              Try Again
+            </Button>
+          </Paper>
+        </Container>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
       {/* Hero Section */}
@@ -151,70 +314,97 @@ export default function ServicesMainPage() {
 
       {/* Services by Category */}
       <Container size="lg" className="py-16">
-        {services.map((category, idx) => (
-          <MotionDiv
-            key={idx}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: idx * 0.1 }}
-            viewport={{ once: true }}
-            className="mb-16 last:mb-0"
-          >
-            <Group gap="sm" className="mb-6">
-              <ThemeIcon size={40} radius="xl" color={category.color} variant="light">
-                {category.icon}
-              </ThemeIcon>
-              <Title order={2} className="text-2xl md:text-3xl font-bold">
-                {category.category}
-              </Title>
-            </Group>
+        {categories.map((category, idx) => {
+          const categoryColor = getCategoryColor(category.slug);
+          const CategoryIcon = iconMap[category.icon_name] || Star;
+          
+          return (
+            <MotionDiv
+              key={category.slug}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: idx * 0.1 }}
+              viewport={{ once: true }}
+              className="mb-16 last:mb-0"
+            >
+              <Group gap="sm" className="mb-6">
+                <ThemeIcon size={40} radius="xl" color={categoryColor} variant="light">
+                  <CategoryIcon size={20} />
+                </ThemeIcon>
+                <Title order={2} className="text-2xl md:text-3xl font-bold">
+                  {category.name}
+                </Title>
+                <Badge color={categoryColor} variant="light" size="lg">
+                  {category.services.length} Services
+                </Badge>
+              </Group>
 
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="lg">
-              {category.items.map((service, index) => (
-                <Card
-                  key={index}
-                  component={Link}
-                  href={service.href}
-                  withBorder
-                  padding="lg"
-                  radius="lg"
-                  className="hover:shadow-lg transition-shadow group"
-                >
-                  <Card.Section className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-                    <Group justify="space-between" align="center">
-                      <ThemeIcon size={50} radius="xl" color={category.color} variant="light">
-                        {service.icon}
-                      </ThemeIcon>
-                      {service.badge && (
-                        <Badge color={category.color} variant="light" size="sm">
-                          {service.badge}
-                        </Badge>
-                      )}
-                    </Group>
-                  </Card.Section>
-
-                  <Text fw={600} size="lg" className="mt-3 mb-2">
-                    {service.title}
-                  </Text>
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="lg">
+                {category.services.map((service, index) => {
+                  const ServiceIcon = iconMap[service.icon_name] || Printer;
                   
-                  <Text size="sm" c="dimmed" className="mb-3">
-                    {service.description}
-                  </Text>
+                  return (
+                    <Card
+                      key={service.id}
+                      component={Link}
+                      href={`/page/services/${service.slug}`}
+                      withBorder
+                      padding="lg"
+                      radius="lg"
+                      className="hover:shadow-lg transition-shadow group"
+                    >
+                      <Card.Section className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+                        <Group justify="space-between" align="center">
+                          <ThemeIcon size={50} radius="xl" color={categoryColor} variant="light">
+                            <ServiceIcon size={24} />
+                          </ThemeIcon>
+                          <Group gap={4}>
+                            {service.is_new && (
+                              <Badge size="xs" color="green" variant="light">NEW</Badge>
+                            )}
+                            {service.is_popular && (
+                              <Badge size="xs" color="orange" variant="light">HOT</Badge>
+                            )}
+                            {service.badge && (
+                              <Badge size="xs" color={categoryColor} variant="light">
+                                {service.badge}
+                              </Badge>
+                            )}
+                          </Group>
+                        </Group>
+                      </Card.Section>
 
-                  <Button
-                    variant="subtle"
-                    color={category.color}
-                    size="compact"
-                    rightSection={<ArrowRight size={14} />}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    Learn More
-                  </Button>
-                </Card>
-              ))}
-            </SimpleGrid>
-          </MotionDiv>
-        ))}
+                      <Text fw={600} size="lg" className="mt-3 mb-2">
+                        {service.title}
+                      </Text>
+                      
+                      <Text size="sm" c="dimmed" className="mb-3 line-clamp-2">
+                        {service.short_description}
+                      </Text>
+
+                      {service.price_range && (
+                        <Text size="sm" fw={600} className="text-red-600 dark:text-red-400 mb-2">
+                          {service.price_range}
+                        </Text>
+                      )}
+
+                      <Button
+                        variant="subtle"
+                        color={categoryColor}
+                        size="compact"
+                        rightSection={<ArrowRight size={14} />}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        fullWidth
+                      >
+                        Learn More
+                      </Button>
+                    </Card>
+                  );
+                })}
+              </SimpleGrid>
+            </MotionDiv>
+          );
+        })}
       </Container>
 
       {/* CTA Section */}

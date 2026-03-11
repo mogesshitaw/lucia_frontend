@@ -17,6 +17,7 @@ import {
   Indicator,
   useMantineColorScheme,
   ScrollArea,
+  Loader,
 } from '@mantine/core';
 import {
   IconMenu2,
@@ -36,12 +37,6 @@ import {
   IconSpeakerphone,
   IconShirt,
   IconTags,
-  IconDeviceLaptop,
-  IconCup,
-  IconLamp,
-  IconFlame,
-  IconSnowflake,
-  IconScissors,
   IconPrinter,
   IconCar,
   IconFileText,
@@ -49,6 +44,11 @@ import {
   IconGift,
   IconBrush,
   IconStar,
+  IconCup,
+  IconLamp,
+  IconFlame,
+  IconSnowflake,
+  IconScissors,
 } from '@tabler/icons-react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
@@ -57,72 +57,77 @@ import { usePathname } from 'next/navigation';
 
 const MotionDiv = motion.div;
 
-// Services dropdown items organized by category
-const serviceCategories = [
-  {
-    category: 'Apparel Printing',
-    icon: <IconShirt size={16} />,
-    items: [
-      { label: 'DTF Printing', href: '/page/services/dtf', icon: '🖨️', badge: 'Popular' },
-      { label: 'T-Shirt Printing', href: '/page/services/tshirt', icon: '👕', badge: 'Best Seller' },
-      { label: 'Custom Hats & Caps', href: '/page/services/hats', icon: '🧢', badge: 'Trending' },
-      { label: 'Hoodies & Sweatshirts', href: '/page/services/hoodies', icon: '👚' },
-      { label: 'Screen Printing', href: '/page/services/screen-printing', icon: '🖨️' },
-      { label: 'Embroidery', href: '/page/services/embroidery', icon: '🧵', badge: 'Premium' },
-      { label: 'Tote Bags', href: '/page/services/totes', icon: '👜', badge: 'Eco' },
-    ],
-  },
-  {
-    category: 'Large Format',
-    icon: <IconPrinter size={16} />,
-    items: [
-      { label: 'Banner Printing', href: '/page/services/banners', icon: '📋', badge: 'Popular' },
-      { label: 'Posters', href: '/page/services/posters', icon: '🖼️' },
-      { label: 'Vehicle Wraps', href: '/page/services/wraps', icon: '🚗', badge: 'Professional' },
-      { label: 'Light Box', href: '/page/services/light-box', icon: '💡', badge: 'Premium' },
-      { label: 'Neo Light (LED Neon)', href: '/page/services/neo-light', icon: '✨', badge: 'Trending' },
-      { label: 'Cutout Letters', href: '/page/services/cutout', icon: '✂️' },
-    ],
-  },
-  {
-    category: 'Stickers & Labels',
-    icon: <IconTags size={16} />,
-    items: [
-      { label: 'Custom Stickers', href: '/page/services/stickers', icon: '🏷️', badge: 'Popular' },
-      { label: 'Product Labels', href: '/page/services/labels', icon: '📦', badge: 'Business' },
-      { label: 'Frosted Glass', href: '/page/services/frosted', icon: '❄️', badge: 'Elegant' },
-    ],
-  },
-  {
-    category: 'Drinkware',
-    icon: <IconCup size={16} />,
-    items: [
-      { label: 'Mug Printing', href: '/page/services/mugs', icon: '☕', badge: 'Gift Idea' },
-      { label: 'Bottle Printing', href: '/page/services/bottles', icon: '🧴', badge: 'Eco' },
-    ],
-  },
-  {
-    category: 'Print & Promo',
-    icon: <IconFileText size={16} />,
-    items: [
-      { label: 'Business Cards', href: '/page/services/business-cards', icon: '💳', badge: 'Essential' },
-      { label: 'Flyers & Brochures', href: '/page/services/flyers', icon: '📄' },
-      { label: 'Custom Packaging', href: '/page/services/packaging', icon: '📦', badge: 'Premium' },
-      { label: 'Custom Pens', href: '/page/services/pens', icon: '✒️' },
-      { label: 'Keychains', href: '/page/services/keychains', icon: '🔑' },
-    ],
-  },
-  {
-    category: 'Specialty',
-    icon: <IconStar size={16} />,
-    items: [
-      { label: 'Laser Engraving', href: '/page/services/engraving', icon: '🔥', badge: 'Precision' },
-      { label: 'Graphic Design', href: '/page/services/design', icon: '🎨', badge: 'Creative' },
-    ],
-  },
-];
+// API URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-// Announcement Items
+// Icon mapping for category icons
+const iconMap: Record<string, any> = {
+  Shirt: IconShirt,
+  ShoppingBag: IconGift,
+  Megaphone: IconPrinter,
+  Camera: IconPhoto,
+  Car: IconCar,
+  Lightbulb: IconLamp,
+  Sparkles: IconStar,
+  Tag: IconTags,
+  Snowflake: IconSnowflake,
+  Coffee: IconCup,
+  Wine: IconCup,
+  FileText: IconFileText,
+  Package: IconBox,
+  Pen: IconBrush,
+  Key: IconTags,
+  Flame: IconFlame,
+  Printer: IconPrinter,
+  Scissors: IconScissors,
+  Palette: IconBrush,
+};
+
+// Emoji fallbacks for icons
+const iconEmojis: Record<string, string> = {
+  Shirt: '👕',
+  ShoppingBag: '🛍️',
+  Megaphone: '📢',
+  Camera: '📷',
+  Car: '🚗',
+  Lightbulb: '💡',
+  Sparkles: '✨',
+  Tag: '🏷️',
+  Snowflake: '❄️',
+  Coffee: '☕',
+  Wine: '🍷',
+  FileText: '📄',
+  Package: '📦',
+  Pen: '✒️',
+  Key: '🔑',
+  Flame: '🔥',
+  Printer: '🖨️',
+  Scissors: '✂️',
+  Palette: '🎨',
+};
+
+// Badge color mapping
+const badgeColorMap: Record<string, string> = {
+  'Most Popular': 'red',
+  'Popular': 'red',
+  'Best Seller': 'orange',
+  'Trending': 'pink',
+  'Premium': 'grape',
+  'Eco-Friendly': 'green',
+  'Eco': 'green',
+  'Professional': 'blue',
+  'Gift Idea': 'yellow',
+  'Essential': 'gray',
+  'Creative': 'violet',
+  'Precision': 'cyan',
+  'Elegant': 'teal',
+  'Versatile': 'lime',
+  'Marketing': 'indigo',
+  'Business': 'cyan',
+  'Budget Friendly': 'green',
+};
+
+// Announcement Items (can also be made dynamic)
 const announcementItems = [
   { 
     label: 'New Year Sale - 20% Off', 
@@ -157,14 +162,30 @@ const announcementItems = [
 // Mock auth state
 const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  
   useEffect(() => {
-    // Check if user is logged in
+    // Check if user is logged in from localStorage
     const checkAuth = () => {
-      setIsLoggedIn(false);
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+          setIsLoggedIn(true);
+          setUser(userData);
+        } catch (e) {
+          setIsLoggedIn(false);
+          setUser(null);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
     };
     checkAuth();
   }, []);
-  return { isLoggedIn, user: isLoggedIn ? { name: 'John Doe' } : null };
+  
+  return { isLoggedIn, user };
 };
 
 // Navigation Links
@@ -176,20 +197,75 @@ const navLinks = [
   { href: '/page/announcements', label: 'News', icon: IconBell },
 ];
 
+// Types
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  icon_name: string;
+  display_order: number;
+}
+
+interface Service {
+  id: string;
+  title: string;
+  slug: string;
+  short_description: string;
+  icon_name: string;
+  badge: string | null;
+  category: string;
+  is_featured: boolean;
+  is_popular: boolean;
+  is_new: boolean;
+}
+
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpened, setDrawerOpened] = useState(false);
   const [language, setLanguage] = useState<'en' | 'am'>('en');
   const [announcementCount, setAnnouncementCount] = useState(4);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === 'dark';
   const pathname = usePathname();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   
   const { scrollY } = useScroll();
   const headerHeight = useTransform(scrollY, [0, 100], [80, 80]);
   const headerOpacity = useTransform(scrollY, [0, 100], [1, 0.95]);
   const headerBlur = useTransform(scrollY, [0, 100], [0, 10]);
+
+  // Fetch categories and services
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch categories
+        const categoriesResponse = await fetch(`${API_URL}/api/public/services/categories/all`);
+        const categoriesData = await categoriesResponse.json();
+        
+        if (categoriesData.success) {
+          setCategories(categoriesData.data);
+        }
+
+        // Fetch all active services
+        const servicesResponse = await fetch(`${API_URL}/api/public/services`);
+        const servicesData = await servicesResponse.json();
+        
+        if (servicesData.success) {
+          setServices(servicesData.data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -203,6 +279,38 @@ export default function Header() {
     if (href === '/') return pathname === href;
     return pathname.startsWith(href);
   };
+
+  // Group services by category
+  const servicesByCategory = categories.map(category => {
+    const categoryServices = services
+      .filter(service => service.category === category.slug)
+      .map(service => ({
+        label: service.title,
+        href: `/page/services/${service.slug}`,
+        icon: iconEmojis[service.icon_name] || '🖨️',
+        badge: service.badge || (service.is_popular ? 'Popular' : service.is_new ? 'New' : null),
+      }));
+    
+    return {
+      category: category.name,
+      icon: iconMap[category.icon_name] || IconPackage,
+      items: categoryServices,
+    };
+  }).filter(cat => cat.items.length > 0);
+
+  // If no categories with services, use fallback
+  const displayCategories = servicesByCategory.length > 0 ? servicesByCategory : [
+    {
+      category: 'All Services',
+      icon: IconPackage,
+      items: services.map(service => ({
+        label: service.title,
+        href: `/page/services/${service.slug}`,
+        icon: iconEmojis[service.icon_name] || '🖨️',
+        badge: service.badge || (service.is_popular ? 'Popular' : service.is_new ? 'New' : null),
+      })),
+    },
+  ];
 
   const translations = {
     en: {
@@ -221,6 +329,7 @@ export default function Header() {
       latestAnnouncements: 'Latest Announcements',
       allServices: 'All Services',
       categories: 'Categories',
+      loading: 'Loading...',
     },
     am: {
       home: 'መነሻ',
@@ -238,6 +347,7 @@ export default function Header() {
       latestAnnouncements: 'የቅርብ ጊዜ ማስታወቂያዎች',
       allServices: 'ሁሉም አገልግሎቶች',
       categories: 'ምድቦች',
+      loading: 'በመጫን ላይ...',
     },
   };
 
@@ -376,69 +486,78 @@ export default function Header() {
                                 {t.printingServices}
                               </Text>
                               <Text size="xs" c="dimmed">
-                                Choose from our wide range of professional printing services
+                                {loading ? t.loading : 'Choose from our wide range of professional printing services'}
                               </Text>
                             </div>
 
-                            {/* Services by Category */}
-                            <div className="grid grid-cols-2 gap-4">
-                              {serviceCategories.map((category, idx) => (
-                                <div key={idx} className="space-y-1">
-                                  <div className="flex items-center gap-1 px-3 py-1">
-                                    <span className="text-red-500">{category.icon}</span>
-                                    <Text fw={600} size="sm" className="text-gray-700 dark:text-gray-300">
-                                      {category.category}
-                                    </Text>
-                                  </div>
-                                  <div className="space-y-0.5">
-                                    {category.items.map((item, itemIdx) => (
-                                      <Menu.Item
-                                        key={itemIdx}
-                                        component={Link}
-                                        href={item.href}
-                                        leftSection={<span className="text-lg w-6">{item.icon}</span>}
-                                        rightSection={
-                                          item.badge && (
-                                            <Badge 
-                                              size="xs" 
-                                              variant="light" 
-                                              color={
-                                                item.badge === 'Popular' ? 'red' :
-                                                item.badge === 'Best Seller' ? 'orange' :
-                                                item.badge === 'Trending' ? 'pink' :
-                                                item.badge === 'Premium' ? 'grape' :
-                                                item.badge === 'Eco' ? 'green' :
-                                                item.badge === 'Professional' ? 'blue' :
-                                                item.badge === 'Gift Idea' ? 'yellow' :
-                                                item.badge === 'Essential' ? 'gray' : 'red'
+                            {/* Loading State */}
+                            {loading ? (
+                              <div className="py-8 text-center">
+                                <Loader size="sm" />
+                                <Text size="sm" c="dimmed" mt="xs">{t.loading}</Text>
+                              </div>
+                            ) : (
+                              <>
+                                {/* Services by Category */}
+                                <div className="grid grid-cols-2 gap-4">
+                                  {displayCategories.map((category, idx) => {
+                                    const CategoryIcon = category.icon;
+                                    return (
+                                      <div key={idx} className="space-y-1">
+                                        <div className="flex items-center gap-1 px-3 py-1">
+                                          <CategoryIcon size={14} className="text-red-500" />
+                                          <Text fw={600} size="sm" className="text-gray-700 dark:text-gray-300">
+                                            {category.category}
+                                          </Text>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                          {category.items.slice(0, 5).map((item, itemIdx) => (
+                                            <Menu.Item
+                                              key={itemIdx}
+                                              component={Link}
+                                              href={item.href}
+                                              leftSection={<span className="text-lg w-6">{item.icon}</span>}
+                                              rightSection={
+                                                item.badge && (
+                                                  <Badge 
+                                                    size="xs" 
+                                                    variant="light" 
+                                                    color={badgeColorMap[item.badge] || 'red'}
+                                                  >
+                                                    {item.badge}
+                                                  </Badge>
+                                                )
                                               }
+                                              className="text-sm"
                                             >
-                                              {item.badge}
-                                            </Badge>
-                                          )
-                                        }
-                                        className="text-sm"
-                                      >
-                                        {item.label}
-                                      </Menu.Item>
-                                    ))}
-                                  </div>
+                                              {item.label}
+                                            </Menu.Item>
+                                          ))}
+                                          {category.items.length > 5 && (
+                                            <Text size="xs" c="dimmed" className="px-3 pt-1">
+                                              +{category.items.length - 5} more
+                                            </Text>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              ))}
-                            </div>
 
-                            {/* Footer Link */}
-                            <div className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-700">
-                              <Menu.Item
-                                component={Link}
-                                href="/page/services"
-                                leftSection={<IconPackage size={16} />}
-                                rightSection={<IconChevronDown size={16} />}
-                                className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20"
-                              >
-                                <Text fw={600}>{t.viewAll}</Text>
-                              </Menu.Item>
-                            </div>
+                                {/* Footer Link */}
+                                <div className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                  <Menu.Item
+                                    component={Link}
+                                    href="/page/services"
+                                    leftSection={<IconPackage size={16} />}
+                                    rightSection={<IconChevronDown size={16} />}
+                                    className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20"
+                                  >
+                                    <Text fw={600}>{t.viewAll}</Text>
+                                  </Menu.Item>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </ScrollArea.Autosize>
                       </Menu.Dropdown>
@@ -477,9 +596,9 @@ export default function Header() {
             </Group>
           )}
 
-          {/* Right Section - Actions */}
+          {/* Right Section - Actions (unchanged) */}
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* Announcements Button */}
+            {/* Announcements Button (unchanged) */}
             <Menu shadow="lg" width={320} position="bottom-end">
               <Menu.Target>
                 <Indicator
@@ -643,7 +762,9 @@ export default function Header() {
                     }}
                   >
                     <Group gap={4}>
-                      <Avatar size="sm" radius="xl" color="red">JD</Avatar>
+                      <Avatar size="sm" radius="xl" color="red">
+                        {user?.full_name?.charAt(0) || 'JD'}
+                      </Avatar>
                       <span className="hidden sm:inline">{t.dashboard}</span>
                     </Group>
                   </Button>
@@ -655,7 +776,15 @@ export default function Header() {
                     {t.dashboard}
                   </Menu.Item>
                   <Menu.Divider />
-                  <Menu.Item leftSection={<IconLogout size={14} />} color="red">
+                  <Menu.Item 
+                    leftSection={<IconLogout size={14} />} 
+                    color="red"
+                    onClick={() => {
+                      localStorage.removeItem('accessToken');
+                      localStorage.removeItem('user');
+                      window.location.href = '/';
+                    }}
+                  >
                     {t.logout}
                   </Menu.Item>
                 </Menu.Dropdown>
@@ -677,7 +806,7 @@ export default function Header() {
         </Group>
       </Container>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer - Update with dynamic data similarly */}
       <Drawer
         opened={drawerOpened}
         onClose={() => setDrawerOpened(false)}
@@ -783,7 +912,7 @@ export default function Header() {
                     {t.home}
                   </Button>
 
-                  {/* Services with nested menu */}
+                  {/* Services with nested menu - Mobile version with dynamic data */}
                   <Menu shadow="lg" width="100%" position="bottom">
                     <Menu.Target>
                       <Button
@@ -798,28 +927,37 @@ export default function Header() {
                     </Menu.Target>
                     <Menu.Dropdown>
                       <ScrollArea.Autosize mah={400} type="scroll">
-                        {serviceCategories.map((category, idx) => (
-                          <div key={idx}>
-                            <Menu.Label>{category.category}</Menu.Label>
-                            {category.items.map((item, itemIdx) => (
-                              <Menu.Item
-                                key={itemIdx}
-                                component={Link}
-                                href={item.href}
-                                leftSection={<span className="text-lg">{item.icon}</span>}
-                                rightSection={
-                                  item.badge && (
-                                    <Badge size="xs" variant="light">{item.badge}</Badge>
-                                  )
-                                }
-                                onClick={() => setDrawerOpened(false)}
-                              >
-                                {item.label}
-                              </Menu.Item>
-                            ))}
-                            {idx < serviceCategories.length - 1 && <Menu.Divider />}
+                        {loading ? (
+                          <div className="py-4 text-center">
+                            <Loader size="sm" />
+                            <Text size="xs" c="dimmed" mt="xs">{t.loading}</Text>
                           </div>
-                        ))}
+                        ) : (
+                          displayCategories.map((category, idx) => (
+                            <div key={idx}>
+                              <Menu.Label>{category.category}</Menu.Label>
+                              {category.items.map((item, itemIdx) => (
+                                <Menu.Item
+                                  key={itemIdx}
+                                  component={Link}
+                                  href={item.href}
+                                  leftSection={<span className="text-lg">{item.icon}</span>}
+                                  rightSection={
+                                    item.badge && (
+                                      <Badge size="xs" variant="light" color={badgeColorMap[item.badge] || 'red'}>
+                                        {item.badge}
+                                      </Badge>
+                                    )
+                                  }
+                                  onClick={() => setDrawerOpened(false)}
+                                >
+                                  {item.label}
+                                </Menu.Item>
+                              ))}
+                              {idx < displayCategories.length - 1 && <Menu.Divider />}
+                            </div>
+                          ))
+                        )}
                       </ScrollArea.Autosize>
                       <Menu.Divider />
                       <Menu.Item
@@ -894,7 +1032,11 @@ export default function Header() {
                   color="red"
                   size="lg"
                   leftSection={<IconLogout size={18} />}
-                  onClick={() => setDrawerOpened(false)}
+                  onClick={() => {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('user');
+                    window.location.href = '/';
+                  }}
                 >
                   {t.logout}
                 </Button>

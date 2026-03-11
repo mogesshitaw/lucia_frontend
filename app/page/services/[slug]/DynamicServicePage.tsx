@@ -38,7 +38,10 @@ const MotionDiv = motion.div;
 
 export default function DynamicServicePage({ service }: { service: any }) {
   const IconComponent = iconMap[service.icon_name] || Printer;
-
+  console.log('Service data:', service);
+  console.log('Features:', service.features);
+  console.log('Applications:', );
+  // ... etc.
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
       {/* Hero Section */}

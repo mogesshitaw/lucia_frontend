@@ -12,8 +12,9 @@ import {
   TextInput,
   Drawer,
   Burger,
-  Title,
+  Badge,
   LoadingOverlay,
+  rem,
 } from '@mantine/core';
 import {
   IconChevronDown,
@@ -23,29 +24,38 @@ import {
   IconLogout,
   IconSettings,
   IconCreditCard,
+  IconDashboard,
+  IconFileText,
+  IconMessage,
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { useAuth } from '@/app/hooks/useAuth';
 import { notifications } from '@mantine/notifications';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 interface HeaderProps {
   toggleSidebar: () => void;
   isSidebarOpen: boolean;
   user?: {
-    name: string;
+    id: string;
+    full_name: string;
     email: string;
     role: string;
+    department_name?: string;
     avatar?: string;
+    is_first_login?: boolean;
   } | null;
+  onLogout?: () => void;
 }
 
-export default function Header({ toggleSidebar, isSidebarOpen, user }: HeaderProps) {
+export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpened, setSearchOpened] = useState(false);
-  const { logout, isLoading } = useAuth();
+  const [notificationsCount, setNotificationsCount] = useState(0);
+  const [loading, setLoading] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -57,34 +67,85 @@ export default function Header({ toggleSidebar, isSidebarOpen, user }: HeaderPro
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Fetch notifications count (optional)
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token || !user) return;
+        
+        const response = await fetch(`${API_URL}/api/notifications/count`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setNotificationsCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+  }, [user]);
+
   const handleLogout = async () => {
+    setLoading(true);
     try {
-      await logout();
+      const token = localStorage.getItem('accessToken');
+      
+      // Call logout API
+      if (token) {
+        await fetch(`${API_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+      
+      // Clear local storage
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      
       notifications.show({
         title: 'Success',
         message: 'Logged out successfully',
         color: 'green',
       });
+      
+      // Call custom onLogout if provided
+      if (onLogout) {
+        onLogout();
+      }
+      
+      // Redirect to home
+      router.push('/');
     } catch (error) {
       notifications.show({
         title: 'Error',
         message: 'Failed to logout',
         color: 'red',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Get current page title
+  // Get current page title from pathname
   const getPageTitle = () => {
     const path = pathname.split('/').pop();
     if (!path || path === 'dashboard') return 'Dashboard';
-    return path.charAt(0).toUpperCase() + path.slice(1);
+    
+    // Format the title (e.g., "manage-users" -> "Manage Users")
+    return path
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   // Get user initials for avatar fallback
   const getUserInitials = () => {
-    if (!user?.name) return 'JD';
-    return user.name
+    if (!user?.full_name) return 'U';
+    return user.full_name
       .split(' ')
       .map(n => n[0])
       .join('')
@@ -92,13 +153,34 @@ export default function Header({ toggleSidebar, isSidebarOpen, user }: HeaderPro
       .slice(0, 2);
   };
 
+  // Get role badge color
+  const getRoleColor = (role: string) => {
+    const roleColors: Record<string, string> = {
+      admin: 'red',
+      manager: 'orange',
+      cashier: 'green',
+      instructor: 'blue',
+      student: 'grape',
+      department_head: 'violet',
+    };
+    return roleColors[role?.toLowerCase()] || 'gray';
+  };
+
+  // Format role for display
+  const formatRole = (role: string) => {
+    return role
+      ?.split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ') || 'User';
+  };
+
   return (
     <header
       className={`w-full h-full flex items-center px-4 md:px-6 transition-all duration-300 relative ${
-        scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm' : 'bg-transparent'
+        scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm dark:bg-gray-900/95' : 'bg-transparent'
       }`}
     >
-      {isLoading && <LoadingOverlay visible />}
+      <LoadingOverlay visible={loading} overlayProps={{ blur: 2 }} />
       
       <Group justify="space-between" className="w-full">
         <Group>
@@ -110,71 +192,17 @@ export default function Header({ toggleSidebar, isSidebarOpen, user }: HeaderPro
             aria-label="Toggle navigation"
           />
           
-          {/* Logo Section */}
-          <Group gap="xs">
-            <Link href="/dashboard" className="flex items-center gap-2 no-underline">
-              <div className="relative">
-                <div className="w-[45px] h-[45px] rounded-full overflow-hidden border-2 border-black">
-                  <Image
-                    src="/images/logo.jpg"
-                    alt="Lucia Printing Logo"
-                    width={45}
-                    height={45}
-                    className="object-cover"
-                    priority
-                  />
-                </div>
-                <motion.div
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ repeat: Infinity, duration: 2 }}
-                />
-              </div>
-              
-              {/* Logo Text - Hidden on mobile, shown on sm and up */}
-              <div className="hidden sm:flex flex-col min-w-0">
-                <Text
-                  size="lg"
-                  fw={800}
-                  className={`leading-tight truncate ${
-                    scrolled 
-                      ? 'text-gray-900 dark:text-white' 
-                      : 'text-white'
-                  }`}
-                  style={{ fontFamily: 'Montserrat, sans-serif' }}
-                >
-                  Lucia
-                </Text>
-                <Text
-                  size="sm"
-                  fw={600}
-                  className={`leading-tight truncate ${
-                    scrolled 
-                      ? 'text-red-600 dark:text-red-400' 
-                      : 'text-red-400'
-                  }`}
-                  style={{ fontFamily: 'Montserrat, sans-serif' }}
-                >
-                  Printing & Advertising
-                </Text>
-              </div>
-
-              {/* Mobile: Show only first letter or short name */}
-              <div className="sm:hidden flex flex-col">
-                <Text
-                  size="md"
-                  fw={800}
-                  className={`leading-tight ${
-                    scrolled 
-                      ? 'text-gray-900 dark:text-white' 
-                      : 'text-white'
-                  }`}
-                >
-                  L
-                </Text>
-              </div>
-            </Link>
-          </Group>
+          {/* Page Title */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="hidden md:block"
+          >
+            <Text size="xl" fw={700} className="text-gray-800 dark:text-white">
+              {getPageTitle()}
+            </Text>
+          </motion.div>
         </Group>
 
         <Group gap="lg">
@@ -200,56 +228,119 @@ export default function Header({ toggleSidebar, isSidebarOpen, user }: HeaderPro
           </div>
 
           {/* Notifications */}
-          <Indicator label={3} size={16} color="red" offset={4}>
+          <Indicator 
+            label={notificationsCount} 
+            size={16} 
+            color="red" 
+            offset={4}
+            disabled={notificationsCount === 0}
+          >
             <Tooltip label="Notifications" withArrow position="bottom">
-              <ActionIcon size="lg" variant="subtle" color="gray">
+              <ActionIcon 
+                size="lg" 
+                variant="subtle" 
+                color="gray"
+                onClick={() => router.push('/dashboard/notifications')}
+              >
                 <IconBell size={20} />
               </ActionIcon>
             </Tooltip>
           </Indicator>
 
           {/* User Menu */}
-          <Menu shadow="lg" width={200} position="bottom-end">
+          <Menu shadow="lg" width={280} position="bottom-end" withArrow>
             <Menu.Target>
               <Group gap="xs" className="cursor-pointer hover:opacity-80 transition-opacity">
                 <Avatar 
-                  src={user?.avatar || "https://i.pravatar.cc/150?img=7"} 
+                  src={user?.avatar || null} 
                   size="md" 
                   radius="xl"
-                  color="red"
+                  color={getRoleColor(user?.role || '')}
                 >
                   {getUserInitials()}
                 </Avatar>
                 <div className="hidden md:block">
-                  <Text size="sm" fw={500}>{user?.name || 'John Doe'}</Text>
-                  <Text size="xs" c="dimmed">{user?.role || 'Administrator'}</Text>
+                  <Group gap="xs">
+                    <Text size="sm" fw={500}>{user?.full_name || 'User'}</Text>
+                    <Badge 
+                      size="xs" 
+                      color={getRoleColor(user?.role || '')}
+                      variant="light"
+                    >
+                      {formatRole(user?.role || 'user')}
+                    </Badge>
+                  </Group>
+                  <Text size="xs" c="dimmed">{user?.email || 'user@example.com'}</Text>
                 </div>
                 <IconChevronDown size={14} className="hidden md:block" />
               </Group>
             </Menu.Target>
             
             <Menu.Dropdown>
-              <Menu.Label>Account</Menu.Label>
+              {/* User Info Header */}
+              <div className="px-3 py-2 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-t-lg">
+                <Group>
+                  <Avatar 
+                    src={user?.avatar || null} 
+                    size="md" 
+                    radius="xl"
+                    color={getRoleColor(user?.role || '')}
+                  >
+                    {getUserInitials()}
+                  </Avatar>
+                  <div>
+                    <Text fw={600} size="sm">{user?.full_name || 'User'}</Text>
+                    <Text size="xs" c="dimmed">{user?.email || 'user@example.com'}</Text>
+                  </div>
+                </Group>
+              </div>
+
+              <Menu.Label>Quick Actions</Menu.Label>
+              <Menu.Item 
+                leftSection={<IconDashboard size={14} />} 
+                component={Link} 
+                href="/dashboard"
+              >
+                Dashboard
+              </Menu.Item>
               <Menu.Item 
                 leftSection={<IconUser size={14} />} 
                 component={Link} 
                 href="/dashboard/profile"
               >
-                Profile
+                My Profile
               </Menu.Item>
+              <Menu.Item 
+                leftSection={<IconFileText size={14} />} 
+                component={Link} 
+                href="/dashboard/my-uploads"
+              >
+                My Uploads
+              </Menu.Item>
+              <Menu.Item 
+                leftSection={<IconMessage size={14} />} 
+                component={Link} 
+                href="/dashboard/messages"
+              >
+                Messages
+              </Menu.Item>
+              
+              <Menu.Divider />
+              
+              <Menu.Label>Settings</Menu.Label>
               <Menu.Item 
                 leftSection={<IconSettings size={14} />} 
                 component={Link} 
                 href="/dashboard/settings"
               >
-                Settings
+                Account Settings
               </Menu.Item>
               <Menu.Item 
                 leftSection={<IconCreditCard size={14} />} 
                 component={Link} 
                 href="/dashboard/billing"
               >
-                Billing
+                Billing & Payments
               </Menu.Item>
               
               <Menu.Divider />
@@ -258,9 +349,9 @@ export default function Header({ toggleSidebar, isSidebarOpen, user }: HeaderPro
                 leftSection={<IconLogout size={14} />} 
                 color="red"
                 onClick={handleLogout}
-                disabled={isLoading}
+                disabled={loading}
               >
-                {isLoading ? 'Logging out...' : 'Logout'}
+                {loading ? 'Logging out...' : 'Logout'}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -274,6 +365,7 @@ export default function Header({ toggleSidebar, isSidebarOpen, user }: HeaderPro
         position="top"
         size="auto"
         padding="md"
+        radius="md"
       >
         <TextInput
           placeholder="Search..."
@@ -281,6 +373,11 @@ export default function Header({ toggleSidebar, isSidebarOpen, user }: HeaderPro
           radius="md"
           autoFocus
           leftSection={<IconSearch size={18} />}
+          rightSection={
+            <ActionIcon size="sm" onClick={() => setSearchOpened(false)}>
+              ✕
+            </ActionIcon>
+          }
         />
       </Drawer>
     </header>

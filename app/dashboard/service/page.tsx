@@ -255,71 +255,99 @@ export default function AdminServicesPage() {
   };
 
   // Handle save service
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('accessToken');
-      const formDataToSend = new FormData();
+// Handle save service
+const handleSave = async () => {
+  setSaving(true);
+  try {
+    const token = localStorage.getItem('accessToken');
+    const formDataToSend = new FormData();
+    
+    // IMPORTANT: Send ALL form data, including empty arrays
+    // This ensures the backend receives all fields
+    Object.keys(formData).forEach(key => {
+      const value = formData[key];
       
-      // Append all form data
-      Object.keys(formData).forEach(key => {
-        if (Array.isArray(formData[key])) {
-          formDataToSend.append(key, JSON.stringify(formData[key]));
-        } else if (typeof formData[key] === 'object' && formData[key] !== null) {
-          formDataToSend.append(key, JSON.stringify(formData[key]));
-        } else {
-          formDataToSend.append(key, formData[key]?.toString() || '');
-        }
-      });
-      
-      // Append gallery files
-      galleryFiles.forEach(file => {
-        formDataToSend.append('gallery', file);
-      });
-
-      // Append deleted images if editing
-      if (editingService && existingGallery.length > 0) {
-        const deletedImages = editingService.gallery
-          ?.filter((img: any) => !existingGallery.find((eg: any) => eg.id === img.id))
-          ?.map((img: any) => img.id) || [];
-        formDataToSend.append('deleted_images', JSON.stringify(deletedImages));
+      if (key === 'gallery') {
+        // Skip gallery as it's handled separately
+        return;
       }
-
-      const url = editingService
-        ? `${API_URL}/api/admin/services/${editingService.id}`
-        : `${API_URL}/api/admin/services`;
       
-      const response = await fetch(url, {
-        method: editingService ? 'PUT' : 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formDataToSend,
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        notifications.show({
-          title: 'Success',
-          message: `Service ${editingService ? 'updated' : 'created'} successfully`,
-          color: 'green',
-        });
-        closeForm();
-        fetchServices();
-        resetForm();
+      // Handle different types of values
+      if (Array.isArray(value)) {
+        // Always send arrays as JSON strings, even if empty
+        // This is crucial - if you don't send empty arrays, the backend might not update them
+        formDataToSend.append(key, JSON.stringify(value));
+        console.log(`Appending ${key}:`, JSON.stringify(value)); // Debug log
+      } else if (typeof value === 'object' && value !== null) {
+        formDataToSend.append(key, JSON.stringify(value));
+        console.log(`Appending ${key}:`, JSON.stringify(value)); // Debug log
       } else {
-        throw new Error(data.message);
+        // For strings, numbers, booleans, etc.
+        formDataToSend.append(key, value?.toString() || '');
+        console.log(`Appending ${key}:`, value?.toString() || ''); // Debug log
       }
-    } catch (error: any) {
-      notifications.show({
-        title: 'Error',
-        message: error.message || 'Failed to save service',
-        color: 'red',
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+    });
+    
+    // Append gallery files
+    galleryFiles.forEach(file => {
+      formDataToSend.append('gallery', file);
+    });
 
+    // Handle deleted images
+    if (editingService) {
+      const originalGallery = editingService.gallery || [];
+      const currentGalleryIds = existingGallery.map(img => img.id);
+      const deletedImages = originalGallery
+        .filter((img: any) => !currentGalleryIds.includes(img.id))
+        .map((img: any) => img.id);
+      
+      if (deletedImages.length > 0) {
+        formDataToSend.append('deleted_images', JSON.stringify(deletedImages));
+        console.log('Deleted images:', JSON.stringify(deletedImages)); // Debug log
+      }
+    }
+
+    const url = editingService
+      ? `${API_URL}/api/admin/services/${editingService.id}`
+      : `${API_URL}/api/admin/services`;
+    
+    console.log('Sending form data to:', url); // Debug log
+    
+    const response = await fetch(url, {
+      method: editingService ? 'PUT' : 'POST',
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        // Don't set Content-Type header when sending FormData
+        // The browser will set it automatically with the correct boundary
+      },
+      body: formDataToSend,
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      notifications.show({
+        title: 'Success',
+        message: `Service ${editingService ? 'updated' : 'created'} successfully`,
+        color: 'green',
+      });
+      closeForm();
+      fetchServices();
+      resetForm();
+    } else {
+      throw new Error(data.message);
+    }
+  } catch (error: any) {
+    console.error('Save error:', error); // Debug log
+    notifications.show({
+      title: 'Error',
+      message: error.message || 'Failed to save service',
+      color: 'red',
+    });
+  } finally {
+    setSaving(false);
+  }
+};
   // Handle delete service
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this service?')) return;
@@ -385,96 +413,123 @@ export default function AdminServicesPage() {
   };
 
   // Reset form
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      slug: '',
-      short_description: '',
-      full_description: '',
-      icon_name: 'Printer',
-      gradient_from: 'from-purple-500',
-      gradient_to: 'to-pink-500',
-      badge: '',
-      category: '',
-      subcategory: '',
-      price_range: '',
-      min_order: '',
-      turnaround: '',
-      is_featured: false,
-      is_popular: false,
-      is_new: false,
-      display_order: 0,
-      status: 'active',
-      seo_title: '',
-      seo_description: '',
-      seo_keywords: '',
-      features: [],
-      applications: [],
-      process_steps: [],
-      specifications: [],
-      materials: [],
-      formats: [],
-      colors: [],
-      faqs: [],
+ // Reset form
+const resetForm = () => {
+  setFormData({
+    title: '',
+    slug: '',
+    short_description: '',
+    full_description: '',
+    icon_name: 'Printer',
+    gradient_from: 'from-purple-500',
+    gradient_to: 'to-pink-500',
+    badge: '',
+    category: '',
+    subcategory: '',
+    price_range: '',
+    min_order: '',
+    turnaround: '',
+    is_featured: false,
+    is_popular: false,
+    is_new: false,
+    display_order: 0,
+    status: 'active',
+    seo_title: '',
+    seo_description: '',
+    seo_keywords: '',
+    features: [],
+    applications: [],
+    process_steps: [],
+    specifications: [],
+    materials: [],
+    formats: [],
+    colors: [],
+    faqs: [],
+  });
+  setGalleryFiles([]);
+  setExistingGallery([]);
+  setEditingService(null);
+};
+// Edit service
+const handleEdit = async (service: any) => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`${API_URL}/api/admin/services/${service.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
-    setGalleryFiles([]);
-    setExistingGallery([]);
-    setEditingService(null);
-  };
-
-  // Edit service
-  const handleEdit = async (service: any) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/admin/services/${service.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('Fetched service data:', data.data); // Debug log
       
-      if (data.success) {
-        setEditingService(data.data);
-        setFormData({
-          title: data.data.title || '',
-          slug: data.data.slug || '',
-          short_description: data.data.short_description || '',
-          full_description: data.data.full_description || '',
-          icon_name: data.data.icon_name || 'Printer',
-          gradient_from: data.data.gradient_from || 'from-purple-500',
-          gradient_to: data.data.gradient_to || 'to-pink-500',
-          badge: data.data.badge || '',
-          category: data.data.category || '',
-          subcategory: data.data.subcategory || '',
-          price_range: data.data.price_range || '',
-          min_order: data.data.min_order || '',
-          turnaround: data.data.turnaround || '',
-          is_featured: data.data.is_featured || false,
-          is_popular: data.data.is_popular || false,
-          is_new: data.data.is_new || false,
-          display_order: data.data.display_order || 0,
-          status: data.data.status || 'active',
-          seo_title: data.data.seo_title || '',
-          seo_description: data.data.seo_description || '',
-          seo_keywords: data.data.seo_keywords || '',
-          features: data.data.features || [],
-          applications: data.data.applications || [],
-          process_steps: data.data.process_steps || [],
-          specifications: data.data.specifications || [],
-          materials: data.data.materials || [],
-          formats: data.data.formats || [],
-          colors: data.data.colors || [],
-          faqs: data.data.faqs || [],
-        });
-        setExistingGallery(data.data.gallery || []);
-        openForm();
-      }
-    } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to load service details',
-        color: 'red',
+      setEditingService(data.data);
+      
+      // Helper function to parse array fields that might come as JSON strings
+      const parseArrayField = (field: any) => {
+        if (!field) return [];
+        if (Array.isArray(field)) return field;
+        if (typeof field === 'string') {
+          try {
+            const parsed = JSON.parse(field);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        }
+        return [];
+      };
+
+      setFormData({
+        // Basic Info
+        title: data.data.title || '',
+        slug: data.data.slug || '',
+        short_description: data.data.short_description || '',
+        full_description: data.data.full_description || '',
+        icon_name: data.data.icon_name || 'Printer',
+        gradient_from: data.data.gradient_from || 'from-purple-500',
+        gradient_to: data.data.gradient_to || 'to-pink-500',
+        badge: data.data.badge || '',
+        category: data.data.category || '',
+        subcategory: data.data.subcategory || '',
+        price_range: data.data.price_range || '',
+        min_order: data.data.min_order || '',
+        turnaround: data.data.turnaround || '',
+        
+        // Status flags
+        is_featured: data.data.is_featured || false,
+        is_popular: data.data.is_popular || false,
+        is_new: data.data.is_new || false,
+        display_order: data.data.display_order || 0,
+        status: data.data.status || 'active',
+        
+        // SEO
+        seo_title: data.data.seo_title || '',
+        seo_description: data.data.seo_description || '',
+        seo_keywords: data.data.seo_keywords || '',
+        
+        // Arrays - parse them properly
+        features: parseArrayField(data.data.features),
+        applications: parseArrayField(data.data.applications),
+        process_steps: parseArrayField(data.data.process_steps),
+        specifications: parseArrayField(data.data.specifications),
+        materials: parseArrayField(data.data.materials),
+        formats: parseArrayField(data.data.formats),
+        colors: parseArrayField(data.data.colors),
+        faqs: parseArrayField(data.data.faqs),
       });
+      
+      setExistingGallery(data.data.gallery || []);
+      openForm();
     }
-  };
+  } catch (error) {
+    console.error('Edit error:', error); // Debug log
+    notifications.show({
+      title: 'Error',
+      message: 'Failed to load service details',
+      color: 'red',
+    });
+  }
+};
 
   return (
     <Container size="xl" py="xl">
@@ -631,7 +686,7 @@ export default function AdminServicesPage() {
                     variant="light"
                     color="blue"
                     size="xs"
-                    onClick={() => window.open(`/page/services/dy/${service.slug}`, '_blank')}
+                    onClick={() => window.open(`/page/services/${service.slug}`, '_blank')}
                   >
                     View Page
                   </Button>

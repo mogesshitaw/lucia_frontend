@@ -784,7 +784,7 @@ export default function AnnouncementsPage() {
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
   const [types, setTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true); 
   const [timelineLoading, setTimelineLoading] = useState(true);
 
   const [activeCategory, setActiveCategory] = useState('all');
