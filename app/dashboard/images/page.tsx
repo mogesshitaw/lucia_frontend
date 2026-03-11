@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Grid,
@@ -587,15 +588,7 @@ export default function ImagesPage() {
       }
     }
   }, []);
-
-  // Fetch images
-  useEffect(() => {
-    fetchImages();
-    fetchStats();
-    fetchTags();
-  }, [page, filters]);
-
-  const fetchImages = async () => {
+ const fetchImages = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
@@ -626,12 +619,21 @@ export default function ImagesPage() {
         setError(data.message || 'Failed to fetch images');
       }
     } catch (error) {
+      console.log(error)
       setError('Failed to fetch images');
     } finally {
       setLoading(false);
     }
-  };
+  },[filters.search, filters.sortBy, filters.sortOrder, filters.status, filters.tags, page, router]);
 
+  // Fetch images
+  useEffect(() => {
+    fetchImages();
+    fetchStats();
+    fetchTags();
+  }, [page, filters, fetchImages]);
+
+ 
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('accessToken');

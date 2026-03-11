@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -127,7 +128,25 @@ const FloatingParticles = () => {
     </div>
   );
 };
-
+const getAnnouncementImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) return '/images/placeholder.jpg'; // Fallback image
+  
+  // Clean up the path
+  let cleanPath = imagePath.replace(/\\/g, '/');
+  cleanPath = cleanPath.replace(/^\/+/, '');
+  
+  // If it's already a full URL, return as is
+  if (cleanPath.startsWith('http')) {
+    return cleanPath;
+  }
+  
+  // Ensure it has uploads/ prefix
+  if (!cleanPath.startsWith('uploads/')) {
+    cleanPath = `uploads/${cleanPath}`;
+  }
+  
+  return `${API_URL}/${cleanPath}`;
+};
 // Announcement Card Component
 const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Announcement; index: number; onLike: (id: string) => void }) => {
   const [isSaved, setIsSaved] = useState(false);
@@ -232,30 +251,31 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
 
       <Grid>
         {/* Image Section */}
-        {announcement.image && (
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <div className="relative h-48 md:h-64 rounded-lg overflow-hidden">
-              <Image
-                src={announcement.image}
-                alt={announcement.title}
-                fill
-                className="object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              
-              {/* Type Badge */}
-              <Badge
-                size="lg"
-                variant="gradient"
-                gradient={{ from: getTypeColor(announcement.type).split(' ')[0].replace('from-', ''), to: getTypeColor(announcement.type).split(' ')[1].replace('to-', '') }}
-                className="absolute top-4 left-4"
-              >
-                {announcement.type}
-              </Badge>
-            </div>
-          </Grid.Col>
-        )}
-
+{announcement.image && (
+  <Grid.Col span={{ base: 12, md: 4 }}>
+    <div className="relative h-48 md:h-64 rounded-lg overflow-hidden">
+      <img
+        src={getAnnouncementImageUrl(announcement.image)}
+        alt={announcement.title}
+        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        onError={(e) => {
+          console.error('Card image failed to load:', announcement.image);
+          e.currentTarget.src = '/images/placeholder.jpg';
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+      
+      <Badge
+        size="lg"
+        variant="gradient"
+        gradient={{ from: getTypeColor(announcement.type).split(' ')[0].replace('from-', ''), to: getTypeColor(announcement.type).split(' ')[1].replace('to-', '') }}
+        className="absolute top-4 left-4"
+      >
+        {announcement.type}
+      </Badge>
+    </div>
+  </Grid.Col>
+)}
         {/* Content Section */}
         <Grid.Col span={{ base: 12, md: announcement.image ? 8 : 12 }}>
           <Stack gap="md">
@@ -418,13 +438,19 @@ const FeaturedAnnouncement = ({ announcement }: { announcement: Announcement | n
       withBorder
     >
       <div className="relative h-[400px] w-full">
-        <Image
-          src={announcement.image || '/images/placeholder.jpg'}
-          alt={announcement.title}
-          fill
-          className="object-cover"
-          priority
-        />
+        {/* In FeaturedAnnouncement component */}
+<div className="relative h-[400px] w-full">
+  <img
+    src={getAnnouncementImageUrl(announcement.image)}
+    alt={announcement.title}
+    className="w-full h-full object-cover"
+    onError={(e) => {
+      console.error('Featured image failed to load:', announcement.image);
+      e.currentTarget.src = '/images/placeholder.jpg';
+    }}
+  />
+  {/* Rest of your component */}
+</div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
         
         {/* Featured Badge */}
@@ -882,7 +908,6 @@ export default function AnnouncementsPage() {
   };
 
   const featuredAnnouncement = announcements.find(a => a.is_featured) || announcements[0];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
       <FloatingParticles />

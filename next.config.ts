@@ -14,7 +14,12 @@ const nextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
-      
+       {
+        protocol: 'http',
+        hostname: '[::1]', // IPv6 localhost
+        port: '5000',
+        pathname: '/uploads/**',
+      },
       // Add your production domain when deployed
       // {
       //   protocol: 'https',

@@ -1,6 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Paper,
@@ -113,14 +115,7 @@ export default function AnnouncementsAdminPage() {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    fetchAnnouncements();
-    fetchStats();
-    fetchTypes();
-  }, [page, search, statusFilter, typeFilter]);
-
-  const fetchAnnouncements = async () => {
+ const fetchAnnouncements = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('accessToken');
@@ -152,7 +147,14 @@ export default function AnnouncementsAdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  },[page, search, statusFilter, typeFilter]);
+  useEffect(() => {
+    fetchAnnouncements();
+    fetchStats();
+    fetchTypes();
+  }, [fetchAnnouncements, page, search, statusFilter, typeFilter]);
+
+ 
 
   const fetchStats = async () => {
     try {
@@ -378,7 +380,28 @@ export default function AnnouncementsAdminPage() {
       default: return 'gray';
     }
   };
-
+{/* Add this helper function at the top of your component, after the API_URL definition */}
+const getImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) return '/images/placeholder.jpg';
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  
+  // Clean up the path
+  let cleanPath = imagePath.replace(/\\/g, '/').replace(/^\/+/, '');
+  
+  // Remove any duplicate 'uploads' in the path
+  cleanPath = cleanPath.replace(/uploads\/uploads\//g, 'uploads/');
+  
+  // Ensure it has the correct prefix
+  if (!cleanPath.startsWith('uploads/')) {
+    cleanPath = `uploads/${cleanPath}`;
+  }
+  
+  return `${API_URL}/${cleanPath}`;
+};
   return (
     <Container size="xl" py="xl">
       <Stack gap="lg">
@@ -765,15 +788,19 @@ export default function AnnouncementsAdminPage() {
       >
         {selectedAnnouncement && (
           <Stack>
-            {selectedAnnouncement.image_url && (
-              <div className="relative h-64 rounded-lg overflow-hidden">
-               <img
-                src={selectedAnnouncement.image_url}
+           {selectedAnnouncement.image_url && (
+            <div className="relative h-64 rounded-lg overflow-hidden bg-gray-100">
+              <img
+                src={getImageUrl(selectedAnnouncement.image_url)}
                 alt={selectedAnnouncement.title}
-                className="object-cover"
-                />
-              </div>
-            )}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  console.error('Failed to load image:', selectedAnnouncement.image_url);
+                  e.currentTarget.src = '/images/placeholder.jpg';
+                }}
+              />
+            </div>
+)}
 
             <Group>
               <Badge color={getTypeColor(selectedAnnouncement.type)} size="lg">

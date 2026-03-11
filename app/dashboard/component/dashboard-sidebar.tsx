@@ -376,12 +376,19 @@ export default function DashboardSidebar({ opened }: SidebarProps) {
       icon: <IconCalendar size={20} />,
       href: '/dashboard/calendar',
     },
+     {
+      id: 'Service',
+      label: 'Service',
+      icon: <IconLayoutDashboard size={20} />,
+      href: '/dashboard/service',
+    },
     {
       id: 'settings',
       label: 'Settings',
       icon: <IconSettings size={20} />,
       href: '/dashboard/settings',
     },
+
   ];
 
   const handleLogout = async () => {
