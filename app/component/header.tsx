@@ -54,7 +54,7 @@ import { usePathname } from 'next/navigation';
 const MotionDiv = motion.div;
 
 // API URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ||'https://lucia-backend-iumb.onrender.com'|| 'http://localhost:5000';
 
 // Icon mapping for category icons
 const iconMap: Record<string, any> = {
