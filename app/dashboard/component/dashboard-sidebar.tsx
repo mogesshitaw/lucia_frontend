@@ -267,13 +267,13 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
       id: 'services',
       label: 'Services',
       icon: <IconBuildingStore size={18} />,
-      href: '/dashboard/services',
+      href: '/dashboard/service',
       children: [
         {
           id: 'service-categories',
           label: 'Categories',
           icon: <IconCategory size={16} />,
-          href: '/dashboard/services/categories',
+          href: '/dashboard/service/categories',
         },
         {
           id: 'service-list',
