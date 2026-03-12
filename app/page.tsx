@@ -3,8 +3,8 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, Avatar, SimpleGrid, ActionIcon, Tooltip, Image, Spoiler, Tabs, Center, Paper, Skeleton, Stack } from '@mantine/core';
-import { motion, useScroll, useTransform, useAnimation } from 'framer-motion';
+import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, Avatar, SimpleGrid, ActionIcon, Tooltip, Spoiler, Tabs, Center, Paper, Skeleton, Stack, useMantineColorScheme } from '@mantine/core';
+import { motion, useScroll, useTransform, useAnimation, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { useEffect, useState, useRef } from 'react';
 import {
@@ -33,7 +33,6 @@ import {
   Printer,
   Zap,
   Gem,
-  Link as LinkIcon,
   Bookmark,
   Camera,
   Car,
@@ -51,6 +50,9 @@ import {
   Tag,
   Wine,
   Snowflake,
+  X,
+  Menu,
+  ChevronUp,
 } from 'lucide-react';
 import CountUp from 'react-countup';
 import Footer from './component/footer';
@@ -58,9 +60,10 @@ import { useMediaQuery } from '@mantine/hooks';
 import confetti from 'canvas-confetti';
 import { Variants } from 'framer-motion';
 import { TestimonialForm } from './component/TestimonialForm';
-import { IconStar } from '@tabler/icons-react';
 import Link from 'next/link';
- interface ServiceImage {
+
+// ==================== TYPES ====================
+interface ServiceImage {
   id: string;
   service_id: string;
   image_path: string;
@@ -72,6 +75,7 @@ import Link from 'next/link';
     slug: string;
   };
 }
+
 interface Service {
   id: string;
   title: string;
@@ -84,7 +88,7 @@ interface Service {
   category: string;
   price_range: string;
 }
-// ==================== TYPES ====================
+
 interface Testimonial {
   id: string;
   customer_name: string;
@@ -96,15 +100,211 @@ interface Testimonial {
   created_at: string;
 }
 
+// ==================== CUSTOM HOOKS ====================
+const useIsDark = () => {
+  const { colorScheme } = useMantineColorScheme();
+  return colorScheme === 'dark';
+};
+
+const useScrollAnimation = (threshold = 0.1) => {
+  const [ref, inView] = useInView({ threshold, triggerOnce: true });
+  const controls = useAnimation();
+
+  useEffect(() => {
+    if (inView) {
+      controls.start('visible');
+    }
+  }, [controls, inView]);
+
+  return { ref, controls, inView };
+};
+
 // ==================== COMPONENTS ====================
 const MotionDiv = motion.div;
 const MotionSection = motion.section;
 const MotionText = motion(Text as any);
 const MotionCard = motion(Card as any);
 
+// ==================== SMART FLOATING ACTIONS ====================
+const SmartFloatingActions = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const isDark = useIsDark();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Show button after scrolling down 300px
+      if (currentScrollY > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+        setIsExpanded(false); // Collapse when at top
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsExpanded(false);
+  };
+
+  const handleAction = (action: string) => {
+    switch(action) {
+      case 'chat':
+        window.open('https://t.me/luciaprinting', '_blank');
+        break;
+      case 'quote':
+        window.location.href = '/page/contact';
+        break;
+      case 'call':
+        window.location.href = 'tel:+251911234567';
+        break;
+      case 'services':
+        window.location.href = '/page/services';
+        break;
+    }
+    setIsExpanded(false);
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <motion.div
+      className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      {/* Expanded Actions */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            className="flex flex-col gap-3 mb-2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Tooltip label="Chat with us" position="left" withArrow>
+              <ActionIcon
+                size="lg"
+                radius="xl"
+                variant="filled"
+                color="blue"
+                className={`shadow-lg hover:scale-110 transition-transform ${isDark ? 'shadow-blue-900/30' : ''}`}
+                onClick={() => handleAction('chat')}
+              >
+                <MessageCircle size={20} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Tooltip label="Get a quote" position="left" withArrow>
+              <ActionIcon
+                size="lg"
+                radius="xl"
+                variant="filled"
+                color="green"
+                className={`shadow-lg hover:scale-110 transition-transform ${isDark ? 'shadow-green-900/30' : ''}`}
+                onClick={() => handleAction('quote')}
+              >
+                <DollarSign size={20} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Tooltip label="Call now" position="left" withArrow>
+              <ActionIcon
+                size="lg"
+                radius="xl"
+                variant="filled"
+                color="red"
+                className={`shadow-lg hover:scale-110 transition-transform ${isDark ? 'shadow-red-900/30' : ''}`}
+                onClick={() => handleAction('call')}
+              >
+                <Phone size={20} />
+              </ActionIcon>
+            </Tooltip>
+
+            <Tooltip label="Our services" position="left" withArrow>
+              <ActionIcon
+                size="lg"
+                radius="xl"
+                variant="filled"
+                color="orange"
+                className={`shadow-lg hover:scale-110 transition-transform ${isDark ? 'shadow-orange-900/30' : ''}`}
+                onClick={() => handleAction('services')}
+              >
+                <Printer size={20} />
+              </ActionIcon>
+            </Tooltip>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main FAB */}
+      <div className="flex gap-3">
+        <Tooltip label="Scroll to top" position="left" withArrow>
+          <ActionIcon
+            size="lg"
+            radius="xl"
+            variant="filled"
+            color="gray"
+            className={`shadow-lg hover:scale-110 transition-transform ${isDark ? 'bg-gray-700 hover:bg-gray-600' : ''}`}
+            onClick={scrollToTop}
+          >
+            <ChevronUp size={20} />
+          </ActionIcon>
+        </Tooltip>
+
+        <Tooltip label={isExpanded ? "Close menu" : "Quick actions"} position="left" withArrow>
+          <ActionIcon
+            size="xl"
+            radius="xl"
+            variant="filled"
+            color="red"
+            className="shadow-lg hover:scale-110 transition-transform"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            <motion.div
+              animate={{ rotate: isExpanded ? 45 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {isExpanded ? <X size={24} /> : <Menu size={24} />}
+            </motion.div>
+          </ActionIcon>
+        </Tooltip>
+      </div>
+
+      {/* Pulse Effect */}
+      <motion.div
+        className="absolute inset-0 -z-10 rounded-full bg-red-500"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.5, 0, 0.5],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        style={{ width: '48px', height: '48px', right: '0', bottom: '0' }}
+      />
+    </motion.div>
+  );
+};
+
 // ==================== STUNNING WELCOME TEXT COMPONENT ====================
 const StunningWelcomeText = () => {
   const [isHovered, setIsHovered] = useState(false);
+  const isDark = useIsDark();
 
   return (
     <MotionDiv
@@ -212,12 +412,12 @@ const StunningWelcomeText = () => {
           >
             <Title
               order={2}
-              className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white"
+              className={`text-3xl md:text-5xl lg:text-6xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
             >
               <motion.span
                 className="inline-block"
                 animate={{
-                  color: isHovered ? ['#ef4444', '#f97316', '#f59e0b', '#ef4444'] : '#000',
+                  color: isHovered ? ['#ef4444', '#f97316', '#f59e0b', '#ef4444'] : isDark ? '#fff' : '#000',
                 }}
                 transition={{ duration: 3, repeat: isHovered ? Infinity : 0 }}
               >
@@ -320,6 +520,8 @@ const StunningWelcomeText = () => {
 
 // ==================== ANIMATED BACKGROUND WAVES ====================
 const AnimatedWaves = () => {
+  const isDark = useIsDark();
+  
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       <svg
@@ -328,7 +530,7 @@ const AnimatedWaves = () => {
         preserveAspectRatio="none"
       >
         <motion.path
-          fill="rgba(239,68,68,0.1)"
+          fill={isDark ? "rgba(255,255,255,0.03)" : "rgba(239,68,68,0.1)"}
           fillOpacity="1"
           d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,170.7C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
           animate={{
@@ -350,27 +552,10 @@ const AnimatedWaves = () => {
   );
 };
 
-// Custom hook for scroll animations
-const useScrollAnimation = (threshold = 0.1) => {
-  const [ref, inView] = useInView({ threshold, triggerOnce: true });
-  const controls = useAnimation();
-
-  useEffect(() => {
-    if (inView) {
-      controls.start('visible');
-    }
-  }, [controls, inView]);
-
-  return { 
-    ref,
-    controls,
-    inView 
-  };
-};
-
-// Floating particles animation
+// ==================== FLOATING PARTICLES ====================
 const FloatingParticles = () => {
   const [mounted, setMounted] = useState(false);
+  const isDark = useIsDark();
   const [particles, setParticles] = useState<Array<{
     id: number;
     startX: number;
@@ -387,7 +572,10 @@ const FloatingParticles = () => {
   useEffect(() => {
     setMounted(true);
     
-    const colors = ['rgba(239,68,68,0.2)', 'rgba(249,115,22,0.2)', 'rgba(245,158,11,0.2)', 'rgba(34,197,94,0.2)', 'rgba(59,130,246,0.2)', 'rgba(168,85,247,0.2)'];
+    const colors = isDark 
+      ? ['rgba(255,255,255,0.1)', 'rgba(239,68,68,0.2)', 'rgba(249,115,22,0.2)', 'rgba(245,158,11,0.2)']
+      : ['rgba(239,68,68,0.2)', 'rgba(249,115,22,0.2)', 'rgba(245,158,11,0.2)', 'rgba(34,197,94,0.2)', 'rgba(59,130,246,0.2)', 'rgba(168,85,247,0.2)'];
+    
     const shapes = ['circle', 'square', 'triangle'] as const;
     
     const newParticles = [...Array(30)].map((_, i) => ({
@@ -415,7 +603,7 @@ const FloatingParticles = () => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [isDark]);
 
   if (!mounted || particles.length === 0) return null;
 
@@ -466,10 +654,11 @@ const FloatingParticles = () => {
   );
 };
 
-// Animated Counter with Confetti
+// ==================== ANIMATED COUNTER ====================
 const AnimatedCounter = ({ value, label, icon, suffix = '' }: { value: number; label: string; icon: React.ReactNode; suffix?: string }) => {
   const counterRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
+  const isDark = useIsDark();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -504,7 +693,7 @@ const AnimatedCounter = ({ value, label, icon, suffix = '' }: { value: number; l
       <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
         {inView && <CountUp end={value} duration={2.5} separator="," suffix={suffix} />}
       </div>
-      <div className="flex items-center justify-center gap-2 text-lg text-gray-600 dark:text-gray-400">
+      <div className={`flex items-center justify-center gap-2 text-lg ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
         <span>{icon}</span>
         <span>{label}</span>
       </div>
@@ -512,21 +701,24 @@ const AnimatedCounter = ({ value, label, icon, suffix = '' }: { value: number; l
   );
 };
 
-// Animated Gradient Border Card
+// ==================== GRADIENT BORDER CARD ====================
 const GradientBorderCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
+  const isDark = useIsDark();
+  
   return (
     <div className={`relative group ${className}`}>
       <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-gradient-xy" />
-      <div className="relative bg-white dark:bg-gray-900 rounded-lg p-6">
+      <div className={`relative ${isDark ? 'bg-gray-900' : 'bg-white'} rounded-lg p-6`}>
         {children}
       </div>
     </div>
   );
 };
 
-// Parallax Background
+// ==================== PARALLAX BACKGROUND ====================
 const ParallaxBackground = () => {
   const { scrollY } = useScroll();
+  const isDark = useIsDark();
   const y1 = useTransform(scrollY, [0, 1000], [0, 200]);
   const y2 = useTransform(scrollY, [0, 1000], [0, -200]);
   const y3 = useTransform(scrollY, [0, 1000], [0, 100]);
@@ -535,23 +727,25 @@ const ParallaxBackground = () => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       <motion.div
-        className="absolute top-20 left-10 w-64 h-64 bg-red-500/10 rounded-full filter blur-3xl"
+        className={`absolute top-20 left-10 w-64 h-64 ${isDark ? 'bg-white/5' : 'bg-red-500/10'} rounded-full filter blur-3xl`}
         style={{ y: y1, opacity }}
       />
       <motion.div
-        className="absolute bottom-20 right-10 w-96 h-96 bg-orange-500/10 rounded-full filter blur-3xl"
+        className={`absolute bottom-20 right-10 w-96 h-96 ${isDark ? 'bg-white/5' : 'bg-orange-500/10'} rounded-full filter blur-3xl`}
         style={{ y: y2, opacity }}
       />
       <motion.div
-        className="absolute top-1/2 left-1/2 w-48 h-48 bg-yellow-500/10 rounded-full filter blur-3xl"
+        className={`absolute top-1/2 left-1/2 w-48 h-48 ${isDark ? 'bg-white/5' : 'bg-yellow-500/10'} rounded-full filter blur-3xl`}
         style={{ y: y3, opacity }}
       />
     </div>
   );
 };
 
-// 3D Rotating Cube
+// ==================== 3D ROTATING CUBE ====================
 const RotatingCube = () => {
+  const isDark = useIsDark();
+  
   return (
     <div className="perspective-1000 w-32 h-32 mx-auto">
       <motion.div
@@ -569,42 +763,42 @@ const RotatingCube = () => {
       >
         {/* Front face */}
         <div 
-          className="absolute w-full h-full bg-gradient-to-br from-red-500/30 to-orange-500/30 border-2 border-red-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          className={`absolute w-full h-full bg-gradient-to-br from-red-500/30 to-orange-500/30 border-2 border-red-500 flex items-center justify-center text-center p-2 text-xs font-bold ${isDark ? 'text-white' : 'text-white'}`}
           style={{ transform: 'rotateY(0deg) translateZ(60px)' }}
         >
           LUCIA
         </div>
         {/* Back face */}
         <div 
-          className="absolute w-full h-full bg-gradient-to-br from-orange-500/30 to-yellow-500/30 border-2 border-orange-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          className={`absolute w-full h-full bg-gradient-to-br from-orange-500/30 to-yellow-500/30 border-2 border-orange-500 flex items-center justify-center text-center p-2 text-xs font-bold ${isDark ? 'text-white' : 'text-white'}`}
           style={{ transform: 'rotateY(180deg) translateZ(60px)' }}
         >
           PRINTING
         </div>
         {/* Right face */}
         <div 
-          className="absolute w-full h-full bg-gradient-to-br from-yellow-500/30 to-green-500/30 border-2 border-yellow-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          className={`absolute w-full h-full bg-gradient-to-br from-yellow-500/30 to-green-500/30 border-2 border-yellow-500 flex items-center justify-center text-center p-2 text-xs font-bold ${isDark ? 'text-white' : 'text-white'}`}
           style={{ transform: 'rotateY(90deg) translateZ(60px)' }}
         >
           ADVERTISING
         </div>
         {/* Left face */}
         <div 
-          className="absolute w-full h-full bg-gradient-to-br from-green-500/30 to-blue-500/30 border-2 border-green-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          className={`absolute w-full h-full bg-gradient-to-br from-green-500/30 to-blue-500/30 border-2 border-green-500 flex items-center justify-center text-center p-2 text-xs font-bold ${isDark ? 'text-white' : 'text-white'}`}
           style={{ transform: 'rotateY(-90deg) translateZ(60px)' }}
         >
           QUALITY
         </div>
         {/* Top face */}
         <div 
-          className="absolute w-full h-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border-2 border-blue-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          className={`absolute w-full h-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border-2 border-blue-500 flex items-center justify-center text-center p-2 text-xs font-bold ${isDark ? 'text-white' : 'text-white'}`}
           style={{ transform: 'rotateX(90deg) translateZ(60px)' }}
         >
           SINCE 2010
         </div>
         {/* Bottom face */}
         <div 
-          className="absolute w-full h-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 border-2 border-purple-500 flex items-center justify-center text-center p-2 text-xs font-bold text-white"
+          className={`absolute w-full h-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 border-2 border-purple-500 flex items-center justify-center text-center p-2 text-xs font-bold ${isDark ? 'text-white' : 'text-white'}`}
           style={{ transform: 'rotateX(-90deg) translateZ(60px)' }}
         >
           PREMIUM
@@ -614,11 +808,13 @@ const RotatingCube = () => {
   );
 };
 
+// ==================== MAIN COMPONENT ====================
 export default function HomePage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [activeTab, setActiveTab] = useState<string | null>('all');
   const videoRef = useRef<HTMLVideoElement>(null);
+  const isDark = useIsDark();
   
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
@@ -632,7 +828,6 @@ export default function HomePage() {
   const { ref: testimonialsRef, controls: testimonialsControls } = useScrollAnimation(0.1);
   const { ref: worksRef, controls: worksControls } = useScrollAnimation(0.1);
   
-  // FIXED: Properly typed testimonials state
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [testimonialsLoading, setTestimonialsLoading] = useState(true);
   const [testimonialFormOpened, setTestimonialFormOpened] = useState(false);
@@ -659,7 +854,8 @@ export default function HomePage() {
       setTestimonialsLoading(false);
     }
   };
-   // Fetch recent works from service images
+  
+  // Fetch recent works from service images
   const fetchRecentWorks = async () => {
     try {
       const response = await fetch(`${API_URL}/api/public/gallery/images?limit=8&sortBy=created_at&sortOrder=desc`);
@@ -673,6 +869,7 @@ export default function HomePage() {
       setRecentWorksLoading(false);
     }
   };
+  
   const fetchFeaturedServices = async () => {
     try {
       const response = await fetch(`${API_URL}/api/public/services?limit=8`);
@@ -686,12 +883,13 @@ export default function HomePage() {
       setServicesLoading(false);
     }
   };
+  
   useEffect(() => {
     fetchTestimonials();
     fetchRecentWorks();
     fetchFeaturedServices();
   }, []);
-  // Add proper typing to your variants
+
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -722,7 +920,8 @@ export default function HomePage() {
     { value: 13, label: 'Years Experience', suffix: '', icon: <Clock size={24} /> },
     { value: 24, label: 'Hour Support', suffix: '/7', icon: <Headphones size={24} /> },
   ];
- // Get icon component
+
+  // Get icon component
   const getIconComponent = (iconName: string, size: number = 32) => {
     const icons: Record<string, any> = {
       Printer, Shirt, Megaphone, Camera, Car, Lightbulb, Sparkles,
@@ -732,11 +931,6 @@ export default function HomePage() {
     const Icon = icons[iconName] || Printer;
     return <Icon size={size} />;
   };
-
-  // Get gradient classes
-
-
-
 
   const whyChooseUs = [
     { icon: <Truck size={28} />, title: 'Lightning Fast', desc: 'Fast & Quality & Services at Affordable', color: 'from-blue-500 to-cyan-500' },
@@ -753,9 +947,6 @@ export default function HomePage() {
     { step: 3, title: 'Approve & Pay', desc: 'Secure payment options', icon: <CheckCircle />, color: 'from-yellow-500 to-orange-500' },
     { step: 4, title: 'Print & Ship', desc: 'Track your order live', icon: <Truck />, color: 'from-purple-500 to-pink-500' },
   ];
-
-
-
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -774,7 +965,8 @@ export default function HomePage() {
       setIsMuted(!isMuted);
     }
   };
- // Get image URL
+
+  // Get image URL
   const getImageUrl = (path: string) => {
     if (!path) return 'https://placehold.co/600x400?text=No+Image';
     let cleanPath = path.replace(/\\/g, '/');
@@ -787,7 +979,7 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
+      <div className={`min-h-screen bg-gradient-to-b ${isDark ? 'from-gray-950 to-gray-900' : 'from-gray-50 to-white'} relative overflow-hidden`}>
         <FloatingParticles />
         <ParallaxBackground />
         <AnimatedWaves />
@@ -848,7 +1040,7 @@ export default function HomePage() {
 
               <MotionText
                 size="xl"
-                className="text-gray-200 mb-8 max-w-2xl text-lg md:text-xl"
+                className={`mb-8 max-w-2xl text-lg md:text-xl ${isDark ? 'text-gray-300' : 'text-gray-200'}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.8 }}
@@ -912,7 +1104,7 @@ export default function HomePage() {
           </motion.div>
         </MotionSection>
 
-          {/* ================= FEATURED SERVICES ================= */}
+        {/* ================= FEATURED SERVICES ================= */}
         <MotionSection
           ref={servicesRef}  
           animate={servicesControls}
@@ -923,7 +1115,7 @@ export default function HomePage() {
           <Container size="lg">
             <MotionDiv variants={itemVariants} className="text-center mb-16">
               <Badge size="lg" color="red" className="mb-4 animate-pulse">Our Services</Badge>
-              <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+              <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 Premium Printing
                 <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent"> Solutions</span>
               </Title>
@@ -951,6 +1143,12 @@ export default function HomePage() {
                     withBorder
                     component={Link}
                     href={`/page/services/${service.slug}`}
+                    styles={{
+                      root: {
+                        backgroundColor: isDark ? '#1e1f22' : 'white',
+                        borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                      }
+                    }}
                   >
                     <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient_from} ${service.gradient_to} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
                     
@@ -974,7 +1172,7 @@ export default function HomePage() {
                       {getIconComponent(service.icon_name)}
                     </ThemeIcon>
 
-                    <Title order={4} className="mb-2">{service.title}</Title>
+                    <Title order={4} className={`mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{service.title}</Title>
                     <Text size="sm" c="dimmed" className="mb-4 line-clamp-2">
                       {service.short_description}
                     </Text>
@@ -1020,7 +1218,7 @@ export default function HomePage() {
           animate={whyUsControls}
           initial="hidden"
           variants={containerVariants}
-          className="py-32 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white relative overflow-hidden"
+          className={`py-32 bg-gradient-to-br ${isDark ? 'from-gray-900 via-gray-800 to-gray-900' : 'from-gray-900 via-gray-800 to-gray-900'} text-white relative overflow-hidden`}
         >
           <div className="absolute inset-0 opacity-10">
             <motion.div
@@ -1099,7 +1297,7 @@ export default function HomePage() {
           <Container size="lg">
             <MotionDiv variants={itemVariants} className="text-center mb-16">
               <Badge size="lg" color="red" className="mb-4 animate-pulse">Simple Process</Badge>
-              <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+              <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 How It Works
               </Title>
               <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
@@ -1146,7 +1344,7 @@ export default function HomePage() {
                           {step.icon}
                         </ThemeIcon>
 
-                        <Title order={4} className="mb-2">{step.title}</Title>
+                        <Title order={4} className={`mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{step.title}</Title>
                         <Text size="sm" c="dimmed">{step.desc}</Text>
                       </div>
                     </GradientBorderCard>
@@ -1210,7 +1408,7 @@ export default function HomePage() {
             <Group justify="space-between" align="center" mb="xl">
               <MotionDiv variants={itemVariants}>
                 <Badge size="lg" color="red" className="mb-4 animate-pulse">Testimonials</Badge>
-                <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+                <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   What Our Clients Say
                 </Title>
                 <Text size="xl" c="dimmed" className="max-w-2xl">
@@ -1245,6 +1443,12 @@ export default function HomePage() {
                     radius="lg"
                     withBorder
                     className="relative hover:shadow-2xl transition-all duration-300"
+                    styles={{
+                      root: {
+                        backgroundColor: isDark ? '#1e1f22' : 'white',
+                        borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                      }
+                    }}
                   >
                     <div className="absolute top-4 right-4 text-yellow-400 flex">
                       {[...Array(testimonial.rating)].map((_, i) => (
@@ -1269,7 +1473,7 @@ export default function HomePage() {
                         {testimonial.customer_name?.charAt(0)}
                       </Avatar>
                       <div>
-                        <Text fw={600}>{testimonial.customer_name}</Text>
+                        <Text fw={600} className={isDark ? 'text-white' : 'text-gray-900'}>{testimonial.customer_name}</Text>
                         <Text size="sm" c="dimmed">{testimonial.customer_role || 'Customer'}</Text>
                         {testimonial.company && (
                           <Text size="xs" c="dimmed">{testimonial.company}</Text>
@@ -1278,7 +1482,7 @@ export default function HomePage() {
                     </Group>
 
                     <Spoiler maxHeight={80} showLabel="Read more" hideLabel="Hide">
-                      <Text size="lg" className="italic">&quot;{testimonial.content}&quot;</Text>
+                      <Text size="lg" className={`italic ${isDark ? 'text-gray-300' : ''}`}>&quot;{testimonial.content}&quot;</Text>
                     </Spoiler>
 
                     <div className="absolute bottom-4 left-4 text-red-500 opacity-10">
@@ -1288,7 +1492,14 @@ export default function HomePage() {
                 ))}
               </SimpleGrid>
             ) : (
-              <Paper p="xl" radius="lg" withBorder>
+              <Paper p="xl" radius="lg" withBorder
+                styles={{
+                  root: {
+                    backgroundColor: isDark ? '#1e1f22' : 'white',
+                    borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                  }
+                }}
+              >
                 <Center>
                   <Stack align="center">
                     <Text size="lg" c="dimmed">No testimonials yet</Text>
@@ -1306,18 +1517,18 @@ export default function HomePage() {
           </Container>
         </MotionSection>
 
-       {/* ================= RECENT WORKS ================= */}
+        {/* ================= RECENT WORKS ================= */}
         <MotionSection
           ref={worksRef}
           animate={worksControls}
           initial="hidden"
           variants={containerVariants}
-          className="py-20 bg-gray-50 dark:bg-gray-900"
+          className={`py-20 ${isDark ? 'bg-gray-900/50' : 'bg-transparent'}`}
         >
           <Container size="lg">
             <MotionDiv variants={itemVariants} className="text-center mb-12">
               <Badge size="lg" color="red" className="mb-4 animate-pulse">Portfolio</Badge>
-              <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+              <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 Recent Projects
               </Title>
               <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
@@ -1373,7 +1584,14 @@ export default function HomePage() {
                 </Group>
               </>
             ) : (
-              <Paper p="xl" radius="lg" withBorder>
+              <Paper p="xl" radius="lg" withBorder
+                styles={{
+                  root: {
+                    backgroundColor: isDark ? '#1e1f22' : 'white',
+                    borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                  }
+                }}
+              >
                 <Center>
                   <Stack align="center">
                     <Text size="lg" c="dimmed">No projects yet</Text>
@@ -1385,7 +1603,7 @@ export default function HomePage() {
         </MotionSection>
 
         {/* ================= CTA SECTION ================= */}
-        <section className="py-32 bg-gradient-to-r from-gray-900 to-gray-800 text-white relative overflow-hidden">
+        <section className={`py-32 bg-gradient-to-r ${isDark ? 'from-gray-900 to-gray-800' : 'from-gray-900 to-gray-800'} text-white relative overflow-hidden`}>
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 left-0 w-full h-full" style={{
               backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
@@ -1419,6 +1637,8 @@ export default function HomePage() {
                   gradient={{ from: 'red', to: 'orange' }}
                   className="shadow-2xl px-12 h-14"
                   rightSection={<ArrowRight size={20} />}
+                  component={Link}
+                  href="/page/contact"
                 >
                   Start Your Project
                 </Button>
@@ -1428,6 +1648,8 @@ export default function HomePage() {
                   variant="outline"
                   className="border-2 border-white text-white hover:bg-white/10 h-14"
                   leftSection={<Phone size={20} />}
+                  component="a"
+                  href="tel:+251911234567"
                 >
                   Call Us Now
                 </Button>
@@ -1439,44 +1661,8 @@ export default function HomePage() {
         {/* ================= FOOTER ================= */}
         <Footer />
 
-        {/* ================= FLOATING ACTIONS ================= */}
-        <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-          <Tooltip label="Chat with us" position="left">
-            <ActionIcon
-              size="lg"
-              radius="xl"
-              variant="filled"
-              color="blue"
-              className="shadow-lg hover:scale-110 transition-transform"
-            >
-              <MessageCircle size={20} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Get quote" position="left">
-            <ActionIcon
-              size="lg"
-              radius="xl"
-              variant="filled"
-              color="green"
-              className="shadow-lg hover:scale-110 transition-transform"
-            >
-              <DollarSign size={20} />
-            </ActionIcon>
-          </Tooltip>
-
-          <Tooltip label="Call now" position="left">
-            <ActionIcon
-              size="lg"
-              radius="xl"
-              variant="filled"
-              color="red"
-              className="shadow-lg hover:scale-110 transition-transform"
-            >
-              <Phone size={20} />
-            </ActionIcon>
-          </Tooltip>
-        </div>
+        {/* ================= SMART FLOATING ACTIONS ================= */}
+        <SmartFloatingActions />
 
         {/* Testimonial Form Modal */}
         <TestimonialForm

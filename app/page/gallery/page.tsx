@@ -26,6 +26,7 @@ import {
   Box,
   Divider,
   Chip,
+  useMantineColorScheme,
 } from '@mantine/core';
 import {
   IconSearch,
@@ -89,6 +90,9 @@ interface Category {
 const MotionDiv = motion.div;
 
 export default function GalleryPage() {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [images, setImages] = useState<ServiceImage[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -266,7 +270,11 @@ export default function GalleryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+    <div className={`min-h-screen w-full transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950' 
+        : 'bg-gradient-to-b from-gray-50 to-white'
+    }`}>
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-r from-red-600 to-orange-600 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -285,7 +293,7 @@ export default function GalleryPage() {
             <Badge size="lg" variant="white" className="mb-4 bg-white/20 text-white border-0">
               Service Gallery
             </Badge>
-            <Title order={1} className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+            <Title order={1} className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white">
               Our Work <span className="text-yellow-300">Showcase</span>
             </Title>
             <Text size="xl" className="max-w-3xl mx-auto text-white/90 mb-8">
@@ -297,7 +305,16 @@ export default function GalleryPage() {
 
       <Container size="xl" className="py-12">
         {/* Filters Bar */}
-        <Paper withBorder p="md" radius="lg" className="mb-8">
+        <Paper 
+          withBorder 
+          p="md" 
+          radius="lg" 
+          className={`mb-8 transition-all duration-300 ${
+            isDark 
+              ? 'bg-gray-900 border-gray-800' 
+              : 'bg-white border-gray-200'
+          }`}
+        >
           <Stack gap="md">
             <Group justify="space-between">
               <Group>
@@ -305,7 +322,9 @@ export default function GalleryPage() {
                   <IconPhoto size={20} />
                 </ThemeIcon>
                 <div>
-                  <Text fw={600}>Service Gallery</Text>
+                  <Text fw={600} className={isDark ? 'text-white' : 'text-gray-900'}>
+                    Service Gallery
+                  </Text>
                   <Text size="xs" c="dimmed">{totalImages} images</Text>
                 </div>
               </Group>
@@ -319,11 +338,16 @@ export default function GalleryPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 radius="md"
                 size="md"
+                classNames={{
+                  input: isDark 
+                    ? 'bg-gray-800 text-white border-gray-700 focus:border-red-500' 
+                    : 'bg-white text-gray-900 border-gray-200 focus:border-red-500',
+                }}
               />
               
               <Select
                 placeholder="Filter by Service"
-                leftSection={<IconCategory size={16} />}
+                leftSection={<IconCategory size={16} className={isDark ? 'text-gray-400' : 'text-gray-500'} />}
                 data={[
                   { value: '', label: 'All Services' },
                   ...services.map(s => ({ 
@@ -337,19 +361,35 @@ export default function GalleryPage() {
                 searchable
                 radius="md"
                 size="md"
+                classNames={{
+                  input: isDark 
+                    ? 'bg-gray-800 text-white border-gray-700' 
+                    : 'bg-white text-gray-900 border-gray-200',
+                  dropdown: isDark 
+                    ? 'bg-gray-800 border-gray-700' 
+                    : 'bg-white border-gray-200',
+                  option: isDark 
+                    ? 'text-gray-200 hover:bg-gray-700' 
+                    : 'text-gray-900 hover:bg-gray-50',
+                }}
               />
             </Group>
 
             {/* Category Chips */}
             {categories.length > 0 && (
               <Group gap="xs">
-                <Text size="sm" fw={500}>Categories:</Text>
+                <Text size="sm" fw={500} className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                  Categories:
+                </Text>
                 <Chip
                   size="sm"
                   variant="light"
                   checked={selectedCategory === null}
                   onChange={() => setSelectedCategory(null)}
                   color="red"
+                  classNames={{
+                    label: isDark ? 'text-gray-300' : 'text-gray-700',
+                  }}
                 >
                   All
                 </Chip>
@@ -361,6 +401,9 @@ export default function GalleryPage() {
                     checked={selectedCategory === cat.value}
                     onChange={() => setSelectedCategory(cat.value)}
                     color="red"
+                    classNames={{
+                      label: isDark ? 'text-gray-300' : 'text-gray-700',
+                    }}
                   >
                     {cat.label} ({cat.count})
                   </Chip>
@@ -379,11 +422,29 @@ export default function GalleryPage() {
             </Stack>
           </Center>
         ) : images.length === 0 ? (
-          <Paper p="xl" withBorder className="text-center">
-            <ThemeIcon size={60} radius="xl" color="gray" variant="light" className="mx-auto mb-4">
-              <IconPhoto size={30} />
+          <Paper 
+            p="xl" 
+            withBorder 
+            className={`text-center transition-all duration-300 ${
+              isDark 
+                ? 'bg-gray-900 border-gray-800' 
+                : 'bg-white border-gray-200'
+            }`}
+          >
+            <ThemeIcon 
+              size={60} 
+              radius="xl" 
+              color="gray" 
+              variant="light" 
+              className={`mx-auto mb-4 ${
+                isDark ? 'bg-gray-800' : 'bg-gray-100'
+              }`}
+            >
+              <IconPhoto size={30} className={isDark ? 'text-gray-400' : 'text-gray-600'} />
             </ThemeIcon>
-            <Title order={3} className="mb-2">No Images Found</Title>
+            <Title order={3} className={`mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              No Images Found
+            </Title>
             <Text c="dimmed" className="mb-6">
               {searchQuery || selectedService || selectedCategory
                 ? 'No images match your filters. Try adjusting your search.'
@@ -420,6 +481,7 @@ export default function GalleryPage() {
                       onClick={() => openLightbox(image, index)}
                       getImageUrl={getImageUrl}
                       getServiceIcon={getServiceIcon}
+                      isDark={isDark}
                     />
                   );
                 })}
@@ -436,6 +498,11 @@ export default function GalleryPage() {
                   withEdges
                   radius="xl"
                   color="red"
+                  classNames={{
+                    control: isDark 
+                      ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' 
+                      : 'bg-white text-gray-900 border-gray-200 hover:bg-gray-50',
+                  }}
                 />
               </Group>
             )}
@@ -452,6 +519,11 @@ export default function GalleryPage() {
         radius="lg"
         withCloseButton={false}
         centered
+        styles={{
+          content: {
+            backgroundColor: isDark ? '#111827' : '#ffffff',
+          },
+        }}
       >
         {currentImage && (
           <Box className="relative" style={{ minHeight: '60vh' }}>
@@ -465,7 +537,7 @@ export default function GalleryPage() {
               style={{ opacity: 0.8 }}
               onClick={() => navigateLightbox('prev')}
             >
-              <IconChevronLeft size={24} color="black" />
+              <IconChevronLeft size={24} color={isDark ? 'white' : 'black'} />
             </ActionIcon>
             
             <ActionIcon
@@ -477,7 +549,7 @@ export default function GalleryPage() {
               style={{ opacity: 0.8 }}
               onClick={() => navigateLightbox('next')}
             >
-              <IconChevronRight size={24} color="black" />
+              <IconChevronRight size={24} color={isDark ? 'white' : 'black'} />
             </ActionIcon>
 
             {/* Close button */}
@@ -489,11 +561,13 @@ export default function GalleryPage() {
               color="white"
               onClick={() => setLightboxOpened(false)}
             >
-              <IconX size={18} color="black" />
+              <IconX size={18} color={isDark ? 'white' : 'black'} />
             </ActionIcon>
 
             {/* Image */}
-            <div className="relative min-h-[60vh] flex items-center justify-center bg-black/5 p-4">
+            <div className={`relative min-h-[60vh] flex items-center justify-center p-4 ${
+              isDark ? 'bg-gray-900' : 'bg-gray-100'
+            }`}>
               <img
                 src={getImageUrl(currentImage.image_path)}
                 alt={currentImage.alt_text || 'Gallery image'}
@@ -502,12 +576,20 @@ export default function GalleryPage() {
             </div>
 
             {/* Image Info */}
-            <Paper p="md" withBorder className="border-t">
+            <Paper 
+              p="md" 
+              withBorder 
+              className={`border-t transition-all duration-300 ${
+                isDark 
+                  ? 'bg-gray-900 border-gray-800' 
+                  : 'bg-white border-gray-200'
+              }`}
+            >
               <Stack>
                 <Group justify="space-between">
                   <div>
                     <Group gap="xs" mb={4}>
-                      <Text fw={600} size="lg">
+                      <Text fw={600} size="lg" className={isDark ? 'text-white' : 'text-gray-900'}>
                         {currentImage.alt_text || 'Service Image'}
                       </Text>
                       {currentImage.is_primary && (
@@ -539,6 +621,7 @@ export default function GalleryPage() {
                         variant="light"
                         color={favorites.has(currentImage.id) ? 'red' : 'gray'}
                         onClick={() => toggleFavorite(currentImage.id)}
+                        className={isDark ? 'text-gray-300 hover:text-white' : ''}
                       >
                         {favorites.has(currentImage.id) ? <IconHeartFilled size={20} /> : <IconHeart size={20} />}
                       </ActionIcon>
@@ -560,18 +643,18 @@ export default function GalleryPage() {
                   </Group>
                 </Group>
 
-                <Divider />
+                <Divider className={isDark ? 'border-gray-800' : 'border-gray-200'} />
 
                 <Group gap="lg">
                   <Group gap="xs">
-                    <IconCalendar size={14} className="text-gray-500" />
+                    <IconCalendar size={14} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
                     <Text size="sm" c="dimmed">
                       {dayjs(currentImage.created_at).format('MMMM D, YYYY')}
                     </Text>
                   </Group>
                   
                   <Group gap="xs">
-                    <IconEye size={14} className="text-gray-500" />
+                    <IconEye size={14} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
                     <Text size="sm" c="dimmed">High Quality</Text>
                   </Group>
                 </Group>
@@ -599,7 +682,8 @@ function GalleryCard({
   onFavoriteToggle, 
   onClick,
   getImageUrl,
-  getServiceIcon 
+  getServiceIcon,
+  isDark 
 }: any) {
   return (
     <MotionDiv
@@ -608,7 +692,17 @@ function GalleryCard({
       transition={{ duration: 0.3, delay: index * 0.05 }}
       whileHover={{ y: -5 }}
     >
-      <Card withBorder padding="lg" radius="lg" className="group cursor-pointer" onClick={onClick}>
+      <Card 
+        withBorder 
+        padding="lg" 
+        radius="lg" 
+        className={`group cursor-pointer transition-all duration-300 ${
+          isDark 
+            ? 'bg-gray-900 border-gray-800 hover:shadow-lg hover:shadow-red-900/20' 
+            : 'bg-white border-gray-200 hover:shadow-lg hover:shadow-gray-200/50'
+        }`}
+        onClick={onClick}
+      >
         <Card.Section className="relative overflow-hidden">
           <div className="relative h-48 overflow-hidden">
             <img
@@ -623,7 +717,7 @@ function GalleryCard({
           <ActionIcon
             className="absolute top-2 right-2"
             variant="filled"
-            color={isFavorite ? 'red' : 'white'}
+            color={isFavorite ? 'red' : isDark ? 'gray' : 'white'}
             radius="xl"
             onClick={(e) => {
               e.stopPropagation();
@@ -648,7 +742,7 @@ function GalleryCard({
 
         <Stack gap="xs" mt="md">
           <Group justify="space-between">
-            <Text fw={600} size="sm" lineClamp={1}>
+            <Text fw={600} size="sm" lineClamp={1} className={isDark ? 'text-white' : 'text-gray-900'}>
               {image.alt_text || 'Service Image'}
             </Text>
           </Group>
@@ -662,7 +756,9 @@ function GalleryCard({
               <Badge 
                 variant="light" 
                 color="red"
-                className="cursor-pointer hover:opacity-80 transition-opacity"
+                className={`cursor-pointer hover:opacity-80 transition-opacity ${
+                  isDark ? 'text-gray-200' : 'text-gray-700'
+                }`}
                 leftSection={getServiceIcon(service.icon_name)}
               >
                 {service.title}

@@ -17,6 +17,7 @@ import {
   Center,
   Paper,
   Stack,
+  useMantineColorScheme,
 } from '@mantine/core';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -89,6 +90,9 @@ interface Category {
 }
 
 export default function ServicesMainPage() {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -126,30 +130,12 @@ export default function ServicesMainPage() {
           // Convert to array and sort with proper typing
           const categoryList = (Object.values(grouped) as Category[]).sort((a: Category, b: Category) => {
             const order: Record<string, number> = {
-              'apparel': 1,
-              'tshirts': 2,
-              'hoodies': 3,
-              'hats': 4,
-              'banners': 5,
-              'posters': 6,
-              'vehicle-wraps': 7,
-              'light-boxes': 8,
-              'neon-signs': 9,
-              'stickers': 10,
-              'labels': 11,
-              'frosted-glass': 12,
-              'mugs': 13,
-              'bottles': 14,
-              'business-cards': 15,
-              'flyers': 16,
-              'packaging': 17,
-              'pens': 18,
-              'keychains': 19,
-              'engraving': 20,
-              'screen-printing': 21,
-              'embroidery': 22,
-              'cutouts': 23,
-              'graphic-design': 24,
+              'apparel-printing': 1,
+              'large-format': 2,
+              'stickers-labels': 3,
+              'drinkware': 4,
+              'print-promo': 5,
+              'specialty': 6,
             };
             return (order[a.slug] || 999) - (order[b.slug] || 999);
           });
@@ -172,30 +158,12 @@ export default function ServicesMainPage() {
   // Get category icon based on slug
   const getCategoryIcon = (slug: string): string => {
     const icons: Record<string, string> = {
-      'apparel': 'Shirt',
-      'tshirts': 'Shirt',
-      'hoodies': 'ShoppingBag',
-      'hats': 'Shirt',
-      'banners': 'Megaphone',
-      'posters': 'Camera',
-      'vehicle-wraps': 'Car',
-      'light-boxes': 'Lightbulb',
-      'neon-signs': 'Sparkle',
-      'stickers': 'Tag',
-      'labels': 'Bookmark',
-      'frosted-glass': 'Snowflake',
-      'mugs': 'Coffee',
-      'bottles': 'Wine',
-      'business-cards': 'FileText',
-      'flyers': 'FileText',
-      'packaging': 'Package',
-      'pens': 'Pen',
-      'keychains': 'Key',
-      'engraving': 'Flame',
-      'screen-printing': 'Layers',
-      'embroidery': 'Sparkles',
-      'cutouts': 'Scissors',
-      'graphic-design': 'Palette',
+      'apparel-printing': 'Shirt',
+      'large-format': 'Megaphone',
+      'stickers-labels': 'Tag',
+      'drinkware': 'Coffee',
+      'print-promo': 'FileText',
+      'specialty': 'Award',
     };
     return icons[slug] || 'Star';
   };
@@ -203,30 +171,12 @@ export default function ServicesMainPage() {
   // Get color based on category
   const getCategoryColor = (slug: string): string => {
     const colors: Record<string, string> = {
-      'apparel': 'red',
-      'tshirts': 'red',
-      'hoodies': 'pink',
-      'hats': 'blue',
-      'banners': 'orange',
-      'posters': 'purple',
-      'vehicle-wraps': 'indigo',
-      'light-boxes': 'yellow',
-      'neon-signs': 'grape',
-      'stickers': 'yellow',
-      'labels': 'teal',
-      'frosted-glass': 'cyan',
-      'mugs': 'orange',
-      'bottles': 'blue',
-      'business-cards': 'gray',
-      'flyers': 'cyan',
-      'packaging': 'indigo',
-      'pens': 'orange',
-      'keychains': 'grape',
-      'engraving': 'gray',
-      'screen-printing': 'blue',
-      'embroidery': 'green',
-      'cutouts': 'teal',
-      'graphic-design': 'orange',
+      'apparel-printing': 'red',
+      'large-format': 'orange',
+      'stickers-labels': 'yellow',
+      'drinkware': 'orange',
+      'print-promo': 'blue',
+      'specialty': 'purple',
     };
     return colors[slug] || 'red';
   };
@@ -239,7 +189,11 @@ export default function ServicesMainPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950' 
+          : 'bg-gradient-to-b from-gray-50 to-white'
+      }`}>
         <Container size="lg" className="py-20">
           <Center>
             <Stack align="center">
@@ -254,9 +208,22 @@ export default function ServicesMainPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950' 
+          : 'bg-gradient-to-b from-gray-50 to-white'
+      }`}>
         <Container size="lg" className="py-20">
-          <Paper withBorder p="xl" radius="lg" className="text-center">
+          <Paper 
+            withBorder 
+            p="xl" 
+            radius="lg" 
+            className={`text-center transition-colors duration-300 ${
+              isDark 
+                ? 'bg-gray-900 border-gray-800' 
+                : 'bg-white border-gray-200'
+            }`}
+          >
             <Text c="red" size="lg" fw={600}>Error</Text>
             <Text c="dimmed" mt="xs">{error}</Text>
             <Button
@@ -274,7 +241,11 @@ export default function ServicesMainPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950' 
+        : 'bg-gradient-to-b from-gray-50 to-white'
+    }`}>
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-r from-red-600 to-orange-600 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -333,7 +304,9 @@ export default function ServicesMainPage() {
                 <ThemeIcon size={40} radius="xl" color={categoryColor} variant="light">
                   <CategoryIcon size={20} />
                 </ThemeIcon>
-                <Title order={2} className="text-2xl md:text-3xl font-bold">
+                <Title order={2} className={`text-2xl md:text-3xl font-bold transition-colors duration-300 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
                   {category.name}
                 </Title>
                 <Badge color={categoryColor} variant="light" size="lg">
@@ -353,9 +326,17 @@ export default function ServicesMainPage() {
                       withBorder
                       padding="lg"
                       radius="lg"
-                      className="hover:shadow-lg transition-shadow group"
+                      className={`hover:shadow-lg transition-all duration-300 group ${
+                        isDark 
+                          ? 'bg-gray-900 border-gray-800 hover:shadow-gray-800/50' 
+                          : 'bg-white border-gray-200 hover:shadow-gray-200/50'
+                      }`}
                     >
-                      <Card.Section className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+                      <Card.Section className={`p-4 transition-colors duration-300 ${
+                        isDark 
+                          ? 'bg-gradient-to-br from-gray-800 to-gray-900' 
+                          : 'bg-gradient-to-br from-gray-50 to-gray-100'
+                      }`}>
                         <Group justify="space-between" align="center">
                           <ThemeIcon size={50} radius="xl" color={categoryColor} variant="light">
                             <ServiceIcon size={24} />
@@ -376,7 +357,9 @@ export default function ServicesMainPage() {
                         </Group>
                       </Card.Section>
 
-                      <Text fw={600} size="lg" className="mt-3 mb-2">
+                      <Text fw={600} size="lg" className={`mt-3 mb-2 transition-colors duration-300 ${
+                        isDark ? 'text-white' : 'text-gray-900'
+                      }`}>
                         {service.title}
                       </Text>
                       
@@ -395,7 +378,9 @@ export default function ServicesMainPage() {
                         color={categoryColor}
                         size="compact"
                         rightSection={<ArrowRight size={14} />}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        className={`opacity-0 group-hover:opacity-100 transition-opacity ${
+                          isDark ? 'text-gray-300 hover:text-white' : ''
+                        }`}
                         fullWidth
                       >
                         Learn More
@@ -410,7 +395,9 @@ export default function ServicesMainPage() {
       </Container>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gray-50 dark:bg-gray-900/50">
+      <section className={`py-16 transition-colors duration-300 ${
+        isDark ? 'bg-gray-900/50' : 'bg-gray-50'
+      }`}>
         <Container size="lg">
           <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-3xl p-12 text-center text-white">
             <Title order={2} className="text-3xl md:text-4xl font-bold mb-4">

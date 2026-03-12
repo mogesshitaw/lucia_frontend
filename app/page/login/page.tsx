@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Container, Title, Text, Button, Card, Group, ThemeIcon, Badge, Stack, Divider, ActionIcon, Tooltip, Paper, TextInput, PasswordInput, Checkbox, Anchor, Alert } from '@mantine/core';
+import { Container, Title, Text, Button, Card, Group, ThemeIcon, Badge, Stack, Divider, ActionIcon, Tooltip, Paper, TextInput, PasswordInput, Checkbox, Anchor, Alert, useMantineColorScheme } from '@mantine/core';
 import { motion } from 'framer-motion';
 import { useEffect, useState, useRef, ChangeEvent, FormEvent } from 'react';
 import {
@@ -12,17 +12,11 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  Facebook,
-  Twitter,
-  Instagram,
-  Send,
   Phone,
   MessageCircle,
   Sparkles,
   CheckCircle,
   AlertCircle,
-  Fingerprint,
-  Smartphone,
   Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -50,14 +44,6 @@ interface AnimatedInputProps {
   error?: string;
 }
 
-interface SocialButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  onClick?: () => void;
-  color: string;
-  loading?: boolean;
-}
-
 interface MagneticButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
@@ -68,22 +54,26 @@ const MotionDiv = motion.div;
 
 // Floating particles animation
 const FloatingParticles = () => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   // Generate particles directly in useState initializer
   const [particles] = useState(() => {
-    const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+    const colors = isDark 
+      ? ['#ef4444', '#f97316', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899']
+      : ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
     
-    return [...Array(30)].map((_, i) => ({
+    return [...Array(20)].map((_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: 2 + Math.random() * 6,
+      size: 2 + Math.random() * 4,
       color: colors[Math.floor(Math.random() * colors.length)],
       duration: 10 + Math.random() * 20,
       delay: Math.random() * 10,
     }));
   });
 
-  // No need for mounted check
   if (particles.length === 0) return null;
 
   return (
@@ -98,13 +88,12 @@ const FloatingParticles = () => {
             backgroundColor: p.color,
             left: `${p.x}%`,
             top: `${p.y}%`,
-            opacity: 0.15,
+            opacity: 0.1,
           }}
           animate={{
-            y: [0, -30, 0, 30, 0],
-            x: [0, 30, 0, -30, 0],
-            scale: [1, 1.2, 1, 0.8, 1],
-            opacity: [0.15, 0.3, 0.15, 0.3, 0.15],
+            y: [0, -20, 0, 20, 0],
+            x: [0, 20, 0, -20, 0],
+            scale: [1, 1.1, 1, 0.9, 1],
           }}
           transition={{
             duration: p.duration,
@@ -117,12 +106,16 @@ const FloatingParticles = () => {
     </div>
   );
 };
+
 // Animated Gradient Border Card
 const GradientBorderCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   return (
     <div className={`relative group ${className}`}>
       <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-gradient-xy" />
-      <div className="relative bg-white dark:bg-gray-900 rounded-lg">
+      <div className={`relative rounded-lg ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
         {children}
       </div>
     </div>
@@ -148,8 +141,8 @@ const MagneticButton: React.FC<MagneticButtonProps> = ({ children, onClick, clas
       
       if (distance < 100) {
         const strength = (100 - distance) / 100;
-        const moveX = (e.clientX - centerX) * strength * 0.3;
-        const moveY = (e.clientY - centerY) * strength * 0.3;
+        const moveX = (e.clientX - centerX) * strength * 0.2;
+        const moveY = (e.clientY - centerY) * strength * 0.2;
         setPosition({ x: moveX, y: moveY });
       } else {
         setPosition({ x: 0, y: 0 });
@@ -185,6 +178,8 @@ const AnimatedInput: React.FC<AnimatedInputProps> = ({
   error 
 }) => {
   const [isFocused, setIsFocused] = useState<boolean>(false);
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
     <MotionDiv
@@ -193,12 +188,12 @@ const AnimatedInput: React.FC<AnimatedInputProps> = ({
       transition={{ duration: 0.3 }}
       className="relative"
     >
-      <Text size="sm" fw={500} mb={4} className="text-gray-700 dark:text-gray-300">
+      <Text size="sm" fw={500} mb={4} className={isDark ? 'text-gray-300' : 'text-gray-700'}>
         {label}
       </Text>
       <div className="relative">
         <div className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors duration-300 ${
-          isFocused ? 'text-red-500' : 'text-gray-400'
+          isFocused ? 'text-red-500' : isDark ? 'text-gray-500' : 'text-gray-400'
         }`}>
           {icon}
         </div>
@@ -217,8 +212,13 @@ const AnimatedInput: React.FC<AnimatedInputProps> = ({
             styles={{
               input: {
                 paddingLeft: '2.5rem',
-                backgroundColor: 'transparent',
-                border: isFocused ? '2px solid #ef4444' : '1px solid #d1d5db',
+                backgroundColor: isDark ? '#1f2937' : 'white',
+                color: isDark ? 'white' : '#1f2937',
+                border: isFocused 
+                  ? '2px solid #ef4444' 
+                  : isDark 
+                    ? '1px solid #374151' 
+                    : '1px solid #d1d5db',
                 transition: 'all 0.3s ease',
               },
             }}
@@ -241,8 +241,13 @@ const AnimatedInput: React.FC<AnimatedInputProps> = ({
             styles={{
               input: {
                 paddingLeft: '2.5rem',
-                backgroundColor: 'transparent',
-                border: isFocused ? '2px solid #ef4444' : '1px solid #d1d5db',
+                backgroundColor: isDark ? '#1f2937' : 'white',
+                color: isDark ? 'white' : '#1f2937',
+                border: isFocused 
+                  ? '2px solid #ef4444' 
+                  : isDark 
+                    ? '1px solid #374151' 
+                    : '1px solid #d1d5db',
                 transition: 'all 0.3s ease',
               },
             }}
@@ -267,44 +272,17 @@ const AnimatedInput: React.FC<AnimatedInputProps> = ({
   );
 };
 
-// Social Login Button with proper typing
-const SocialButton: React.FC<SocialButtonProps> = ({ icon, label, onClick, color, loading }) => {
-  return (
-    <MagneticButton>
-      <Button
-        variant="outline"
-        size="lg"
-        radius="md"
-        fullWidth
-        leftSection={icon}
-        onClick={onClick}
-        loading={loading}
-        className="hover:border-red-500 transition-all duration-300"
-        styles={{
-          root: {
-            borderColor: '#e5e7eb',
-            color: '#374151',
-            '&:hover': {
-              borderColor: '#ef4444',
-              backgroundColor: 'white',
-            },
-          },
-        }}
-      >
-        {label}
-      </Button>
-    </MagneticButton>
-  );
-};
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [rememberMe, setRememberMe] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [emailError, setEmailError] = useState<string>('');
@@ -324,116 +302,90 @@ export default function LoginPage() {
     return re.test(email);
   };
 
-const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-  e.preventDefault();
-  setError('');
-  setEmailError('');
-  setPasswordError('');
-  setNeedsVerification(false);
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+    setError('');
+    setEmailError('');
+    setPasswordError('');
+    setNeedsVerification(false);
 
-  // Validation
-  let isValid = true;
-  if (!email) {
-    setEmailError('Email is required');
-    isValid = false;
-  } else if (!validateEmail(email)) {
-    setEmailError('Please enter a valid email');
-    isValid = false;
-  }
+    // Validation
+    let isValid = true;
+    if (!email) {
+      setEmailError('Email is required');
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email');
+      isValid = false;
+    }
 
-  if (!password) {
-    setPasswordError('Password is required');
-    isValid = false;
-  }
+    if (!password) {
+      setPasswordError('Password is required');
+      isValid = false;
+    }
 
-  if (!isValid) return;
+    if (!isValid) return;
 
-  setIsLoading(true);
+    setIsLoading(true);
 
-  try {
-    console.log('Attempting login with:', { email, rememberMe });
-    
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        email,
-        password,
-        rememberMe
-      }),
-    });
+    try {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email,
+          password,
+          rememberMe
+        }),
+      });
 
-    const data = await response.json();
-    console.log('Login response:', data);
+      const data = await response.json();
 
-    // Handle different response scenarios
-    if (!response.ok) {
-      // Case 1: Email needs verification
-      if (data.needsVerification || response.status === 401) {
-        setNeedsVerification(true);
-        // Redirect to verification page
-        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
-        return; // Important: stop execution here
-      }
-      
-      // Case 2: Validation errors
-      if (data.errors) {
-        if (data.errors.email) setEmailError(data.errors.email);
-        if (data.errors.password) setPasswordError(data.errors.password);
+      if (!response.ok) {
+        if (data.needsVerification || response.status === 401) {
+          setNeedsVerification(true);
+          router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+          return;
+        }
+        
+        if (data.errors) {
+          if (data.errors.email) setEmailError(data.errors.email);
+          if (data.errors.password) setPasswordError(data.errors.password);
+          throw new Error(data.message || 'Login failed');
+        }
+        
         throw new Error(data.message || 'Login failed');
       }
-      
-      // Case 3: Other errors
-      throw new Error(data.message || 'Login failed');
-    }
 
-    // Login successful
-    if (data.data?.accessToken) {
-      // Store the access token
-      localStorage.setItem('accessToken', data.data.accessToken);
-      
-      // Store user data
-      if (data.data.user) {
-        localStorage.setItem('user', JSON.stringify(data.data.user));
+      if (data.data?.accessToken) {
+        localStorage.setItem('accessToken', data.data.accessToken);
+        
+        if (data.data.user) {
+          localStorage.setItem('user', JSON.stringify(data.data.user));
+        }
+        
+        if (data.data.expiresIn) {
+          const expiryTime = Date.now() + (data.data.expiresIn * 1000);
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+        }
+
+        setSuccess('Login successful! Redirecting...');
+        
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
+      } else {
+        throw new Error('Invalid response from server');
       }
-      
-      // Store refresh token expiry info if needed
-      if (data.data.expiresIn) {
-        const expiryTime = Date.now() + (data.data.expiresIn * 1000);
-        localStorage.setItem('tokenExpiry', expiryTime.toString());
-      }
 
-      setSuccess('Login successfull! Redirecting...');
-      
-      // Redirect to dashboard
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1000);
-    } else {
-      throw new Error('Invalid response from server');
-    }
-
-  } catch (err: any) {
-    console.error('Login error:', err);
-    setError(err.message || 'An error occurred during login ');
-  } finally {
-    setIsLoading(false);
-  }
-  };
-
-  const handleSocialLogin = async (provider: string): Promise<void> => {
-    setSocialLoading(provider);
-    
-    try {
-
-      // Redirect to OAuth provider
-      window.location.href = `${API_URL}/api/auth/${provider.toLowerCase()}`;
     } catch (err: any) {
-      setError(`Failed to connect to ${provider}`);
-      setSocialLoading(null);
+      console.error('Login error:', err);
+      setError(err.message || 'An error occurred during login');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -445,7 +397,6 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
 
     setIsLoading(true);
     try {
-      
       const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: {
@@ -484,7 +435,11 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
+    <div className={`min-h-screen relative overflow-hidden transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950' 
+        : 'bg-gradient-to-b from-gray-50 to-white'
+    }`}>
       <FloatingParticles />
 
       {/* Background Image with Overlay */}
@@ -493,9 +448,14 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
           src="/images/bg-2.jpg"
           alt="Background"
           fill
-          className="object-cover opacity-10"
+          className={`object-cover transition-opacity duration-300 ${
+            isDark ? 'opacity-5' : 'opacity-10'
+          }`}
           priority
         />
+        <div className={`absolute inset-0 transition-colors duration-300 ${
+          isDark ? 'bg-black/20' : 'bg-transparent'
+        }`} />
       </div>
 
       <Container size="lg" className="relative z-10 min-h-screen flex items-center justify-center py-20">
@@ -511,14 +471,18 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
                 Welcome Back
               </Badge>
 
-              <Title className="text-5xl md:text-6xl font-bold mb-6">
+              <Title className={`text-5xl md:text-6xl font-bold mb-6 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
                 Sign in to <br />
                 <span className="bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
                   Lucia Printing
                 </span>
               </Title>
 
-              <Text size="xl" className="text-gray-600 dark:text-gray-400 mb-8">
+              <Text size="xl" className={`mb-8 ${
+                isDark ? 'text-gray-400' : 'text-gray-600'
+              }`}>
                 Access your account to manage orders, track projects, and connect with our team.
               </Text>
 
@@ -529,7 +493,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
                     <CheckCircle size={20} />
                   </ThemeIcon>
                   <div>
-                    <Text fw={600}>Order Management</Text>
+                    <Text fw={600} className={isDark ? 'text-white' : 'text-gray-900'}>Order Management</Text>
                     <Text size="sm" c="dimmed">Track and manage all your printing orders</Text>
                   </div>
                 </Group>
@@ -539,7 +503,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
                     <Sparkles size={20} />
                   </ThemeIcon>
                   <div>
-                    <Text fw={600}>Design Library</Text>
+                    <Text fw={600} className={isDark ? 'text-white' : 'text-gray-900'}>Design Library</Text>
                     <Text size="sm" c="dimmed">Access your saved designs and templates</Text>
                   </div>
                 </Group>
@@ -549,7 +513,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
                     <MessageCircle size={20} />
                   </ThemeIcon>
                   <div>
-                    <Text fw={600}>Live Chat Support</Text>
+                    <Text fw={600} className={isDark ? 'text-white' : 'text-gray-900'}>Live Chat Support</Text>
                     <Text size="sm" c="dimmed">Instant help from our printing experts</Text>
                   </div>
                 </Group>
@@ -565,7 +529,9 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
               transition={{ duration: 0.8 }}
             >
               <GradientBorderCard>
-                <Card padding="xl" radius="lg" className="bg-white dark:bg-gray-900">
+                <Card padding="xl" radius="lg" className={`border-0 ${
+                  isDark ? 'bg-gray-900' : 'bg-white'
+                }`}>
                   <Stack gap="lg">
                     {/* Header */}
                     <div className="text-center">
@@ -578,7 +544,11 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
                       >
                         <LogIn size={30} />
                       </ThemeIcon>
-                      <Title order={2} className="text-3xl font-bold mb-2">Welcome Back</Title>
+                      <Title order={2} className={`text-3xl font-bold mb-2 ${
+                        isDark ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        Welcome Back
+                      </Title>
                       <Text c="dimmed">Sign in to continue to your account</Text>
                     </div>
 
@@ -645,6 +615,9 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
                             checked={rememberMe}
                             onChange={handleRememberMeChange}
                             color="red"
+                            classNames={{
+                              label: isDark ? 'text-gray-300' : 'text-gray-700',
+                            }}
                           />
                           <Anchor
                             component={Link}
@@ -657,61 +630,25 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
                         </Group>
 
                         {/* Submit Button */}
-                        <Button
-                          type="submit"
-                          size="lg"
-                          fullWidth
-                          variant="gradient"
-                          gradient={{ from: 'red', to: 'orange' }}
-                          rightSection={isLoading ? <Loader2 className="animate-spin" size={20} /> : <ArrowRight size={20} />}
-                          disabled={isLoading}
-                          className="h-12"
-                        >
-                          {isLoading ? 'Signing in...' : 'Sign In'}
-                        </Button>
+                        <MagneticButton>
+                          <Button
+                            type="submit"
+                            size="lg"
+                            fullWidth
+                            variant="gradient"
+                            gradient={{ from: 'red', to: 'orange' }}
+                            rightSection={isLoading ? <Loader2 className="animate-spin" size={20} /> : <ArrowRight size={20} />}
+                            disabled={isLoading}
+                            className="h-12"
+                          >
+                            {isLoading ? 'Signing in...' : 'Sign In'}
+                          </Button>
+                        </MagneticButton>
                       </Stack>
                     </form>
 
-                    {/* Divider */}
-                    <Divider label="Or continue with" labelPosition="center" />
-
-                    {/* Social Login */}
-                    <Group grow>
-                      <SocialButton
-                        icon={<Facebook size={18} />}
-                        label="Facebook"
-                        onClick={() => handleSocialLogin('Facebook')}
-                        color="#1877F2"
-                        loading={socialLoading === 'Facebook'}
-                      />
-                      <SocialButton
-                        icon={<Twitter size={18} />}
-                        label="Twitter"
-                        onClick={() => handleSocialLogin('Twitter')}
-                        color="#1DA1F2"
-                        loading={socialLoading === 'Twitter'}
-                      />
-                    </Group>
-
-                    <Group grow>
-                      <SocialButton
-                        icon={<Instagram size={18} />}
-                        label="Instagram"
-                        onClick={() => handleSocialLogin('Instagram')}
-                        color="#E4405F"
-                        loading={socialLoading === 'Instagram'}
-                      />
-                      <SocialButton
-                        icon={<Send size={18} />}
-                        label="Telegram"
-                        onClick={() => handleSocialLogin('Telegram')}
-                        color="#0088cc"
-                        loading={socialLoading === 'Telegram'}
-                      />
-                    </Group>
-
                     {/* Sign Up Link */}
-                    <Text ta="center" size="sm">
+                    <Text ta="center" size="sm" c="dimmed">
                       Don&apos;t have an account?{' '}
                       <Anchor
                         component={Link}
@@ -724,7 +661,11 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
                     </Text>
 
                     {/* Demo Credentials */}
-                    <Paper p="xs" radius="md" withBorder className="bg-blue-50 dark:bg-blue-900/20">
+                    <Paper p="xs" radius="md" withBorder className={`${
+                      isDark 
+                        ? 'bg-blue-900/10 border-blue-800/30' 
+                        : 'bg-blue-50 border-blue-100'
+                    }`}>
                       <Text size="xs" ta="center" c="dimmed">
                         Demo: demo@luciaprinting.com / password123
                       </Text>
@@ -742,6 +683,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
                   leftSection={<Phone size={14} />}
                   component={Link}
                   href="/contact"
+                  className={isDark ? 'text-gray-400 hover:text-white' : ''}
                 >
                   Need help? Contact support
                 </Button>

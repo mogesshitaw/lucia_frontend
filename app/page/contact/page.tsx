@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, SimpleGrid, Stack, ActionIcon, Tooltip, Paper, TextInput, Textarea, Select, Radio, Checkbox, Alert } from '@mantine/core';
+import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, SimpleGrid, Stack, ActionIcon, Tooltip, Paper, TextInput, Textarea, Select, Radio, Checkbox, Alert, useMantineColorScheme } from '@mantine/core';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useState, useRef } from 'react';
 import {
@@ -35,14 +35,22 @@ import Link from 'next/link';
 
 const MotionDiv = motion.div;
 const MotionSection = motion.section;
-const MotionCard = motion(Card as any );
+const MotionCard = motion(Card as any);
+
+// Helper function to determine dark mode
+const useIsDark = () => {
+  const { colorScheme } = useMantineColorScheme();
+  return colorScheme === 'dark';
+};
 
 // Floating particles animation
-
 const FloatingParticles = () => {
-  // Generate particles directly in useState initializer
+  const isDark = useIsDark();
+  
   const [particles] = useState(() => {
-    const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+    const colors = isDark 
+      ? ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6']
+      : ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
     
     return [...Array(30)].map((_, i) => ({
       id: i,
@@ -55,7 +63,6 @@ const FloatingParticles = () => {
     }));
   });
 
-  // No need for mounted check
   if (particles.length === 0) return null;
 
   return (
@@ -70,13 +77,13 @@ const FloatingParticles = () => {
             backgroundColor: p.color,
             left: `${p.x}%`,
             top: `${p.y}%`,
-            opacity: 0.15,
+            opacity: isDark ? 0.1 : 0.15,
           }}
           animate={{
             y: [0, -30, 0, 30, 0],
             x: [0, 30, 0, -30, 0],
             scale: [1, 1.2, 1, 0.8, 1],
-            opacity: [0.15, 0.3, 0.15, 0.3, 0.15],
+            opacity: isDark ? [0.1, 0.2, 0.1, 0.2, 0.1] : [0.15, 0.3, 0.15, 0.3, 0.15],
           }}
           transition={{
             duration: p.duration,
@@ -93,6 +100,7 @@ const FloatingParticles = () => {
 // Contact Info Card
 const ContactInfoCard = ({ icon, title, content, link, color }: { icon: React.ReactNode; title: string; content: string; link?: string; color: string }) => {
   const [copied, setCopied] = useState(false);
+  const isDark = useIsDark();
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content);
@@ -111,6 +119,12 @@ const ContactInfoCard = ({ icon, title, content, link, color }: { icon: React.Re
       padding="xl"
       radius="lg"
       withBorder
+      styles={{
+        root: {
+          backgroundColor: isDark ? '#1e1f22' : 'white',
+          borderColor: isDark ? '#2c2e33' : '#e9ecef',
+        }
+      }}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
       
@@ -126,11 +140,11 @@ const ContactInfoCard = ({ icon, title, content, link, color }: { icon: React.Re
         <div className="flex-1">
           <Text size="sm" c="dimmed">{title}</Text>
           {link ? (
-            <Link href={link} className="text-lg font-semibold hover:text-red-600 transition-colors">
+            <Link href={link} className={`text-lg font-semibold ${isDark ? 'text-gray-200' : 'text-gray-900'} hover:text-red-600 transition-colors`}>
               {content}
             </Link>
           ) : (
-            <Text fw={600} size="lg">{content}</Text>
+            <Text fw={600} size="lg" className={isDark ? 'text-white' : 'text-gray-900'}>{content}</Text>
           )}
         </div>
         <Tooltip label={copied ? 'Copied!' : 'Copy'} withArrow>
@@ -139,6 +153,14 @@ const ContactInfoCard = ({ icon, title, content, link, color }: { icon: React.Re
             color={copied ? 'green' : 'gray'}
             onClick={handleCopy}
             className="hover:scale-110 transition-transform"
+            styles={{
+              root: {
+                color: isDark ? '#9ca3af' : undefined,
+                '&:hover': {
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : undefined,
+                },
+              },
+            }}
           >
             {copied ? <CheckCircle size={18} /> : <Copy size={18} />}
           </ActionIcon>
@@ -150,6 +172,8 @@ const ContactInfoCard = ({ icon, title, content, link, color }: { icon: React.Re
 
 // Social Media Card
 const SocialCard = ({ icon, label, href, color, username }: { icon: React.ReactNode; label: string; href: string; color: string; username: string }) => {
+  const isDark = useIsDark();
+
   return (
     <MotionCard
       initial={{ opacity: 0, scale: 0.9 }}
@@ -164,6 +188,13 @@ const SocialCard = ({ icon, label, href, color, username }: { icon: React.ReactN
       padding="lg"
       radius="lg"
       withBorder
+      styles={{
+        root: {
+          backgroundColor: isDark ? '#1e1f22' : 'white',
+          borderColor: isDark ? '#2c2e33' : '#e9ecef',
+          textDecoration: 'none',
+        }
+      }}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
       
@@ -176,7 +207,7 @@ const SocialCard = ({ icon, label, href, color, username }: { icon: React.ReactN
         >
           {icon}
         </ThemeIcon>
-        <Text fw={600} size="lg">{label}</Text>
+        <Text fw={600} size="lg" className={isDark ? 'text-white' : 'text-gray-900'}>{label}</Text>
         <Text size="sm" c="dimmed" className="text-center">{username}</Text>
       </Stack>
     </MotionCard>
@@ -184,7 +215,9 @@ const SocialCard = ({ icon, label, href, color, username }: { icon: React.ReactN
 };
 
 // Office Location Card
-const OfficeCard = ({ city, address, phone, email, hours, image, index }: { city: string; address: string; phone: string; email: string; hours: string; image: string; index: number }) => {
+const OfficeCard = ({ city, address, phone, email, hours, index }: { city: string; address: string; phone: string; email: string; hours: string; index: number }) => {
+  const isDark = useIsDark();
+
   return (
     <MotionCard
       initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
@@ -196,17 +229,20 @@ const OfficeCard = ({ city, address, phone, email, hours, image, index }: { city
       radius="lg"
       withBorder
       className="overflow-hidden"
+      styles={{
+        root: {
+          backgroundColor: isDark ? '#1e1f22' : 'white',
+          borderColor: isDark ? '#2c2e33' : '#e9ecef',
+        }
+      }}
     >
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>
-          <div className="relative h-48 md:h-full rounded-lg overflow-hidden">
-            <Image
-              src="/images/service2.jpg"
-              alt={city}
-              fill
-              className="object-cover group-hover:scale-110 transition-transform duration-500"
-            />
+          <div className="relative h-48 md:h-full rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-800">
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="w-full h-full flex items-center justify-center">
+              <MapPin size={48} className="text-gray-400" />
+            </div>
             <Badge
               size="lg"
               variant="gradient"
@@ -225,7 +261,7 @@ const OfficeCard = ({ city, address, phone, email, hours, image, index }: { city
               </ThemeIcon>
               <div>
                 <Text size="sm" c="dimmed">Address</Text>
-                <Text fw={500}>{address}</Text>
+                <Text fw={500} className={isDark ? 'text-white' : 'text-gray-900'}>{address}</Text>
               </div>
             </Group>
 
@@ -235,7 +271,7 @@ const OfficeCard = ({ city, address, phone, email, hours, image, index }: { city
               </ThemeIcon>
               <div>
                 <Text size="sm" c="dimmed">Phone</Text>
-                <Link href={`tel:${phone}`} className="text-blue-600 hover:underline">
+                <Link href={`tel:${phone}`} className="text-blue-600 hover:underline dark:text-blue-400">
                   {phone}
                 </Link>
               </div>
@@ -247,7 +283,7 @@ const OfficeCard = ({ city, address, phone, email, hours, image, index }: { city
               </ThemeIcon>
               <div>
                 <Text size="sm" c="dimmed">Email</Text>
-                <Link href={`mailto:${email}`} className="text-green-600 hover:underline">
+                <Link href={`mailto:${email}`} className="text-green-600 hover:underline dark:text-green-400">
                   {email}
                 </Link>
               </div>
@@ -259,7 +295,7 @@ const OfficeCard = ({ city, address, phone, email, hours, image, index }: { city
               </ThemeIcon>
               <div>
                 <Text size="sm" c="dimmed">Business Hours</Text>
-                <Text>{hours}</Text>
+                <Text className={isDark ? 'text-gray-300' : 'text-gray-700'}>{hours}</Text>
               </div>
             </Group>
 
@@ -284,6 +320,7 @@ const OfficeCard = ({ city, address, phone, email, hours, image, index }: { city
 // FAQ Item Component
 const FAQItem = ({ faq, index }: { faq: any; index: number }) => {
   const [opened, setOpened] = useState(false);
+  const isDark = useIsDark();
 
   return (
     <MotionDiv
@@ -291,7 +328,7 @@ const FAQItem = ({ faq, index }: { faq: any; index: number }) => {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       viewport={{ once: true }}
-      className="border-b border-gray-200 dark:border-gray-700 last:border-0"
+      className={`border-b ${isDark ? 'border-gray-800' : 'border-gray-200'} last:border-0`}
     >
       <button
         onClick={() => setOpened(!opened)}
@@ -301,13 +338,13 @@ const FAQItem = ({ faq, index }: { faq: any; index: number }) => {
           <ThemeIcon size={30} radius="xl" color="red" variant="light">
             <HelpCircle size={16} />
           </ThemeIcon>
-          <Text fw={600} size="lg">{faq.question}</Text>
+          <Text fw={600} size="lg" className={isDark ? 'text-white' : 'text-gray-900'}>{faq.question}</Text>
         </Group>
         <motion.div
           animate={{ rotate: opened ? 180 : 0 }}
           transition={{ duration: 0.3 }}
         >
-          <ChevronRight size={20} className="transform rotate-90" />
+          <ChevronRight size={20} className={`transform rotate-90 ${isDark ? 'text-gray-400' : ''}`} />
         </motion.div>
       </button>
       <motion.div
@@ -328,6 +365,7 @@ export default function ContactPage() {
     target: heroRef,
     offset: ["start start", "end start"]
   });
+  const isDark = useIsDark();
   
   const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
@@ -370,7 +408,6 @@ export default function ContactPage() {
         newsletter: false,
       });
       
-      // Reset success message after 5 seconds
       setTimeout(() => setFormStatus('idle'), 5000);
     }, 1500);
   };
@@ -456,7 +493,6 @@ export default function ContactPage() {
       phone: '+251 911 234 567',
       email: 'addis@luciyaprinting.com',
       hours: 'Mon-Fri: 8:30 AM - 6:00 PM, Sat: 9:00 AM - 2:00 PM',
-      image: 'https://images.unsplash.com/photo-1577415124269-fc1140a69e91?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     },
     {
       city: 'Adama',
@@ -464,7 +500,6 @@ export default function ContactPage() {
       phone: '+251 922 345 678',
       email: 'adama@luciyaprinting.com',
       hours: 'Mon-Fri: 8:30 AM - 5:30 PM, Sat: 9:00 AM - 1:00 PM',
-      image: 'https://images.unsplash.com/photo-1577415124269-fc1140a69e91?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     },
   ];
 
@@ -505,7 +540,7 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
+    <div className={`min-h-screen bg-gradient-to-b ${isDark ? 'from-gray-950 to-gray-900' : 'from-gray-50 to-white'} relative overflow-hidden`}>
       <FloatingParticles />
 
       {/* Hero Section */}
@@ -584,8 +619,14 @@ export default function ContactPage() {
               padding="xl"
               radius="lg"
               withBorder
+              styles={{
+                root: {
+                  backgroundColor: isDark ? '#1e1f22' : 'white',
+                  borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                }
+              }}
             >
-              <Title order={2} className="text-3xl font-bold mb-2">
+              <Title order={2} className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 Send Us a <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Message</span>
               </Title>
               <Text c="dimmed" className="mb-6">
@@ -631,6 +672,16 @@ export default function ContactPage() {
                         required
                         leftSection={<User size={16} />}
                         size="md"
+                        styles={{
+                          input: {
+                            backgroundColor: isDark ? '#1e1f22' : 'white',
+                            borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                            color: isDark ? 'white' : 'black',
+                          },
+                          label: {
+                            color: isDark ? '#9ca3af' : undefined,
+                          },
+                        }}
                       />
                     </Grid.Col>
                     <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -644,6 +695,16 @@ export default function ContactPage() {
                         required
                         leftSection={<Mail size={16} />}
                         size="md"
+                        styles={{
+                          input: {
+                            backgroundColor: isDark ? '#1e1f22' : 'white',
+                            borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                            color: isDark ? 'white' : 'black',
+                          },
+                          label: {
+                            color: isDark ? '#9ca3af' : undefined,
+                          },
+                        }}
                       />
                     </Grid.Col>
                   </Grid>
@@ -658,6 +719,16 @@ export default function ContactPage() {
                         onChange={handleChange}
                         leftSection={<Phone size={16} />}
                         size="md"
+                        styles={{
+                          input: {
+                            backgroundColor: isDark ? '#1e1f22' : 'white',
+                            borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                            color: isDark ? 'white' : 'black',
+                          },
+                          label: {
+                            color: isDark ? '#9ca3af' : undefined,
+                          },
+                        }}
                       />
                     </Grid.Col>
                     <Grid.Col span={{ base: 12, sm: 6 }}>
@@ -670,6 +741,26 @@ export default function ContactPage() {
                         onChange={(value: any) => setFormData(prev => ({ ...prev, service: value || '' }))}
                         leftSection={<FileText size={16} />}
                         size="md"
+                        styles={{
+                          input: {
+                            backgroundColor: isDark ? '#1e1f22' : 'white',
+                            borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                            color: isDark ? 'white' : 'black',
+                          },
+                          label: {
+                            color: isDark ? '#9ca3af' : undefined,
+                          },
+                          dropdown: {
+                            backgroundColor: isDark ? '#1e1f22' : 'white',
+                            borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                          },
+                          option: {
+                            color: isDark ? 'white' : 'black',
+                            '&:hover': {
+                              backgroundColor: isDark ? '#2c2e33' : '#f8f9fa',
+                            },
+                          },
+                        }}
                       />
                     </Grid.Col>
                   </Grid>
@@ -679,11 +770,37 @@ export default function ContactPage() {
                     label="How urgent is your project?"
                     value={formData.urgency}
                     onChange={(value: any) => setFormData(prev => ({ ...prev, urgency: value }))}
+                    styles={{
+                      label: {
+                        color: isDark ? '#9ca3af' : undefined,
+                      },
+                    }}
                   >
                     <Group mt="xs">
-                      <Radio value="low" label="Not urgent (planning ahead)" />
-                      <Radio value="normal" label="Normal (within a week)" />
-                      <Radio value="urgent" label="Urgent (need ASAP)" />
+                      <Radio 
+                        value="low" 
+                        label="Not urgent (planning ahead)" 
+                        styles={{
+                          label: { color: isDark ? '#d1d5db' : undefined },
+                          radio: { backgroundColor: isDark ? '#1e1f22' : undefined },
+                        }}
+                      />
+                      <Radio 
+                        value="normal" 
+                        label="Normal (within a week)" 
+                        styles={{
+                          label: { color: isDark ? '#d1d5db' : undefined },
+                          radio: { backgroundColor: isDark ? '#1e1f22' : undefined },
+                        }}
+                      />
+                      <Radio 
+                        value="urgent" 
+                        label="Urgent (need ASAP)" 
+                        styles={{
+                          label: { color: isDark ? '#d1d5db' : undefined },
+                          radio: { backgroundColor: isDark ? '#1e1f22' : undefined },
+                        }}
+                      />
                     </Group>
                   </Radio.Group>
 
@@ -696,6 +813,16 @@ export default function ContactPage() {
                     required
                     minRows={5}
                     size="md"
+                    styles={{
+                      input: {
+                        backgroundColor: isDark ? '#1e1f22' : 'white',
+                        borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                        color: isDark ? 'white' : 'black',
+                      },
+                      label: {
+                        color: isDark ? '#9ca3af' : undefined,
+                      },
+                    }}
                   />
 
                   <Checkbox
@@ -703,6 +830,10 @@ export default function ContactPage() {
                     name="newsletter"
                     checked={formData.newsletter}
                     onChange={handleChange}
+                    styles={{
+                      label: { color: isDark ? '#d1d5db' : undefined },
+                      input: { backgroundColor: isDark ? '#1e1f22' : undefined },
+                    }}
                   />
 
                   <Button
@@ -734,8 +865,14 @@ export default function ContactPage() {
                 radius="lg"
                 withBorder
                 className="overflow-hidden"
+                styles={{
+                  root: {
+                    backgroundColor: isDark ? '#1e1f22' : 'white',
+                    borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                  }
+                }}
               >
-                <Title order={3} className="text-xl font-bold mb-4">
+                <Title order={3} className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   Visit Our Main Office
                 </Title>
                 
@@ -759,7 +896,7 @@ export default function ContactPage() {
                     </ThemeIcon>
                     <div>
                       <Text size="sm" c="dimmed">Address</Text>
-                      <Text size="sm">Bole Road, Addis Ababa, Ethiopia</Text>
+                      <Text size="sm" className={isDark ? 'text-gray-300' : 'text-gray-700'}>Bole Road, Addis Ababa, Ethiopia</Text>
                     </div>
                   </Group>
                   
@@ -769,7 +906,7 @@ export default function ContactPage() {
                     </ThemeIcon>
                     <div>
                       <Text size="sm" c="dimmed">Phone</Text>
-                      <Text size="sm">+251 911 234 567</Text>
+                      <Text size="sm" className={isDark ? 'text-gray-300' : 'text-gray-700'}>+251 911 234 567</Text>
                     </div>
                   </Group>
                   
@@ -779,7 +916,7 @@ export default function ContactPage() {
                     </ThemeIcon>
                     <div>
                       <Text size="sm" c="dimmed">Email</Text>
-                      <Text size="sm">info@luciyaprinting.com</Text>
+                      <Text size="sm" className={isDark ? 'text-gray-300' : 'text-gray-700'}>info@luciyaprinting.com</Text>
                     </div>
                   </Group>
                 </Stack>
@@ -806,8 +943,14 @@ export default function ContactPage() {
                 padding="xl"
                 radius="lg"
                 withBorder
+                styles={{
+                  root: {
+                    backgroundColor: isDark ? '#1e1f22' : 'white',
+                    borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                  }
+                }}
               >
-                <Title order={3} className="text-xl font-bold mb-4">
+                <Title order={3} className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   Quick Response Guarantee
                 </Title>
                 
@@ -817,7 +960,7 @@ export default function ContactPage() {
                       <CheckCircle size={20} />
                     </ThemeIcon>
                     <div>
-                      <Text fw={600}>24-Hour Response</Text>
+                      <Text fw={600} className={isDark ? 'text-white' : 'text-gray-900'}>24-Hour Response</Text>
                       <Text size="sm" c="dimmed">We reply to all inquiries within 24 hours</Text>
                     </div>
                   </Group>
@@ -827,7 +970,7 @@ export default function ContactPage() {
                       <Headphones size={20} />
                     </ThemeIcon>
                     <div>
-                      <Text fw={600}>Live Chat Support</Text>
+                      <Text fw={600} className={isDark ? 'text-white' : 'text-gray-900'}>Live Chat Support</Text>
                       <Text size="sm" c="dimmed">Instant messaging during business hours</Text>
                     </div>
                   </Group>
@@ -837,7 +980,7 @@ export default function ContactPage() {
                       <Calendar size={20} />
                     </ThemeIcon>
                     <div>
-                      <Text fw={600}>Free Consultation</Text>
+                      <Text fw={600} className={isDark ? 'text-white' : 'text-gray-900'}>Free Consultation</Text>
                       <Text size="sm" c="dimmed">Schedule a free project consultation</Text>
                     </div>
                   </Group>
@@ -849,7 +992,7 @@ export default function ContactPage() {
       </Container>
 
       {/* Offices Section */}
-      <MotionSection className="py-20 bg-gray-50 dark:bg-gray-900/50">
+      <MotionSection className={`py-20 ${isDark ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
         <Container size="lg">
           <MotionDiv
             initial={{ opacity: 0, y: 30 }}
@@ -859,7 +1002,7 @@ export default function ContactPage() {
             className="text-center mb-16"
           >
             <Badge size="lg" color="red" className="mb-4">Our Locations</Badge>
-            <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+            <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Visit Us at Any of Our <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Offices</span>
             </Title>
             <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
@@ -885,7 +1028,7 @@ export default function ContactPage() {
           className="text-center mb-16"
         >
           <Badge size="lg" color="red" className="mb-4">Connect With Us</Badge>
-          <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+          <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Follow Us on <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Social Media</span>
           </Title>
           <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
@@ -901,7 +1044,7 @@ export default function ContactPage() {
       </Container>
 
       {/* FAQ Section */}
-      <MotionSection className="py-20 bg-gray-50 dark:bg-gray-900/50">
+      <MotionSection className={`py-20 ${isDark ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
         <Container size="lg">
           <MotionDiv
             initial={{ opacity: 0, y: 30 }}
@@ -911,7 +1054,7 @@ export default function ContactPage() {
             className="text-center mb-16"
           >
             <Badge size="lg" color="red" className="mb-4">FAQ</Badge>
-            <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+            <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Frequently Asked <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Questions</span>
             </Title>
             <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
@@ -921,14 +1064,34 @@ export default function ContactPage() {
 
           <Grid>
             <Grid.Col span={{ base: 12, md: 6 }}>
-              <Paper p="xl" radius="lg" withBorder>
+              <Paper 
+                p="xl" 
+                radius="lg" 
+                withBorder
+                styles={{
+                  root: {
+                    backgroundColor: isDark ? '#1e1f22' : 'white',
+                    borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                  }
+                }}
+              >
                 {faqs.slice(0, 3).map((faq, index) => (
                   <FAQItem key={index} faq={faq} index={index} />
                 ))}
               </Paper>
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 6 }}>
-              <Paper p="xl" radius="lg" withBorder>
+              <Paper 
+                p="xl" 
+                radius="lg" 
+                withBorder
+                styles={{
+                  root: {
+                    backgroundColor: isDark ? '#1e1f22' : 'white',
+                    borderColor: isDark ? '#2c2e33' : '#e9ecef',
+                  }
+                }}
+              >
                 {faqs.slice(3, 6).map((faq, index) => (
                   <FAQItem key={index} faq={faq} index={index} />
                 ))}

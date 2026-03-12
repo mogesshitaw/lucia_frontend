@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, SimpleGrid, Stack, Divider, ActionIcon, Tooltip, Paper, Alert, Pagination, Timeline, TextInput, Loader, Center, Skeleton } from '@mantine/core';
+import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, SimpleGrid, Stack, Divider, ActionIcon, Tooltip, Paper, Alert, Pagination, Timeline, TextInput, Loader, Center, Skeleton, useMantineColorScheme } from '@mantine/core';
 import { motion, useScroll, useTransform, useAnimation, useInView } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
 import {
@@ -81,6 +81,9 @@ interface TimelineEvent {
 
 // Floating particles animation
 const FloatingParticles = () => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [particles] = useState(() => {
     const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
     
@@ -109,13 +112,12 @@ const FloatingParticles = () => {
             backgroundColor: p.color,
             left: `${p.x}%`,
             top: `${p.y}%`,
-            opacity: 0.15,
+            opacity: isDark ? 0.1 : 0.15,
           }}
           animate={{
             y: [0, -20, 0, 20, 0],
             x: [0, 20, 0, -20, 0],
             scale: [1, 1.2, 1, 0.8, 1],
-            opacity: [0.15, 0.25, 0.15, 0.25, 0.15],
           }}
           transition={{
             duration: p.duration,
@@ -128,27 +130,28 @@ const FloatingParticles = () => {
     </div>
   );
 };
+
 const getAnnouncementImageUrl = (imagePath: string | null | undefined): string => {
   if (!imagePath) return '/images/placeholder.jpg'; // Fallback image
   
-  // Clean up the path
   let cleanPath = imagePath.replace(/\\/g, '/');
   cleanPath = cleanPath.replace(/^\/+/, '');
   
-  // If it's already a full URL, return as is
   if (cleanPath.startsWith('http')) {
     return cleanPath;
   }
   
-  // Ensure it has uploads/ prefix
   if (!cleanPath.startsWith('uploads/')) {
     cleanPath = `uploads/${cleanPath}`;
   }
   
   return `${API_URL}/${cleanPath}`;
 };
+
 // Announcement Card Component
 const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Announcement; index: number; onLike: (id: string) => void }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
   const [isSaved, setIsSaved] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -235,7 +238,11 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
       transition={{ duration: 0.5, delay: index * 0.1 }}
       viewport={{ once: true }}
       whileHover={{ y: -5 }}
-      className="relative overflow-hidden group cursor-pointer"
+      className={`relative overflow-hidden group cursor-pointer transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-gray-200'
+      }`}
       padding="xl"
       radius="lg"
       withBorder
@@ -251,31 +258,32 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
 
       <Grid>
         {/* Image Section */}
-{announcement.image && (
-  <Grid.Col span={{ base: 12, md: 4 }}>
-    <div className="relative h-48 md:h-64 rounded-lg overflow-hidden">
-      <img
-        src={getAnnouncementImageUrl(announcement.image)}
-        alt={announcement.title}
-        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-        onError={(e) => {
-          console.error('Card image failed to load:', announcement.image);
-          e.currentTarget.src = '/images/placeholder.jpg';
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-      
-      <Badge
-        size="lg"
-        variant="gradient"
-        gradient={{ from: getTypeColor(announcement.type).split(' ')[0].replace('from-', ''), to: getTypeColor(announcement.type).split(' ')[1].replace('to-', '') }}
-        className="absolute top-4 left-4"
-      >
-        {announcement.type}
-      </Badge>
-    </div>
-  </Grid.Col>
-)}
+        {announcement.image && (
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <div className="relative h-48 md:h-64 rounded-lg overflow-hidden">
+              <img
+                src={getAnnouncementImageUrl(announcement.image)}
+                alt={announcement.title}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                onError={(e) => {
+                  console.error('Card image failed to load:', announcement.image);
+                  e.currentTarget.src = '/images/placeholder.jpg';
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              
+              <Badge
+                size="lg"
+                variant="gradient"
+                gradient={{ from: getTypeColor(announcement.type).split(' ')[0].replace('from-', ''), to: getTypeColor(announcement.type).split(' ')[1].replace('to-', '') }}
+                className="absolute top-4 left-4"
+              >
+                {announcement.type}
+              </Badge>
+            </div>
+          </Grid.Col>
+        )}
+        
         {/* Content Section */}
         <Grid.Col span={{ base: 12, md: announcement.image ? 8 : 12 }}>
           <Stack gap="md">
@@ -291,7 +299,9 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
                   {getTypeIcon(announcement.type)}
                 </ThemeIcon>
                 <div>
-                  <Title order={3} className="mb-1">{announcement.title}</Title>
+                  <Title order={3} className={`mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {announcement.title}
+                  </Title>
                   <Group gap="xs">
                     <Text size="sm" c="dimmed">{new Date(announcement.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
                     <Text size="sm" c="dimmed">•</Text>
@@ -302,7 +312,7 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
             </Group>
 
             {/* Description */}
-            <Text size="lg" className="text-gray-700 dark:text-gray-300">
+            <Text size="lg" className={isDark ? 'text-gray-300' : 'text-gray-700'}>
               {announcement.description}
             </Text>
 
@@ -320,15 +330,15 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
             {/* Stats */}
             <Group gap="lg">
               <Group gap={4}>
-                <Eye size={16} className="text-gray-500" />
+                <Eye size={16} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
                 <Text size="sm" c="dimmed">{announcement.views} views</Text>
               </Group>
               <Group gap={4}>
-                <Heart size={16} className="text-gray-500" />
+                <Heart size={16} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
                 <Text size="sm" c="dimmed">{likeCount} likes</Text>
               </Group>
               <Group gap={4}>
-                <MessageCircle size={16} className="text-gray-500" />
+                <MessageCircle size={16} className={isDark ? 'text-gray-500' : 'text-gray-400'} />
                 <Text size="sm" c="dimmed">{announcement.comments} comments</Text>
               </Group>
             </Group>
@@ -374,6 +384,7 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
                   e.stopPropagation();
                   setShowDetails(!showDetails);
                 }}
+                className={isDark ? 'text-gray-400 hover:text-white' : ''}
               >
                 {showDetails ? 'Show Less' : 'Read More'}
               </Button>
@@ -388,15 +399,19 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden"
               >
-                <Divider my="md" />
+                <Divider my="md" className={isDark ? 'border-gray-700' : 'border-gray-200'} />
                 
                 <Stack gap="md">
-                  <Text>{announcement.detailed_content}</Text>
+                  <Text className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                    {announcement.detailed_content}
+                  </Text>
 
                   {announcement.bullet_points && announcement.bullet_points.length > 0 && (
                     <ul className="list-disc list-inside space-y-2">
                       {announcement.bullet_points.map((point: string, i: number) => (
-                        <li key={i} className="text-gray-700 dark:text-gray-300">{point}</li>
+                        <li key={i} className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                          {point}
+                        </li>
                       ))}
                     </ul>
                   )}
@@ -424,6 +439,9 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
 
 // Featured Announcement Component
 const FeaturedAnnouncement = ({ announcement }: { announcement: Announcement | null }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   if (!announcement) return null;
 
   return (
@@ -438,19 +456,15 @@ const FeaturedAnnouncement = ({ announcement }: { announcement: Announcement | n
       withBorder
     >
       <div className="relative h-[400px] w-full">
-        {/* In FeaturedAnnouncement component */}
-<div className="relative h-[400px] w-full">
-  <img
-    src={getAnnouncementImageUrl(announcement.image)}
-    alt={announcement.title}
-    className="w-full h-full object-cover"
-    onError={(e) => {
-      console.error('Featured image failed to load:', announcement.image);
-      e.currentTarget.src = '/images/placeholder.jpg';
-    }}
-  />
-  {/* Rest of your component */}
-</div>
+        <img
+          src={getAnnouncementImageUrl(announcement.image)}
+          alt={announcement.title}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            console.error('Featured image failed to load:', announcement.image);
+            e.currentTarget.src = '/images/placeholder.jpg';
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
         
         {/* Featured Badge */}
@@ -473,7 +487,7 @@ const FeaturedAnnouncement = ({ announcement }: { announcement: Announcement | n
             <Text size="sm">{announcement.read_time} min read</Text>
           </Group>
 
-          <Title order={2} className="text-3xl md:text-4xl font-bold mb-4">
+          <Title order={2} className="text-3xl md:text-4xl font-bold mb-4 text-white">
             {announcement.title}
           </Title>
 
@@ -512,6 +526,8 @@ const CategoryFilter = ({ categories, activeCategory, setActiveCategory, onSearc
   setActiveCategory: (category: string) => void;
   onSearch: (query: string) => void;
 }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -520,11 +536,22 @@ const CategoryFilter = ({ categories, activeCategory, setActiveCategory, onSearc
   };
 
   return (
-    <Paper p="md" radius="lg" withBorder className="sticky top-20 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
+    <Paper 
+      p="md" 
+      radius="lg" 
+      withBorder 
+      className={`sticky top-20 z-10 backdrop-blur-md transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gray-900/80 border-gray-800' 
+          : 'bg-white/80 border-gray-200'
+      }`}
+    >
       <Group justify="space-between">
         <Group gap="xs">
-          <Filter size={20} />
-          <Text fw={600}>Filter by:</Text>
+          <Filter size={20} className={isDark ? 'text-gray-300' : 'text-gray-700'} />
+          <Text fw={600} className={isDark ? 'text-white' : 'text-gray-900'}>
+            Filter by:
+          </Text>
         </Group>
         
         <Group gap="xs" wrap="wrap">
@@ -554,15 +581,24 @@ const CategoryFilter = ({ categories, activeCategory, setActiveCategory, onSearc
         <Group gap="xs">
           <TextInput
             placeholder="Search announcements..."
-            leftSection={<Search size={16} />}
+            leftSection={<Search size={16} className={isDark ? 'text-gray-400' : 'text-gray-500'} />}
             size="sm"
             className="w-64"
             value={searchQuery}
             onChange={handleSearch}
-            rightSection={searchQuery ? <X size={16} className="cursor-pointer" onClick={() => {
-              setSearchQuery('');
-              onSearch('');
-            }} /> : null}
+            rightSection={searchQuery ? 
+              <X size={16} className={`cursor-pointer ${isDark ? 'text-gray-400' : 'text-gray-500'}`} onClick={() => {
+                setSearchQuery('');
+                onSearch('');
+              }} /> : null
+            }
+            styles={{
+              input: {
+                backgroundColor: isDark ? '#1f2937' : 'white',
+                color: isDark ? 'white' : '#1f2937',
+                borderColor: isDark ? '#374151' : '#e5e7eb',
+              },
+            }}
           />
         </Group>
       </Group>
@@ -572,6 +608,8 @@ const CategoryFilter = ({ categories, activeCategory, setActiveCategory, onSearc
 
 // Newsletter Subscription Component
 const NewsletterSubscribe = () => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
@@ -623,14 +661,16 @@ const NewsletterSubscribe = () => {
       padding="xl"
       radius="lg"
       withBorder
-      className="bg-gradient-to-br from-red-600 to-orange-600 text-white"
+      className={`bg-gradient-to-br from-red-600 to-orange-600 text-white transition-colors duration-300 ${
+        isDark ? 'border-gray-800' : 'border-gray-200'
+      }`}
     >
       <Stack align="center" gap="md">
         <ThemeIcon size={60} radius="xl" variant="white" className="text-red-600">
           <Bell size={30} />
         </ThemeIcon>
 
-        <Title order={3} className="text-center">Stay Updated</Title>
+        <Title order={3} className="text-center text-white">Stay Updated</Title>
         
         <Text ta="center" className="text-white/90">
           Subscribe to our newsletter and never miss an announcement
@@ -677,6 +717,9 @@ const NewsletterSubscribe = () => {
 
 // Announcement Stats Component
 const AnnouncementStats = ({ stats }: { stats: Stats[] }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const getIcon = (iconName?: string) => {
     switch(iconName) {
       case 'Bell': return <Bell size={24} />;
@@ -699,7 +742,11 @@ const AnnouncementStats = ({ stats }: { stats: Stats[] }) => {
           padding="lg"
           radius="lg"
           withBorder
-          className="text-center"
+          className={`text-center transition-colors duration-300 ${
+            isDark 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}
         >
           <ThemeIcon
             size={50}
@@ -710,7 +757,7 @@ const AnnouncementStats = ({ stats }: { stats: Stats[] }) => {
           >
             {getIcon(stat.icon)}
           </ThemeIcon>
-          <Title order={3} className="text-2xl font-bold">
+          <Title order={3} className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
             <CountUp end={stat.value} duration={2} />
           </Title>
           <Text size="sm" c="dimmed">{stat.label}</Text>
@@ -722,6 +769,9 @@ const AnnouncementStats = ({ stats }: { stats: Stats[] }) => {
 
 // Timeline Component
 const AnnouncementTimeline = ({ events }: { events: TimelineEvent[] }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   return (
     <MotionCard
       initial={{ opacity: 0, x: -30 }}
@@ -731,14 +781,21 @@ const AnnouncementTimeline = ({ events }: { events: TimelineEvent[] }) => {
       padding="xl"
       radius="lg"
       withBorder
+      className={`transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-gray-200'
+      }`}
     >
-      <Title order={3} className="mb-6">Announcement Timeline</Title>
+      <Title order={3} className={`mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        Announcement Timeline
+      </Title>
       
       <Timeline active={events.length - 1} bulletSize={24} lineWidth={2}>
         {events.map((event, index) => (
           <Timeline.Item
             key={index}
-            title={event.title}
+            title={<span className={isDark ? 'text-gray-200' : 'text-gray-900'}>{event.title}</span>}
             bullet={
               <ThemeIcon
                 size={24}
@@ -769,6 +826,9 @@ const AnnouncementTimeline = ({ events }: { events: TimelineEvent[] }) => {
 };
 
 export default function AnnouncementsPage() {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -908,8 +968,13 @@ export default function AnnouncementsPage() {
   };
 
   const featuredAnnouncement = announcements.find(a => a.is_featured) || announcements[0];
+  
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950' 
+        : 'bg-gradient-to-b from-gray-50 to-white'
+    } relative overflow-hidden`}>
       <FloatingParticles />
 
       {/* Hero Section */}
@@ -941,7 +1006,7 @@ export default function AnnouncementsPage() {
               Stay Informed
             </Badge>
             
-            <Title className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
+            <Title className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-white">
               Announcements & <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Updates</span>
             </Title>
             
@@ -973,7 +1038,7 @@ export default function AnnouncementsPage() {
         {statsLoading ? (
           <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} height={120} radius="lg" />
+              <Skeleton key={i} height={120} radius="lg" className={isDark ? 'bg-gray-800' : 'bg-gray-200'} />
             ))}
           </SimpleGrid>
         ) : (
@@ -1006,14 +1071,23 @@ export default function AnnouncementsPage() {
               {loading ? (
                 <Stack gap="md">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} height={300} radius="lg" />
+                    <Skeleton key={i} height={300} radius="lg" className={isDark ? 'bg-gray-800' : 'bg-gray-200'} />
                   ))}
                 </Stack>
               ) : announcements.length === 0 ? (
-                <Paper p="xl" radius="lg" withBorder>
+                <Paper 
+                  p="xl" 
+                  radius="lg" 
+                  withBorder 
+                  className={`transition-colors duration-300 ${
+                    isDark 
+                      ? 'bg-gray-900 border-gray-800' 
+                      : 'bg-white border-gray-200'
+                  }`}
+                >
                   <Center>
                     <Stack align="center">
-                      <Bell size={48} className="text-gray-400" />
+                      <Bell size={48} className={isDark ? 'text-gray-600' : 'text-gray-400'} />
                       <Text size="lg" c="dimmed">No announcements found</Text>
                       <Button
                         variant="light"
@@ -1053,6 +1127,11 @@ export default function AnnouncementsPage() {
                     size="lg"
                     radius="xl"
                     withEdges
+                    classNames={{
+                      control: isDark 
+                        ? 'bg-gray-800 text-white border-gray-700 hover:bg-gray-700' 
+                        : 'bg-white text-gray-900 border-gray-200 hover:bg-gray-50',
+                    }}
                   />
                 </Group>
               )}
@@ -1067,7 +1146,7 @@ export default function AnnouncementsPage() {
 
               {/* Timeline */}
               {timelineLoading ? (
-                <Skeleton height={300} radius="lg" />
+                <Skeleton height={300} radius="lg" className={isDark ? 'bg-gray-800' : 'bg-gray-200'} />
               ) : (
                 <AnnouncementTimeline events={timelineEvents} />
               )}
@@ -1081,8 +1160,15 @@ export default function AnnouncementsPage() {
                 padding="xl"
                 radius="lg"
                 withBorder
+                className={`transition-colors duration-300 ${
+                  isDark 
+                    ? 'bg-gray-800 border-gray-700' 
+                    : 'bg-white border-gray-200'
+                }`}
               >
-                <Title order={4} className="mb-4">Quick Links</Title>
+                <Title order={4} className={`mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Quick Links
+                </Title>
                 <Stack gap="xs">
                   <Button
                     variant="light"
@@ -1129,8 +1215,15 @@ export default function AnnouncementsPage() {
                 padding="xl"
                 radius="lg"
                 withBorder
+                className={`transition-colors duration-300 ${
+                  isDark 
+                    ? 'bg-gray-800 border-gray-700' 
+                    : 'bg-white border-gray-200'
+                }`}
               >
-                <Title order={4} className="mb-4">Popular Tags</Title>
+                <Title order={4} className={`mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Popular Tags
+                </Title>
                 <Group gap="xs">
                   {['DTF', 'Sale', 'NewService', 'Event', 'Holiday', 'Update', 'Eco', 'Workshop', 'Expansion'].map((tag) => (
                     <Badge
@@ -1138,7 +1231,9 @@ export default function AnnouncementsPage() {
                       variant="light"
                       color="red"
                       size="lg"
-                      className="cursor-pointer hover:bg-red-100 transition-colors"
+                      className={`cursor-pointer transition-colors ${
+                        isDark ? 'hover:bg-red-900/50' : 'hover:bg-red-100'
+                      }`}
                       onClick={() => handleSearch(tag)}
                     >
                       #{tag}
@@ -1154,7 +1249,7 @@ export default function AnnouncementsPage() {
       {/* CTA Section */}
       <Container size="lg" className="py-12">
         <MotionDiv
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
@@ -1168,11 +1263,11 @@ export default function AnnouncementsPage() {
           </div>
 
           <div className="relative z-10">
-            <Title order={2} className="text-4xl md:text-5xl font-bold mb-6">
+            <Title order={2} className="text-4xl md:text-5xl font-bold mb-6 text-white">
               Never Miss an Update!
             </Title>
             
-            <Text size="xl" className="mb-8 max-w-2xl mx-auto">
+            <Text size="xl" className="mb-8 max-w-2xl mx-auto text-white/90">
               Follow us on social media for real-time updates and exclusive content
             </Text>
 

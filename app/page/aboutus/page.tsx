@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, Avatar, SimpleGrid, Stack, ActionIcon, Tooltip } from '@mantine/core';
+import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, Avatar, SimpleGrid, Stack, ActionIcon, Tooltip, useMantineColorScheme } from '@mantine/core';
 import { motion, useScroll, useTransform, useAnimation, useInView } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
 import {
@@ -27,11 +27,6 @@ import Link from 'next/link';
 
 const MotionDiv = motion.div;
 const MotionSection = motion.section;
-
-// For Mantine components, use motion.create instead of motion()
-// const MotionContainer = motion.create(Container);
-// const MotionTitle = motion.create(Title as any );
-// const MotionText = motion.create(Text as any );
 const MotionCard = motion.create(Card as any);
 
 // Custom hook for scroll animations - FIXED VERSION
@@ -40,7 +35,7 @@ const useScrollAnimation = (threshold = 0.1) => {
   const ref = useRef(null);
   const inView = useInView(ref, { 
     once: true, 
-    amount: threshold // Use 'amount' instead of 'threshold' for the version you're using
+    amount: threshold
   });
 
   useEffect(() => {
@@ -54,15 +49,19 @@ const useScrollAnimation = (threshold = 0.1) => {
 
 // Floating particles animation
 const FloatingParticles = () => {
-  // Generate particles directly in useState initializer
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const [particles] = useState(() => {
-    const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+    const colors = isDark 
+      ? ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6']
+      : ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
     
-    return [...Array(30)].map((_, i) => ({
+    return [...Array(20)].map((_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: 2 + Math.random() * 6,
+      size: 2 + Math.random() * 4,
       color: colors[Math.floor(Math.random() * colors.length)],
       duration: 10 + Math.random() * 20,
       delay: Math.random() * 10,
@@ -83,13 +82,12 @@ const FloatingParticles = () => {
             backgroundColor: p.color,
             left: `${p.x}%`,
             top: `${p.y}%`,
-            opacity: 0.2,
+            opacity: isDark ? 0.15 : 0.2,
           }}
           animate={{
             y: [0, -30, 0, 30, 0],
             x: [0, 30, 0, -30, 0],
             scale: [1, 1.2, 1, 0.8, 1],
-            opacity: [0.2, 0.4, 0.2, 0.4, 0.2],
           }}
           transition={{
             duration: p.duration,
@@ -102,8 +100,11 @@ const FloatingParticles = () => {
     </div>
   );
 };
+
 // Animated Counter
 const AnimatedCounter = ({ value, label, suffix = '', duration = 2 }: { value: number; label: string; suffix?: string; duration?: number }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
   const [isInView, setIsInView] = useState(false);
   const ref = useRef(null);
 
@@ -134,13 +135,16 @@ const AnimatedCounter = ({ value, label, suffix = '', duration = 2 }: { value: n
       <div className="text-5xl font-bold mb-2 bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
         {isInView && <CountUp end={value} duration={duration} separator="," suffix={suffix} />}
       </div>
-      <div className="text-gray-600 dark:text-gray-400">{label}</div>
+      <div className={isDark ? 'text-gray-400' : 'text-gray-600'}>{label}</div>
     </MotionDiv>
   );
 };
 
 // Timeline Item
 const TimelineItem = ({ year, title, description, icon, index }: { year: string; title: string; description: string; icon: React.ReactNode; index: number }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   return (
     <MotionDiv
       initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
@@ -156,12 +160,18 @@ const TimelineItem = ({ year, title, description, icon, index }: { year: string;
           </div>
         </div>
         <div className="flex-grow">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow">
+          <div className={`rounded-lg p-6 shadow-lg hover:shadow-xl transition-all ${
+            isDark 
+              ? 'bg-gray-800 hover:shadow-gray-800/50' 
+              : 'bg-white hover:shadow-gray-200/50'
+          }`}>
             <div className="flex items-center gap-3 mb-2">
               <Badge size="lg" variant="gradient" gradient={{ from: 'red', to: 'orange' }}>
                 {year}
               </Badge>
-              <Title order={4}>{title}</Title>
+              <Title order={4} className={isDark ? 'text-white' : 'text-gray-900'}>
+                {title}
+              </Title>
             </div>
             <Text c="dimmed">{description}</Text>
           </div>
@@ -173,6 +183,9 @@ const TimelineItem = ({ year, title, description, icon, index }: { year: string;
 
 // Team Member Card
 const TeamMember = ({ name, role, bio, image, index }: { name: string; role: string; bio: string; image: string; index: number }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   return (
     <MotionCard
       initial={{ opacity: 0, y: 50 }}
@@ -180,7 +193,11 @@ const TeamMember = ({ name, role, bio, image, index }: { name: string; role: str
       transition={{ duration: 0.5, delay: index * 0.1 }}
       viewport={{ once: true }}
       whileHover={{ y: -10 }}
-      className="relative overflow-hidden group"
+      className={`relative overflow-hidden group transition-colors ${
+        isDark 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-gray-200'
+      }`}
       padding="xl"
       radius="lg"
       withBorder
@@ -197,22 +214,48 @@ const TeamMember = ({ name, role, bio, image, index }: { name: string; role: str
           />
         </div>
         
-        <Title order={3} className="mb-1">{name}</Title>
+        <Title order={3} className={`mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          {name}
+        </Title>
         <Badge size="lg" color="red" className="mb-3">{role}</Badge>
         <Text size="sm" c="dimmed" className="mb-4">{bio}</Text>
         
         <Group justify="center" gap="xs">
-          <ActionIcon variant="subtle" color="gray" size="lg" component="a" href="#" target="_blank">
+          <ActionIcon 
+            variant="subtle" 
+            color="gray" 
+            size="lg" 
+            component="a" 
+            href="#" 
+            target="_blank"
+            className={isDark ? 'text-gray-400 hover:text-white' : ''}
+          >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.99h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.99C18.343 21.128 22 16.991 22 12z"/>
             </svg>
           </ActionIcon>
-          <ActionIcon variant="subtle" color="gray" size="lg" component="a" href="#" target="_blank">
+          <ActionIcon 
+            variant="subtle" 
+            color="gray" 
+            size="lg" 
+            component="a" 
+            href="#" 
+            target="_blank"
+            className={isDark ? 'text-gray-400 hover:text-white' : ''}
+          >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.104c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 0021.645-3.188 13.94 13.94 0 001.464-6.108c0-.21-.005-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
             </svg>
           </ActionIcon>
-          <ActionIcon variant="subtle" color="gray" size="lg" component="a" href="#" target="_blank">
+          <ActionIcon 
+            variant="subtle" 
+            color="gray" 
+            size="lg" 
+            component="a" 
+            href="#" 
+            target="_blank"
+            className={isDark ? 'text-gray-400 hover:text-white' : ''}
+          >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
             </svg>
@@ -225,6 +268,9 @@ const TeamMember = ({ name, role, bio, image, index }: { name: string; role: str
 
 // Value Card
 const ValueCard = ({ icon, title, description, color }: { icon: React.ReactNode; title: string; description: string; color: string }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   return (
     <MotionCard
       initial={{ opacity: 0, scale: 0.9 }}
@@ -232,7 +278,11 @@ const ValueCard = ({ icon, title, description, color }: { icon: React.ReactNode;
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
       whileHover={{ y: -5, scale: 1.02 }}
-      className="relative overflow-hidden group"
+      className={`relative overflow-hidden group transition-colors ${
+        isDark 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-gray-200'
+      }`}
       padding="xl"
       radius="lg"
       withBorder
@@ -249,7 +299,9 @@ const ValueCard = ({ icon, title, description, color }: { icon: React.ReactNode;
         {icon}
       </ThemeIcon>
       
-      <Title order={4} className="mb-2">{title}</Title>
+      <Title order={4} className={`mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+        {title}
+      </Title>
       <Text size="sm" c="dimmed">{description}</Text>
     </MotionCard>
   );
@@ -257,13 +309,20 @@ const ValueCard = ({ icon, title, description, color }: { icon: React.ReactNode;
 
 // Achievement Card
 const AchievementCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   return (
     <MotionDiv
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
-      className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow"
+      className={`rounded-lg p-6 shadow-lg hover:shadow-xl transition-all ${
+        isDark 
+          ? 'bg-gray-800 hover:shadow-gray-800/50' 
+          : 'bg-white hover:shadow-gray-200/50'
+      }`}
     >
       <Group>
         <ThemeIcon size={50} radius="xl" color="red" variant="light">
@@ -279,6 +338,9 @@ const AchievementCard = ({ icon, title, description }: { icon: React.ReactNode; 
 };
 
 export default function AboutPage() {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -289,7 +351,6 @@ export default function AboutPage() {
   const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 100]);
 
-  // Fixed: Destructure ref and controls from the hook
   const { ref: storyRef, controls: storyControls } = useScrollAnimation(0.2);
   const { ref: timelineRef, controls: timelineControls } = useScrollAnimation(0.2);
   const { ref: valuesRef, controls: valuesControls } = useScrollAnimation(0.2);
@@ -433,7 +494,11 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 relative overflow-hidden">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950' 
+        : 'bg-gradient-to-b from-gray-50 to-white'
+    } relative overflow-hidden`}>
       <FloatingParticles />
 
       {/* Hero Section */}
@@ -463,7 +528,7 @@ export default function AboutPage() {
               About Us
             </Badge>
             
-            <Title className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
+            <Title className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-white">
               Crafting <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Excellence</span>
             </Title>
             
@@ -504,7 +569,9 @@ export default function AboutPage() {
         ref={storyRef}
         animate={storyControls}
         initial="hidden"
-        className="py-20 bg-gray-50 dark:bg-gray-900/50"
+        className={`py-20 transition-colors duration-300 ${
+          isDark ? 'bg-gray-900/50' : 'bg-gray-50'
+        }`}
       >
         <Container size="lg">
           <Grid gutter={50} align="center">
@@ -516,20 +583,22 @@ export default function AboutPage() {
                 viewport={{ once: true }}
               >
                 <Badge size="lg" color="red" className="mb-4">Our Story</Badge>
-                <Title order={2} className="text-4xl md:text-5xl font-bold mb-6">
+                <Title order={2} className={`text-4xl md:text-5xl font-bold mb-6 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
                   More Than Just <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Printing</span>
                 </Title>
                 
                 <Stack gap="md">
-                  <Text size="lg">
+                  <Text size="lg" className={isDark ? 'text-gray-300' : 'text-gray-700'}>
                     Founded in 2010, Lucia Printing started as a small print shop with a big dream: 
                     to provide exceptional quality printing services to businesses and individuals in Ethiopia.
                   </Text>
-                  <Text size="lg">
+                  <Text size="lg" className={isDark ? 'text-gray-300' : 'text-gray-700'}>
                     What began with a single printer has grown into a full-service printing and advertising 
                     company, serving thousands of satisfied customers across the nation.
                   </Text>
-                  <Text size="lg">
+                  <Text size="lg" className={isDark ? 'text-gray-300' : 'text-gray-700'}>
                     Today, we combine cutting-edge technology with artisanal craftsmanship to deliver 
                     prints that not only meet but exceed expectations.
                   </Text>
@@ -579,7 +648,9 @@ export default function AboutPage() {
                 
                 {/* Floating Card */}
                 <MotionDiv
-                  className="absolute -bottom-10 -left-10 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-xl"
+                  className={`absolute -bottom-10 -left-10 rounded-lg p-6 shadow-xl ${
+                    isDark ? 'bg-gray-800' : 'bg-white'
+                  }`}
                   whileHover={{ scale: 1.05 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                 >
@@ -615,7 +686,9 @@ export default function AboutPage() {
             className="text-center mb-16"
           >
             <Badge size="lg" color="red" className="mb-4">Our Journey</Badge>
-            <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+            <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               The Road to <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Success</span>
             </Title>
             <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
@@ -636,7 +709,9 @@ export default function AboutPage() {
         ref={valuesRef}
         animate={valuesControls}
         initial="hidden"
-        className="py-20 bg-gray-50 dark:bg-gray-900/50"
+        className={`py-20 transition-colors duration-300 ${
+          isDark ? 'bg-gray-900/50' : 'bg-gray-50'
+        }`}
       >
         <Container size="lg">
           <MotionDiv
@@ -647,7 +722,9 @@ export default function AboutPage() {
             className="text-center mb-16"
           >
             <Badge size="lg" color="red" className="mb-4">Our Values</Badge>
-            <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+            <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               What Drives <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">Us</span>
             </Title>
             <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
@@ -679,7 +756,9 @@ export default function AboutPage() {
             className="text-center mb-16"
           >
             <Badge size="lg" color="red" className="mb-4">Our Team</Badge>
-            <Title order={2} className="text-4xl md:text-5xl font-bold mb-4">
+            <Title order={2} className={`text-4xl md:text-5xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               The People Behind <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">the Prints</span>
             </Title>
             <Text size="xl" c="dimmed" className="max-w-2xl mx-auto">
@@ -752,11 +831,11 @@ export default function AboutPage() {
             </div>
 
             <div className="relative z-10">
-              <Title order={2} className="text-4xl md:text-5xl font-bold mb-6">
+              <Title order={2} className="text-4xl md:text-5xl font-bold mb-6 text-white">
                 Ready to Start Your Project?
               </Title>
               
-              <Text size="xl" className="mb-8 max-w-2xl mx-auto">
+              <Text size="xl" className="mb-8 max-w-2xl mx-auto text-white/90">
                 Let&apos;s bring your vision to life with our premium printing services
               </Text>
 

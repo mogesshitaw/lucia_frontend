@@ -14,7 +14,11 @@ import {
   Burger,
   Badge,
   LoadingOverlay,
-  rem,
+  Modal,
+  PasswordInput,
+  Button,
+  Stack,
+  Divider,
 } from '@mantine/core';
 import {
   IconChevronDown,
@@ -27,12 +31,17 @@ import {
   IconDashboard,
   IconFileText,
   IconMessage,
+  IconLock,
+  IconEyeCheck,
+  IconUserCircle,
+  IconKey,
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { notifications } from '@mantine/notifications';
+import { useForm } from '@mantine/form';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -56,8 +65,30 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
   const [searchOpened, setSearchOpened] = useState(false);
   const [notificationsCount, setNotificationsCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [changePasswordOpened, setChangePasswordOpened] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  const passwordForm = useForm({
+    initialValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+    validate: {
+      currentPassword: (value) => (value.length < 6 ? 'Password must be at least 6 characters' : null),
+      newPassword: (value) => {
+        if (value.length < 8) return 'Password must be at least 8 characters';
+        if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+          return 'Password must contain uppercase, lowercase, and numbers';
+        }
+        return null;
+      },
+      confirmPassword: (value, values) => 
+        value !== values.newPassword ? 'Passwords do not match' : null,
+    },
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -130,6 +161,47 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
     }
   };
 
+  const handleChangePassword = async (values: typeof passwordForm.values) => {
+    setPasswordLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      
+      const response = await fetch(`${API_URL}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentPassword: values.currentPassword,
+          newPassword: values.newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        notifications.show({
+          title: 'Success',
+          message: 'Password changed successfully',
+          color: 'green',
+        });
+        setChangePasswordOpened(false);
+        passwordForm.reset();
+      } else {
+        throw new Error(data.message || 'Failed to change password');
+      }
+    } catch (error: any) {
+      notifications.show({
+        title: 'Error',
+        message: error.message || 'Failed to change password',
+        color: 'red',
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   // Get current page title from pathname
   const getPageTitle = () => {
     const path = pathname.split('/').pop();
@@ -175,111 +247,83 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
   };
 
   return (
-    <header
-      className={`w-full h-full flex items-center px-4 md:px-6 transition-all duration-300 relative ${
-        scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm dark:bg-gray-900/95' : 'bg-transparent'
-      }`}
-    >
-      <LoadingOverlay visible={loading} overlayProps={{ blur: 2 }} />
-      
-      <Group justify="space-between" className="w-full">
-        <Group>
-          <Burger
-            opened={isSidebarOpen}
-            onClick={toggleSidebar}
-            size="sm"
-            className="md:hidden"
-            aria-label="Toggle navigation"
-          />
-          
-          {/* Page Title */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-            className="hidden md:block"
-          >
-            <Text size="xl" fw={700} className="text-gray-800 dark:text-white">
-              {getPageTitle()}
-            </Text>
-          </motion.div>
-        </Group>
-
-        <Group gap="lg">
-          {/* Search */}
-          <div className="hidden md:block relative">
-            <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <TextInput
-              placeholder="Search..."
-              className="w-64"
+    <>
+      <header
+        className={`w-full h-full flex items-center px-4 md:px-6 transition-all duration-300 relative ${
+          scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm dark:bg-gray-900/95' : 'bg-transparent'
+        }`}
+      >
+        <LoadingOverlay visible={loading} overlayProps={{ blur: 2 }} />
+        
+        <Group justify="space-between" className="w-full">
+          <Group>
+            <Burger
+              opened={isSidebarOpen}
+              onClick={toggleSidebar}
               size="sm"
-              radius="md"
-              styles={{
-                input: {
-                  paddingLeft: '2.5rem',
-                  backgroundColor: scrolled ? 'white' : '#f8f9fa',
-                  border: 'none',
-                  '&:focus': {
-                    border: '1px solid #ef4444',
-                  },
-                },
-              }}
+              className="md:hidden"
+              aria-label="Toggle navigation"
             />
-          </div>
-
-          {/* Notifications */}
-          <Indicator 
-            label={notificationsCount} 
-            size={16} 
-            color="red" 
-            offset={4}
-            disabled={notificationsCount === 0}
-          >
-            <Tooltip label="Notifications" withArrow position="bottom">
-              <ActionIcon 
-                size="lg" 
-                variant="subtle" 
-                color="gray"
-                onClick={() => router.push('/dashboard/notifications')}
-              >
-                <IconBell size={20} />
-              </ActionIcon>
-            </Tooltip>
-          </Indicator>
-
-          {/* User Menu */}
-          <Menu shadow="lg" width={280} position="bottom-end" withArrow>
-            <Menu.Target>
-              <Group gap="xs" className="cursor-pointer hover:opacity-80 transition-opacity">
-                <Avatar 
-                  src={user?.avatar || null} 
-                  size="md" 
-                  radius="xl"
-                  color={getRoleColor(user?.role || '')}
-                >
-                  {getUserInitials()}
-                </Avatar>
-                <div className="hidden md:block">
-                  <Group gap="xs">
-                    <Text size="sm" fw={500}>{user?.full_name || 'User'}</Text>
-                    <Badge 
-                      size="xs" 
-                      color={getRoleColor(user?.role || '')}
-                      variant="light"
-                    >
-                      {formatRole(user?.role || 'user')}
-                    </Badge>
-                  </Group>
-                  <Text size="xs" c="dimmed">{user?.email || 'user@example.com'}</Text>
-                </div>
-                <IconChevronDown size={14} className="hidden md:block" />
-              </Group>
-            </Menu.Target>
             
-            <Menu.Dropdown>
-              {/* User Info Header */}
-              <div className="px-3 py-2 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-t-lg">
-                <Group>
+            {/* Page Title */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              className="hidden md:block"
+            >
+              <Text size="xl" fw={700} className="text-gray-800 dark:text-white">
+                {getPageTitle()}
+              </Text>
+            </motion.div>
+          </Group>
+
+          <Group gap="lg">
+            {/* Search */}
+            <div className="hidden md:block relative">
+              <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <TextInput
+                placeholder="Search..."
+                className="w-64"
+                size="sm"
+                radius="md"
+                styles={{
+                  input: {
+                    paddingLeft: '2.5rem',
+                    backgroundColor: scrolled ? 'white' : '#f8f9fa',
+                    border: 'none',
+                    '&:focus': {
+                      border: '1px solid #ef4444',
+                    },
+                  },
+                }}
+              />
+            </div>
+
+            {/* Notifications */}
+            <Indicator 
+              label={notificationsCount} 
+              size={16} 
+              color="red" 
+              offset={4}
+              disabled={notificationsCount === 0}
+            >
+              <Tooltip label="Notifications" withArrow position="bottom">
+                <ActionIcon 
+                  size="lg" 
+                  variant="subtle" 
+                  color="gray"
+                  onClick={() => router.push('/dashboard/notifications')}
+                >
+                  <IconBell size={20} />
+                </ActionIcon>
+              </Tooltip>
+            </Indicator>
+
+            {/* User Menu */}
+            <Menu shadow="lg" width={280} position="bottom-end" withArrow>
+              <Menu.Target>
+                <Group gap="xs" className="cursor-pointer hover:opacity-80 transition-opacity">
                   <Avatar 
                     src={user?.avatar || null} 
                     size="md" 
@@ -288,98 +332,211 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
                   >
                     {getUserInitials()}
                   </Avatar>
-                  <div>
-                    <Text fw={600} size="sm">{user?.full_name || 'User'}</Text>
+                  <div className="hidden md:block">
+                    <Group gap="xs">
+                      <Text size="sm" fw={500}>{user?.full_name || 'User'}</Text>
+                      <Badge 
+                        size="xs" 
+                        color={getRoleColor(user?.role || '')}
+                        variant="light"
+                      >
+                        {formatRole(user?.role || 'user')}
+                      </Badge>
+                    </Group>
                     <Text size="xs" c="dimmed">{user?.email || 'user@example.com'}</Text>
                   </div>
+                  <IconChevronDown size={14} className="hidden md:block" />
                 </Group>
-              </div>
+              </Menu.Target>
+              
+              <Menu.Dropdown>
+                {/* User Info Header */}
+                <div className="px-3 py-2 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-t-lg">
+                  <Group>
+                    <Avatar 
+                      src={user?.avatar || null} 
+                      size="md" 
+                      radius="xl"
+                      color={getRoleColor(user?.role || '')}
+                    >
+                      {getUserInitials()}
+                    </Avatar>
+                    <div>
+                      <Text fw={600} size="sm">{user?.full_name || 'User'}</Text>
+                      <Text size="xs" c="dimmed">{user?.email || 'user@example.com'}</Text>
+                      <Badge 
+                        size="xs" 
+                        color={getRoleColor(user?.role || '')}
+                        variant="light"
+                        className="mt-1"
+                      >
+                        {formatRole(user?.role || 'user')}
+                      </Badge>
+                    </div>
+                  </Group>
+                </div>
 
-              <Menu.Label>Quick Actions</Menu.Label>
-              <Menu.Item 
-                leftSection={<IconDashboard size={14} />} 
-                component={Link} 
-                href="/dashboard"
-              >
-                Dashboard
-              </Menu.Item>
-              <Menu.Item 
-                leftSection={<IconUser size={14} />} 
-                component={Link} 
-                href="/dashboard/profile"
-              >
-                My Profile
-              </Menu.Item>
-              <Menu.Item 
-                leftSection={<IconFileText size={14} />} 
-                component={Link} 
-                href="/dashboard/my-uploads"
-              >
-                My Uploads
-              </Menu.Item>
-              <Menu.Item 
-                leftSection={<IconMessage size={14} />} 
-                component={Link} 
-                href="/dashboard/messages"
-              >
-                Messages
-              </Menu.Item>
-              
-              <Menu.Divider />
-              
-              <Menu.Label>Settings</Menu.Label>
-              <Menu.Item 
-                leftSection={<IconSettings size={14} />} 
-                component={Link} 
-                href="/dashboard/settings"
-              >
-                Account Settings
-              </Menu.Item>
-              <Menu.Item 
-                leftSection={<IconCreditCard size={14} />} 
-                component={Link} 
-                href="/dashboard/billing"
-              >
-                Billing & Payments
-              </Menu.Item>
-              
-              <Menu.Divider />
-              
-              <Menu.Item 
-                leftSection={<IconLogout size={14} />} 
-                color="red"
-                onClick={handleLogout}
-                disabled={loading}
-              >
-                {loading ? 'Logging out...' : 'Logout'}
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
+                <Menu.Label>Account Management</Menu.Label>
+                <Menu.Item 
+                  leftSection={<IconUserCircle size={14} />} 
+                  component={Link} 
+                  href="/dashboard/profile"
+                >
+                  View Profile
+                </Menu.Item>
+                <Menu.Item 
+                  leftSection={<IconKey size={14} />} 
+                  onClick={() => setChangePasswordOpened(true)}
+                >
+                  Change Password
+                </Menu.Item>
+                
+                <Menu.Divider />
+                
+                <Menu.Label>Quick Links</Menu.Label>
+                <Menu.Item 
+                  leftSection={<IconDashboard size={14} />} 
+                  component={Link} 
+                  href="/dashboard"
+                >
+                  Dashboard
+                </Menu.Item>
+                <Menu.Item 
+                  leftSection={<IconFileText size={14} />} 
+                  component={Link} 
+                  href="/dashboard/my-uploads"
+                >
+                  My Uploads
+                </Menu.Item>
+                <Menu.Item 
+                  leftSection={<IconMessage size={14} />} 
+                  component={Link} 
+                  href="/dashboard/messages"
+                >
+                  Messages
+                </Menu.Item>
+                
+                <Menu.Divider />
+                
+                <Menu.Label>Settings</Menu.Label>
+                <Menu.Item 
+                  leftSection={<IconSettings size={14} />} 
+                  component={Link} 
+                  href="/dashboard/settings"
+                >
+                  Account Settings
+                </Menu.Item>
+                <Menu.Item 
+                  leftSection={<IconCreditCard size={14} />} 
+                  component={Link} 
+                  href="/dashboard/billing"
+                >
+                  Billing & Payments
+                </Menu.Item>
+                
+                <Menu.Divider />
+                
+                <Menu.Item 
+                  leftSection={<IconLogout size={14} />} 
+                  color="red"
+                  onClick={handleLogout}
+                  disabled={loading}
+                >
+                  {loading ? 'Logging out...' : 'Logout'}
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </Group>
         </Group>
-      </Group>
 
-      {/* Mobile Search Drawer */}
-      <Drawer
-        opened={searchOpened}
-        onClose={() => setSearchOpened(false)}
-        position="top"
-        size="auto"
-        padding="md"
-        radius="md"
-      >
-        <TextInput
-          placeholder="Search..."
-          size="lg"
+        {/* Mobile Search Drawer */}
+        <Drawer
+          opened={searchOpened}
+          onClose={() => setSearchOpened(false)}
+          position="top"
+          size="auto"
+          padding="md"
           radius="md"
-          autoFocus
-          leftSection={<IconSearch size={18} />}
-          rightSection={
-            <ActionIcon size="sm" onClick={() => setSearchOpened(false)}>
-              ✕
-            </ActionIcon>
-          }
-        />
-      </Drawer>
-    </header>
+        >
+          <TextInput
+            placeholder="Search..."
+            size="lg"
+            radius="md"
+            autoFocus
+            leftSection={<IconSearch size={18} />}
+            rightSection={
+              <ActionIcon size="sm" onClick={() => setSearchOpened(false)}>
+                ✕
+              </ActionIcon>
+            }
+          />
+        </Drawer>
+      </header>
+
+      {/* Change Password Modal */}
+      <Modal
+        opened={changePasswordOpened}
+        onClose={() => {
+          setChangePasswordOpened(false);
+          passwordForm.reset();
+        }}
+        title="Change Password"
+        size="md"
+        radius="lg"
+        centered
+      >
+        <form onSubmit={passwordForm.onSubmit(handleChangePassword)}>
+          <Stack gap="md">
+            <PasswordInput
+              label="Current Password"
+              placeholder="Enter your current password"
+              leftSection={<IconLock size={16} />}
+              required
+              {...passwordForm.getInputProps('currentPassword')}
+            />
+
+            <PasswordInput
+              label="New Password"
+              placeholder="Enter new password"
+              leftSection={<IconKey size={16} />}
+              required
+              description="Password must be at least 8 characters with uppercase, lowercase, and numbers"
+              {...passwordForm.getInputProps('newPassword')}
+            />
+
+            <PasswordInput
+              label="Confirm New Password"
+              placeholder="Confirm your new password"
+              leftSection={<IconEyeCheck size={16} />}
+              required
+              {...passwordForm.getInputProps('confirmPassword')}
+            />
+
+            <Divider />
+
+            <Group justify="flex-end">
+              <Button 
+                variant="light" 
+                color="gray" 
+                onClick={() => {
+                  setChangePasswordOpened(false);
+                  passwordForm.reset();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                loading={passwordLoading}
+                variant="gradient"
+                gradient={{ from: 'red', to: 'orange' }}
+              >
+                Change Password
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
+    </>
   );
 }

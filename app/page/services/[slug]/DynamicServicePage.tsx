@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Container, Title, Text, Button, Grid, Group, ThemeIcon, Badge, SimpleGrid, Stack, Divider, Paper, List } from '@mantine/core';
+import { Container, Title, Text, Button, Grid, Group, ThemeIcon, Badge, SimpleGrid, Stack, Divider, Paper, List, useMantineColorScheme } from '@mantine/core';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -35,13 +35,28 @@ const iconMap: Record<string, any> = {
 const MotionDiv = motion.div;
 
 export default function DynamicServicePage({ service }: { service: any }) {
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   const IconComponent = iconMap[service.icon_name] || Printer;
+
+  // Debug logs
   console.log('Service data:', service);
   console.log('Features:', service.features);
-  console.log('Applications:', );
-  // ... etc.
+  console.log('Applications:', service.applications);
+  console.log('Process Steps:', service.process_steps);
+  console.log('Specifications:', service.specifications);
+  console.log('Materials:', service.materials);
+  console.log('Formats:', service.formats);
+  console.log('Colors:', service.colors);
+  console.log('FAQs:', service.faqs);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950' 
+        : 'bg-gradient-to-b from-gray-50 to-white'
+    }`}>
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-r from-red-600 to-orange-600 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -125,20 +140,35 @@ export default function DynamicServicePage({ service }: { service: any }) {
               viewport={{ once: true }}
             >
               <Badge size="lg" color="red" className="mb-4">Overview</Badge>
-              <Title order={2} className="text-3xl md:text-4xl font-bold mb-6">
+              <Title order={2} className={`text-3xl md:text-4xl font-bold mb-6 transition-colors duration-300 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
                 About This Service
               </Title>
-              <Text size="lg" className="text-gray-600 dark:text-gray-400 mb-6">
+              <Text size="lg" className={`mb-6 transition-colors duration-300 ${
+                isDark ? 'text-gray-300' : 'text-gray-600'
+              }`}>
                 {service.full_description}
               </Text>
               
               {service.features && service.features.length > 0 && (
                 <SimpleGrid cols={2} spacing="md" className="mb-8">
                   {service.features.map((feature: string, index: number) => (
-                    <Paper key={index} p="md" withBorder className="bg-gray-50 dark:bg-gray-800">
+                    <Paper 
+                      key={index} 
+                      p="md" 
+                      withBorder 
+                      className={`transition-colors duration-300 ${
+                        isDark 
+                          ? 'bg-gray-800 border-gray-700' 
+                          : 'bg-gray-50 border-gray-200'
+                      }`}
+                    >
                       <Group>
-                        <CheckCircle size={20} className="text-green-500" />
-                        <Text>{feature}</Text>
+                        <CheckCircle size={20} className="text-green-500 flex-shrink-0" />
+                        <Text className={isDark ? 'text-gray-200' : 'text-gray-700'}>
+                          {feature}
+                        </Text>
                       </Group>
                     </Paper>
                   ))}
@@ -154,14 +184,32 @@ export default function DynamicServicePage({ service }: { service: any }) {
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
                 viewport={{ once: true }}
-                className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-8"
+                className={`rounded-2xl p-8 transition-colors duration-300 ${
+                  isDark 
+                    ? 'bg-gradient-to-br from-red-900/20 to-orange-900/20' 
+                    : 'bg-gradient-to-br from-red-50 to-orange-50'
+                }`}
               >
-                <Title order={3} className="text-2xl font-bold mb-6">Quick Specs</Title>
+                <Title order={3} className={`text-2xl font-bold mb-6 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Quick Specs
+                </Title>
                 <Stack gap="md">
                   {service.specifications.map((spec: any, index: number) => (
-                    <Group key={index} justify="space-between" className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                    <Group 
+                      key={index} 
+                      justify="space-between" 
+                      className={`border-b pb-2 transition-colors duration-300 ${
+                        isDark 
+                          ? 'border-gray-700' 
+                          : 'border-gray-200'
+                      }`}
+                    >
                       <Text c="dimmed">{spec.label}</Text>
-                      <Text fw={600}>{spec.value}</Text>
+                      <Text fw={600} className={isDark ? 'text-gray-200' : 'text-gray-900'}>
+                        {spec.value}
+                      </Text>
                     </Group>
                   ))}
                 </Stack>
@@ -173,7 +221,9 @@ export default function DynamicServicePage({ service }: { service: any }) {
 
       {/* Applications Section */}
       {service.applications && service.applications.length > 0 && (
-        <section className="py-16 bg-gray-50 dark:bg-gray-900/50">
+        <section className={`py-16 transition-colors duration-300 ${
+          isDark ? 'bg-gray-900/50' : 'bg-gray-50'
+        }`}>
           <Container size="lg">
             <MotionDiv
               initial={{ opacity: 0, y: 30 }}
@@ -183,7 +233,9 @@ export default function DynamicServicePage({ service }: { service: any }) {
               className="text-center mb-12"
             >
               <Badge size="lg" color="red" className="mb-4">Applications</Badge>
-              <Title order={2} className="text-3xl md:text-4xl font-bold mb-4">
+              <Title order={2} className={`text-3xl md:text-4xl font-bold mb-4 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}>
                 Perfect For
               </Title>
             </MotionDiv>
@@ -197,11 +249,21 @@ export default function DynamicServicePage({ service }: { service: any }) {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <Paper p="xl" withBorder className="text-center hover:shadow-lg transition-shadow">
+                  <Paper 
+                    p="xl" 
+                    withBorder 
+                    className={`text-center hover:shadow-lg transition-all duration-300 ${
+                      isDark 
+                        ? 'bg-gray-800 border-gray-700 hover:shadow-gray-800/50' 
+                        : 'bg-white border-gray-200 hover:shadow-gray-200/50'
+                    }`}
+                  >
                     <ThemeIcon size={50} radius="xl" color="red" variant="light" className="mx-auto mb-4">
                       <CheckCircle size={24} />
                     </ThemeIcon>
-                    <Text>{app}</Text>
+                    <Text className={isDark ? 'text-gray-200' : 'text-gray-700'}>
+                      {app}
+                    </Text>
                   </Paper>
                 </MotionDiv>
               ))}
@@ -221,14 +283,16 @@ export default function DynamicServicePage({ service }: { service: any }) {
             className="text-center mb-12"
           >
             <Badge size="lg" color="red" className="mb-4">Process</Badge>
-            <Title order={2} className="text-3xl md:text-4xl font-bold mb-4">
+            <Title order={2} className={`text-3xl md:text-4xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               How It Works
             </Title>
           </MotionDiv>
 
           <Grid gutter={30}>
             {service.process_steps.map((step: any, index: number) => {
-              const StepIcon = iconMap[step.icon] || Printer;
+              const StepIcon = iconMap[step.icon_name] || Printer;
               return (
                 <Grid.Col key={index} span={{ base: 12, md: 6, lg: 3 }}>
                   <MotionDiv
@@ -238,10 +302,18 @@ export default function DynamicServicePage({ service }: { service: any }) {
                     viewport={{ once: true }}
                     className="relative"
                   >
-                    <Paper p="xl" withBorder className="text-center h-full">
+                    <Paper 
+                      p="xl" 
+                      withBorder 
+                      className={`text-center h-full transition-all duration-300 ${
+                        isDark 
+                          ? 'bg-gray-800 border-gray-700' 
+                          : 'bg-white border-gray-200'
+                      }`}
+                    >
                       <div className="relative inline-block mb-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto">
-                          {step.step || index + 1}
+                          {step.step_number || index + 1}
                         </div>
                       </div>
                       <ThemeIcon
@@ -253,7 +325,11 @@ export default function DynamicServicePage({ service }: { service: any }) {
                       >
                         <StepIcon size={24} />
                       </ThemeIcon>
-                      <Title order={4} className="mb-2">{step.title}</Title>
+                      <Title order={4} className={`mb-2 ${
+                        isDark ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {step.title}
+                      </Title>
                       <Text size="sm" c="dimmed">{step.description}</Text>
                     </Paper>
                   </MotionDiv>
@@ -266,7 +342,9 @@ export default function DynamicServicePage({ service }: { service: any }) {
 
       {/* Materials & Specifications */}
       {(service.materials?.length > 0 || service.formats?.length > 0 || service.colors?.length > 0) && (
-        <section className="py-16 bg-gray-50 dark:bg-gray-900/50">
+        <section className={`py-16 transition-colors duration-300 ${
+          isDark ? 'bg-gray-900/50' : 'bg-gray-50'
+        }`}>
           <Container size="lg">
             <Grid gutter={50}>
               {service.materials?.length > 0 && (
@@ -278,11 +356,16 @@ export default function DynamicServicePage({ service }: { service: any }) {
                     viewport={{ once: true }}
                   >
                     <Badge size="lg" color="red" className="mb-4">Materials</Badge>
-                    <Title order={3} className="text-2xl font-bold mb-4">Available Materials</Title>
+                    <Title order={3} className={`text-2xl font-bold mb-4 ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      Available Materials
+                    </Title>
                     <List
                       spacing="sm"
                       size="lg"
                       icon={<CheckCircle size={20} className="text-green-500" />}
+                      className={isDark ? 'text-gray-300' : 'text-gray-700'}
                     >
                       {service.materials.map((material: string, index: number) => (
                         <List.Item key={index}>{material}</List.Item>
@@ -301,11 +384,16 @@ export default function DynamicServicePage({ service }: { service: any }) {
                     viewport={{ once: true }}
                   >
                     <Badge size="lg" color="red" className="mb-4">File Formats</Badge>
-                    <Title order={3} className="text-2xl font-bold mb-4">Accepted Formats</Title>
+                    <Title order={3} className={`text-2xl font-bold mb-4 ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      Accepted Formats
+                    </Title>
                     <List
                       spacing="sm"
                       size="lg"
                       icon={<CheckCircle size={20} className="text-green-500" />}
+                      className={isDark ? 'text-gray-300' : 'text-gray-700'}
                     >
                       {service.formats.map((format: string, index: number) => (
                         <List.Item key={index}>{format}</List.Item>
@@ -324,11 +412,16 @@ export default function DynamicServicePage({ service }: { service: any }) {
                     viewport={{ once: true }}
                   >
                     <Badge size="lg" color="red" className="mb-4">Colors</Badge>
-                    <Title order={3} className="text-2xl font-bold mb-4">Available Colors</Title>
+                    <Title order={3} className={`text-2xl font-bold mb-4 ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}>
+                      Available Colors
+                    </Title>
                     <List
                       spacing="sm"
                       size="lg"
                       icon={<CheckCircle size={20} className="text-green-500" />}
+                      className={isDark ? 'text-gray-300' : 'text-gray-700'}
                     >
                       {service.colors.map((color: string, index: number) => (
                         <List.Item key={index}>{color}</List.Item>
@@ -353,7 +446,9 @@ export default function DynamicServicePage({ service }: { service: any }) {
             className="text-center mb-12"
           >
             <Badge size="lg" color="red" className="mb-4">FAQ</Badge>
-            <Title order={2} className="text-3xl md:text-4xl font-bold mb-4">
+            <Title order={2} className={`text-3xl md:text-4xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}>
               Frequently Asked Questions
             </Title>
           </MotionDiv>
@@ -367,8 +462,20 @@ export default function DynamicServicePage({ service }: { service: any }) {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                <Paper p="xl" withBorder>
-                  <Text fw={700} size="lg" className="mb-2">{faq.question}</Text>
+                <Paper 
+                  p="xl" 
+                  withBorder 
+                  className={`transition-all duration-300 ${
+                    isDark 
+                      ? 'bg-gray-800 border-gray-700' 
+                      : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <Text fw={700} size="lg" className={`mb-2 ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {faq.question}
+                  </Text>
                   <Text c="dimmed">{faq.answer}</Text>
                 </Paper>
               </MotionDiv>

@@ -264,7 +264,7 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
       href: '/dashboard',
     },
     {
-      id: 'services',
+      id: 'service',
       label: 'Services',
       icon: <IconBuildingStore size={18} />,
       href: '/dashboard/service',
@@ -279,7 +279,7 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
           id: 'service-list',
           label: 'All Services',
           icon: <IconPackage size={16} />,
-          href: '/dashboard/services',
+          href: '/dashboard/service',
         },
       ],
     },

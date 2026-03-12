@@ -58,6 +58,8 @@ import { useRouter } from 'next/navigation';
 import { Dropzone } from '@mantine/dropzone';
 import dayjs from 'dayjs';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 interface UserProfile {
   id: string;
   firstName: string;
@@ -102,14 +104,58 @@ interface UserProfile {
   }[];
 }
 
+// Default profile for when data is loading or missing
+const DEFAULT_PROFILE: UserProfile = {
+  id: '',
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  company: '',
+  position: '',
+  bio: '',
+  avatar: null,
+  coverImage: null,
+  dateOfBirth: null,
+  address: {
+    street: '',
+    city: '',
+    state: '',
+    country: '',
+    postalCode: '',
+  },
+  social: {
+    linkedin: '',
+    twitter: '',
+    github: '',
+    website: '',
+  },
+  preferences: {
+    language: 'en',
+    timezone: 'UTC',
+    emailNotifications: true,
+    twoFactorAuth: false,
+  },
+  stats: {
+    totalOrders: 0,
+    totalSpent: 0,
+    memberSince: new Date().toISOString(),
+    lastLogin: new Date().toISOString(),
+  },
+  activity: [],
+};
+
 export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('profile');
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
     fetchProfile();
@@ -118,16 +164,67 @@ export default function ProfilePage() {
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
+      
+      console.log('Fetching profile from:', `${API_URL}/api/users/profile`);
+      console.log('Token exists:', !!token);
+
+      if (!token) {
+        console.log('No token found, redirecting to login');
+        router.push('/page/login');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/users/profile`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.log('Token expired or invalid');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('user');
+          router.push('/page/login');
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      if (data.success) {
-        setProfile(data.data);
+      console.log('Response data:', data);
+      
+      if (data.success && data.data) {
+        // ✅ Safe merge with defaults
+        setProfile({
+          ...DEFAULT_PROFILE,
+          ...data.data,
+          stats: {
+            ...DEFAULT_PROFILE.stats,
+            ...(data.data.stats || {}),
+          },
+          address: {
+            ...DEFAULT_PROFILE.address,
+            ...(data.data.address || {}),
+          },
+          social: {
+            ...DEFAULT_PROFILE.social,
+            ...(data.data.social || {}),
+          },
+          preferences: {
+            ...DEFAULT_PROFILE.preferences,
+            ...(data.data.preferences || {}),
+          },
+          activity: data.data.activity || [],
+        });
       } else {
-        setError('Failed to load profile');
+        setError(data.message || 'Failed to load profile');
       }
     } catch (error) {
+      console.error('Error fetching profile:', error);
       setError('Error loading profile');
     } finally {
       setLoading(false);
@@ -135,12 +232,10 @@ export default function ProfilePage() {
   };
 
   const handleSaveProfile = async () => {
-    if (!profile) return;
-    
     setSaving(true);
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`, {
+      const response = await fetch(`${API_URL}/api/users/profile`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -171,14 +266,14 @@ export default function ProfilePage() {
   };
 
   const handleAvatarUpload = async (file: File | null) => {
-    if (!file || !profile) return;
+    if (!file) return;
 
     const formData = new FormData();
     formData.append('avatar', file);
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/avatar`, {
+      const response = await fetch(`${API_URL}/api/users/avatar`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -201,10 +296,19 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChangePassword = async (oldPassword: string, newPassword: string) => {
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      notifications.show({
+        title: 'Error',
+        message: 'New passwords do not match',
+        color: 'red',
+      });
+      return;
+    }
+
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/change-password`, {
+      const response = await fetch(`${API_URL}/api/users/change-password`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -219,6 +323,9 @@ export default function ProfilePage() {
           message: 'Password changed successfully',
           color: 'green',
         });
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
       } else {
         throw new Error(data.message || 'Failed to change password');
       }
@@ -239,12 +346,15 @@ export default function ProfilePage() {
     );
   }
 
-  if (error || !profile) {
+  if (error) {
     return (
       <Container size="xl" py="xl">
         <Alert icon={<IconExclamationCircle size={16} />} title="Error" color="red">
-          {error || 'Failed to load profile'}
+          {error}
         </Alert>
+        <Group justify="center" mt="md">
+          <Button onClick={fetchProfile}>Try Again</Button>
+        </Group>
       </Container>
     );
   }
@@ -256,7 +366,9 @@ export default function ProfilePage() {
         withBorder
         style={{
           height: 200,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: profile.coverImage 
+            ? `url(${profile.coverImage}) center/cover`
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           position: 'relative',
           marginBottom: 80,
           borderRadius: 8,
@@ -282,7 +394,9 @@ export default function ProfilePage() {
             size={120}
             radius={120}
             style={{ border: '4px solid white' }}
-          />
+          >
+            {profile.firstName?.[0]}{profile.lastName?.[0]}
+          </Avatar>
           {editing && (
             <ActionIcon
               style={{ position: 'absolute', bottom: 0, right: 0 }}
@@ -349,7 +463,7 @@ export default function ProfilePage() {
         </Group>
       </Stack>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Now with safe access */}
       <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} mt="xl">
         <Card withBorder>
           <Group>
@@ -358,7 +472,7 @@ export default function ProfilePage() {
             </ThemeIcon>
             <div>
               <Text size="xs" c="dimmed">Total Orders</Text>
-              <Text fw={700} size="xl">{profile.stats.totalOrders}</Text>
+              <Text fw={700} size="xl">{profile.stats?.totalOrders ?? 0}</Text>
             </div>
           </Group>
         </Card>
@@ -369,7 +483,7 @@ export default function ProfilePage() {
             </ThemeIcon>
             <div>
               <Text size="xs" c="dimmed">Total Spent</Text>
-              <Text fw={700} size="xl">${profile.stats.totalSpent.toLocaleString()}</Text>
+              <Text fw={700} size="xl">${profile.stats?.totalSpent?.toLocaleString() ?? 0}</Text>
             </div>
           </Group>
         </Card>
@@ -380,7 +494,9 @@ export default function ProfilePage() {
             </ThemeIcon>
             <div>
               <Text size="xs" c="dimmed">Member Since</Text>
-              <Text fw={700} size="xl">{dayjs(profile.stats.memberSince).format('MMM YYYY')}</Text>
+              <Text fw={700} size="xl">
+                {profile.stats?.memberSince ? dayjs(profile.stats.memberSince).format('MMM YYYY') : 'N/A'}
+              </Text>
             </div>
           </Group>
         </Card>
@@ -391,7 +507,9 @@ export default function ProfilePage() {
             </ThemeIcon>
             <div>
               <Text size="xs" c="dimmed">Last Login</Text>
-              <Text fw={700} size="xl">{dayjs(profile.stats.lastLogin).format('MMM D')}</Text>
+              <Text fw={700} size="xl">
+                {profile.stats?.lastLogin ? dayjs(profile.stats.lastLogin).format('MMM D') : 'N/A'}
+              </Text>
             </div>
           </Group>
         </Card>
@@ -503,7 +621,7 @@ export default function ProfilePage() {
 
                   <TextInput
                     label="Street Address"
-                    value={profile.address.street}
+                    value={profile.address?.street || ''}
                     onChange={(e) =>
                       setProfile({
                         ...profile,
@@ -517,7 +635,7 @@ export default function ProfilePage() {
                     <Grid.Col span={4}>
                       <TextInput
                         label="City"
-                        value={profile.address.city}
+                        value={profile.address?.city || ''}
                         onChange={(e) =>
                           setProfile({
                             ...profile,
@@ -530,7 +648,7 @@ export default function ProfilePage() {
                     <Grid.Col span={4}>
                       <TextInput
                         label="State"
-                        value={profile.address.state}
+                        value={profile.address?.state || ''}
                         onChange={(e) =>
                           setProfile({
                             ...profile,
@@ -543,7 +661,7 @@ export default function ProfilePage() {
                     <Grid.Col span={4}>
                       <TextInput
                         label="Postal Code"
-                        value={profile.address.postalCode}
+                        value={profile.address?.postalCode || ''}
                         onChange={(e) =>
                           setProfile({
                             ...profile,
@@ -557,7 +675,7 @@ export default function ProfilePage() {
 
                   <TextInput
                     label="Country"
-                    value={profile.address.country}
+                    value={profile.address?.country || ''}
                     onChange={(e) =>
                       setProfile({
                         ...profile,
@@ -591,7 +709,7 @@ export default function ProfilePage() {
 
                   <TextInput
                     label="LinkedIn"
-                    value={profile.social.linkedin}
+                    value={profile.social?.linkedin || ''}
                     onChange={(e) =>
                       setProfile({
                         ...profile,
@@ -604,7 +722,7 @@ export default function ProfilePage() {
 
                   <TextInput
                     label="Twitter"
-                    value={profile.social.twitter}
+                    value={profile.social?.twitter || ''}
                     onChange={(e) =>
                       setProfile({
                         ...profile,
@@ -617,7 +735,7 @@ export default function ProfilePage() {
 
                   <TextInput
                     label="GitHub"
-                    value={profile.social.github}
+                    value={profile.social?.github || ''}
                     onChange={(e) =>
                       setProfile({
                         ...profile,
@@ -630,7 +748,7 @@ export default function ProfilePage() {
 
                   <TextInput
                     label="Website"
-                    value={profile.social.website}
+                    value={profile.social?.website || ''}
                     onChange={(e) =>
                       setProfile({
                         ...profile,
@@ -652,7 +770,7 @@ export default function ProfilePage() {
                       { value: 'es', label: 'Spanish' },
                       { value: 'fr', label: 'French' },
                     ]}
-                    value={profile.preferences.language}
+                    value={profile.preferences?.language || 'en'}
                     onChange={(value) =>
                       setProfile({
                         ...profile,
@@ -670,11 +788,11 @@ export default function ProfilePage() {
                       { value: 'America/Denver', label: 'Mountain Time' },
                       { value: 'America/Los_Angeles', label: 'Pacific Time' },
                     ]}
-                    value={profile.preferences.timezone}
+                    value={profile.preferences?.timezone || 'UTC'}
                     onChange={(value) =>
                       setProfile({
                         ...profile,
-                        preferences: { ...profile.preferences, timezone: value || '' },
+                        preferences: { ...profile.preferences, timezone: value || 'UTC' },
                       })
                     }
                     disabled={!editing}
@@ -696,22 +814,29 @@ export default function ProfilePage() {
                   <PasswordInput
                     label="Current Password"
                     placeholder="Enter current password"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
                   />
                   
                   <PasswordInput
                     label="New Password"
                     placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                   />
                   
                   <PasswordInput
                     label="Confirm New Password"
                     placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                   />
                   
                   <Button
                     variant="gradient"
                     gradient={{ from: 'blue', to: 'cyan' }}
                     leftSection={<IconKey size={16} />}
+                    onClick={handleChangePassword}
                   >
                     Update Password
                   </Button>
@@ -725,22 +850,22 @@ export default function ProfilePage() {
                   <Title order={3}>Two-Factor Authentication</Title>
                   
                   <Group>
-                    <ThemeIcon size="lg" color={profile.preferences.twoFactorAuth ? 'green' : 'gray'} variant="light">
+                    <ThemeIcon size="lg" color={profile.preferences?.twoFactorAuth ? 'green' : 'gray'} variant="light">
                       <IconLock size={20} />
                     </ThemeIcon>
                     <div style={{ flex: 1 }}>
                       <Text fw={500}>2FA Status</Text>
                       <Text size="sm" c="dimmed">
-                        {profile.preferences.twoFactorAuth
+                        {profile.preferences?.twoFactorAuth
                           ? 'Two-factor authentication is enabled'
                           : 'Two-factor authentication is disabled'}
                       </Text>
                     </div>
                     <Button
-                      variant={profile.preferences.twoFactorAuth ? 'light' : 'filled'}
-                      color={profile.preferences.twoFactorAuth ? 'red' : 'green'}
+                      variant={profile.preferences?.twoFactorAuth ? 'light' : 'filled'}
+                      color={profile.preferences?.twoFactorAuth ? 'red' : 'green'}
                     >
-                      {profile.preferences.twoFactorAuth ? 'Disable' : 'Enable'}
+                      {profile.preferences?.twoFactorAuth ? 'Disable' : 'Enable'}
                     </Button>
                   </Group>
 
@@ -773,15 +898,19 @@ export default function ProfilePage() {
             <Title order={3} mb="lg">Recent Activity</Title>
             
             <Stack>
-              {profile.activity.map((activity, index) => (
-                <Group key={index} gap="xl">
-                  <Text size="sm" c="dimmed" style={{ minWidth: 100 }}>
-                    {dayjs(activity.date).format('MMM D, h:mm A')}
-                  </Text>
-                  <Badge color="blue">{activity.action}</Badge>
-                  <Text size="sm">{activity.details}</Text>
-                </Group>
-              ))}
+              {(profile.activity || []).length > 0 ? (
+                profile.activity.map((activity, index) => (
+                  <Group key={index} gap="xl">
+                    <Text size="sm" c="dimmed" style={{ minWidth: 100 }}>
+                      {dayjs(activity.date).format('MMM D, h:mm A')}
+                    </Text>
+                    <Badge color="blue">{activity.action}</Badge>
+                    <Text size="sm">{activity.details}</Text>
+                  </Group>
+                ))
+              ) : (
+                <Text c="dimmed" ta="center">No recent activity</Text>
+              )}
             </Stack>
           </Paper>
         </Tabs.Panel>

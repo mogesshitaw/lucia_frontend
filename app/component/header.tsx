@@ -14,7 +14,6 @@ import {
   Divider,
   Tooltip,
   Badge,
-  Indicator,
   useMantineColorScheme,
   ScrollArea,
   Loader,
@@ -22,15 +21,12 @@ import {
 import {
   IconMenu2,
   IconChevronDown,
-  IconSearch,
   IconHome,
   IconPackage,
   IconPhoto,
   IconSun,
   IconMoon,
   IconInfoCircle,
-  IconBell,
-  IconSpeakerphone,
   IconShirt,
   IconTags,
   IconPrinter,
@@ -45,6 +41,7 @@ import {
   IconFlame,
   IconSnowflake,
   IconScissors,
+  IconBell,
 } from '@tabler/icons-react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
@@ -54,7 +51,7 @@ import { usePathname } from 'next/navigation';
 const MotionDiv = motion.div;
 
 // API URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL ||'https://lucia-backend-iumb.onrender.com'|| 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // Icon mapping for category icons
 const iconMap: Record<string, any> = {
@@ -123,45 +120,13 @@ const badgeColorMap: Record<string, string> = {
   'Budget Friendly': 'green',
 };
 
-// Announcement Items
-const announcementItems = [
-  { 
-    label: 'New Year Sale - 20% Off', 
-    href: '/page/announcements/new-year-sale', 
-    icon: '🎉',
-    badge: 'NEW',
-    color: 'red'
-  },
-  { 
-    label: 'DTF Printing Launch', 
-    href: '/page/announcements/dtf-launch', 
-    icon: '🖨️',
-    badge: 'HOT',
-    color: 'orange'
-  },
-  { 
-    label: 'Holiday Hours', 
-    href: '/page/announcements/holiday-hours', 
-    icon: '📅',
-    badge: 'INFO',
-    color: 'blue'
-  },
-  { 
-    label: 'Free Delivery on Orders > 1000 ETB', 
-    href: '/page/announcements/free-delivery', 
-    icon: '🚚',
-    badge: 'OFFER',
-    color: 'green'
-  },
-];
-
 // Navigation Links
 const navLinks = [
   { href: '/', label: 'Home', icon: IconHome },
   { href: '/page/services', label: 'Services', icon: IconPackage, hasDropdown: true },
   { href: '/page/gallery', label: 'Gallery', icon: IconPhoto },
   { href: '/page/aboutus', label: 'About Us', icon: IconInfoCircle },
-  { href: '/page/announcements', label: 'Annoncements', icon: IconBell },
+  { href: '/page/announcements', label: 'Announcements', icon: IconBell },
 ];
 
 // Types
@@ -189,7 +154,6 @@ interface Service {
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpened, setDrawerOpened] = useState(false);
-  const [announcementCount] = useState(4);
   const [categories, setCategories] = useState<Category[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -198,9 +162,9 @@ export default function Header() {
   const pathname = usePathname();
   
   const { scrollY } = useScroll();
-  const headerHeight = useTransform(scrollY, [0, 100], [80, 80]);
-  const headerOpacity = useTransform(scrollY, [0, 100], [1, 0.95]);
-  const headerBlur = useTransform(scrollY, [0, 100], [0, 10]);
+  const headerHeight = useTransform(scrollY, [0, 100], [80, 70]);
+  const headerOpacity = useTransform(scrollY, [0, 100], [1, 0.98]);
+  const headerBlur = useTransform(scrollY, [0, 100], [0, 12]);
 
   // Fetch categories and services
   useEffect(() => {
@@ -286,7 +250,9 @@ export default function Header() {
       }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled 
-          ? 'bg-white/90 dark:bg-gray-900/90 shadow-xl border-b border-gray-200 dark:border-gray-800' 
+          ? dark
+            ? 'bg-gray-900/95 shadow-xl border-b border-gray-800' 
+            : 'bg-white/95 shadow-xl border-b border-gray-200'
           : 'bg-transparent'
       }`}
     >
@@ -296,7 +262,7 @@ export default function Header() {
           <Group gap="xs">
             <Link href="/" className="flex items-center gap-2 no-underline">
               <div className="relative">
-                <div className="w-[45px] h-[45px] rounded-full overflow-hidden border-2 border-black">
+                <div className="w-[45px] h-[45px] rounded-full overflow-hidden border-2 border-red-500 shadow-lg">
                   <Image
                     src="/images/logo.jpg"
                     alt="Lucia Printing Logo"
@@ -318,26 +284,26 @@ export default function Header() {
                 <Text
                   size="lg"
                   fw={800}
-                  className={`leading-tight truncate ${
+                  className={`leading-tight truncate transition-colors duration-300 ${
                     scrolled 
-                      ? 'text-gray-900 dark:text-white' 
+                      ? dark ? 'text-white' : 'text-gray-900'
                       : 'text-white'
                   }`}
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                  Lucia
+                  Lucia Printing
                 </Text>
                 <Text
                   size="sm"
-                  fw={600}
-                  className={`leading-tight truncate ${
+                  fw={500}
+                  className={`leading-tight truncate transition-colors duration-300 ${
                     scrolled 
-                      ? 'text-red-600 dark:text-red-400' 
-                      : 'text-red-400'
+                      ? dark ? 'text-gray-400' : 'text-gray-600'
+                      : 'text-gray-200'
                   }`}
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                  Printing & Advertising
+                  Since 2010 • Ethiopia
                 </Text>
               </div>
 
@@ -346,20 +312,20 @@ export default function Header() {
                 <Text
                   size="md"
                   fw={800}
-                  className={`leading-tight ${
+                  className={`leading-tight transition-colors duration-300 ${
                     scrolled 
-                      ? 'text-gray-900 dark:text-white' 
+                      ? dark ? 'text-white' : 'text-gray-900'
                       : 'text-white'
                   }`}
                 >
-                  L
+                  Lucia
                 </Text>
               </div>
             </Link>
           </Group>
 
           {/* Desktop Navigation */}
-          <Group gap="xl" visibleFrom="md">
+          <Group gap="md" visibleFrom="lg">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const active = isActive(link.href);
@@ -372,7 +338,7 @@ export default function Header() {
                     openDelay={100}
                     closeDelay={400}
                     shadow="lg"
-                    width={600}
+                    width={650}
                     position="bottom"
                     withinPortal
                   >
@@ -380,10 +346,16 @@ export default function Header() {
                       <Button
                         variant="subtle"
                         rightSection={<IconChevronDown size={16} />}
-                        className={`font-medium ${
+                        className={`font-medium transition-colors duration-300 ${
                           scrolled 
-                            ? active ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400'
-                            : active ? 'text-red-400' : 'text-white hover:text-red-400'
+                            ? active 
+                              ? 'text-red-600 dark:text-red-400' 
+                              : dark
+                                ? 'text-gray-300 hover:text-white'
+                                : 'text-gray-700 hover:text-red-600'
+                            : active 
+                              ? 'text-red-400' 
+                              : 'text-white/90 hover:text-white'
                         }`}
                         styles={{
                           root: {
@@ -395,29 +367,29 @@ export default function Header() {
                       >
                         <Group gap="xs">
                           <Icon size={18} />
-                          <span>Services</span>
+                          <span>{link.label}</span>
                         </Group>
                       </Button>
                     </Menu.Target>
 
-                    <Menu.Dropdown>
+                    <Menu.Dropdown className={dark ? 'bg-gray-900 border-gray-800' : ''}>
                       <ScrollArea.Autosize mah={500} type="scroll">
-                        <div className="p-2">
+                        <div className="p-3">
                           {/* Header */}
-                          <div className="px-3 py-2 mb-2 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg">
-                            <Text fw={700} size="lg" className="text-red-600 dark:text-red-400">
+                          <div className="px-3 py-2 mb-2 bg-gradient-to-r from-red-500 to-orange-500 rounded-lg">
+                            <Text fw={700} size="lg" className="text-white">
                               Our Printing Services
                             </Text>
-                            <Text size="xs" c="dimmed">
-                              {loading ? 'Loading...' : 'Choose from our wide range of professional printing services'}
+                            <Text size="xs" className="text-white/80">
+                              {loading ? 'Loading...' : 'Professional printing solutions for every need'}
                             </Text>
                           </div>
 
                           {/* Loading State */}
                           {loading ? (
                             <div className="py-8 text-center">
-                              <Loader size="sm" />
-                              <Text size="sm" c="dimmed" mt="xs">Loading...</Text>
+                              <Loader size="sm" color="red" />
+                              <Text size="sm" c="dimmed" mt="xs">Loading services...</Text>
                             </div>
                           ) : (
                             <>
@@ -427,9 +399,9 @@ export default function Header() {
                                   const CategoryIcon = category.icon;
                                   return (
                                     <div key={idx} className="space-y-1">
-                                      <div className="flex items-center gap-1 px-3 py-1">
+                                      <div className="flex items-center gap-1 px-3 py-1 border-b border-gray-200 dark:border-gray-700">
                                         <CategoryIcon size={14} className="text-red-500" />
-                                        <Text fw={600} size="sm" className="text-gray-700 dark:text-gray-300">
+                                        <Text fw={600} size="sm" className={dark ? 'text-gray-200' : 'text-gray-700'}>
                                           {category.category}
                                         </Text>
                                       </div>
@@ -451,7 +423,11 @@ export default function Header() {
                                                 </Badge>
                                               )
                                             }
-                                            className="text-sm"
+                                            className={`text-sm ${
+                                              dark 
+                                                ? 'hover:bg-gray-800 text-gray-300' 
+                                                : 'hover:bg-gray-50 text-gray-700'
+                                            }`}
                                           >
                                             {item.label}
                                           </Menu.Item>
@@ -474,7 +450,9 @@ export default function Header() {
                                   href="/page/services"
                                   leftSection={<IconPackage size={16} />}
                                   rightSection={<IconChevronDown size={16} />}
-                                  className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20"
+                                  className={`bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 ${
+                                    dark ? 'text-white' : ''
+                                  }`}
                                 >
                                   <Text fw={600}>View All Services</Text>
                                 </Menu.Item>
@@ -494,10 +472,16 @@ export default function Header() {
                   variant="subtle"
                   component={Link}
                   href={link.href}
-                  className={`font-medium ${
+                  className={`font-medium transition-colors duration-300 ${
                     scrolled 
-                      ? active ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400'
-                      : active ? 'text-red-400' : 'text-white hover:text-red-400'
+                      ? active 
+                        ? 'text-red-600 dark:text-red-400' 
+                        : dark
+                          ? 'text-gray-300 hover:text-white'
+                          : 'text-gray-700 hover:text-red-600'
+                      : active 
+                        ? 'text-red-400' 
+                        : 'text-white/90 hover:text-white'
                   }`}
                   styles={{
                     root: {
@@ -512,36 +496,38 @@ export default function Header() {
                 </Button>
               );
             })}
-              <Tooltip label={dark ? 'Light mode' : 'Dark mode'} withArrow position="bottom">
+
+            {/* Dark/Light Mode Toggle */}
+            <Tooltip label={dark ? 'Light mode' : 'Dark mode'} withArrow position="bottom">
               <ActionIcon
-                size="md"
+                size="lg"
                 variant="subtle"
                 onClick={() => toggleColorScheme()}
-                className={scrolled 
-                  ? 'text-gray-700 dark:text-gray-300' 
-                  : 'text-white'
-                }
+                className={`transition-colors duration-300 ${
+                  scrolled 
+                    ? dark ? 'text-gray-400 hover:text-white' : 'text-gray-700 hover:text-red-600'
+                    : 'text-white/80 hover:text-white'
+                }`}
               >
-                {dark ? <IconSun size={18} /> : <IconMoon size={18} />}
+                {dark ? <IconSun size={20} /> : <IconMoon size={20} />}
               </ActionIcon>
             </Tooltip>
           </Group>
 
-          {/* Right Section - Actions */}
-          <div className="flex items-center gap-0 sm:gap-0">
-          
-
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <ActionIcon
-                size="md"
-                variant="subtle"
-                onClick={() => setDrawerOpened(true)}
-                className={`md:hidden ${scrolled ? 'text-gray-700' : 'text-white'}`}
-              >
-                <IconMenu2 size={20} />
-              </ActionIcon>
-            </div>
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden">
+            <ActionIcon
+              size="lg"
+              variant="subtle"
+              onClick={() => setDrawerOpened(true)}
+              className={`transition-colors duration-300 ${
+                scrolled 
+                  ? dark ? 'text-gray-400 hover:text-white' : 'text-gray-700 hover:text-red-600'
+                  : 'text-white/80 hover:text-white'
+              }`}
+            >
+              <IconMenu2 size={20} />
+            </ActionIcon>
           </div>
         </Group>
       </Container>
@@ -553,20 +539,25 @@ export default function Header() {
         position="right"
         size="100%"
         padding="md"
-        hiddenFrom="md"
+        hiddenFrom="lg"
+        styles={{
+          content: dark ? { backgroundColor: '#111827' } : {},
+        }}
         title={
           <Group gap="xs">
-            <div className="w-[30px] h-[30px] rounded-full overflow-hidden border border-gray-300">
+            <div className="w-[40px] h-[40px] rounded-full overflow-hidden border-2 border-red-500">
               <Image
                 src="/images/logo.jpg"
                 alt="Lucia Printing Logo"
-                width={30}
-                height={30}
+                width={40}
+                height={40}
                 className="object-cover"
               />
             </div>
             <div>
-              <Text fw={700} size="sm">Lucia Printing</Text>
+              <Text fw={700} size="md" className={dark ? 'text-white' : ''}>
+                Lucia Printing
+              </Text>
               <Text size="xs" c="dimmed">Menu</Text>
             </div>
           </Group>
@@ -583,6 +574,7 @@ export default function Header() {
                 component={Link}
                 href="/"
                 onClick={() => setDrawerOpened(false)}
+                className={dark ? 'text-gray-300 hover:text-white' : ''}
               >
                 Home
               </Button>
@@ -596,21 +588,24 @@ export default function Header() {
                     justify="space-between"
                     leftSection={<IconPackage size={18} />}
                     rightSection={<IconChevronDown size={16} />}
+                    className={dark ? 'text-gray-300 hover:text-white' : ''}
                   >
                     Services
                   </Button>
                 </Menu.Target>
-                <Menu.Dropdown>
+                <Menu.Dropdown className={dark ? 'bg-gray-800 border-gray-700' : ''}>
                   <ScrollArea.Autosize mah={400} type="scroll">
                     {loading ? (
                       <div className="py-4 text-center">
-                        <Loader size="sm" />
+                        <Loader size="sm" color="red" />
                         <Text size="xs" c="dimmed" mt="xs">Loading...</Text>
                       </div>
                     ) : (
                       displayCategories.map((category, idx) => (
                         <div key={idx}>
-                          <Menu.Label>{category.category}</Menu.Label>
+                          <Menu.Label className={dark ? 'text-gray-400' : ''}>
+                            {category.category}
+                          </Menu.Label>
                           {category.items.map((item, itemIdx) => (
                             <Menu.Item
                               key={itemIdx}
@@ -625,21 +620,25 @@ export default function Header() {
                                 )
                               }
                               onClick={() => setDrawerOpened(false)}
+                              className={dark ? 'hover:bg-gray-700 text-gray-300' : ''}
                             >
                               {item.label}
                             </Menu.Item>
                           ))}
-                          {idx < displayCategories.length - 1 && <Menu.Divider />}
+                          {idx < displayCategories.length - 1 && (
+                            <Menu.Divider className={dark ? 'border-gray-700' : ''} />
+                          )}
                         </div>
                       ))
                     )}
                   </ScrollArea.Autosize>
-                  <Menu.Divider />
+                  <Menu.Divider className={dark ? 'border-gray-700' : ''} />
                   <Menu.Item
                     component={Link}
                     href="/page/services"
                     leftSection={<IconPackage size={16} />}
                     onClick={() => setDrawerOpened(false)}
+                    className={dark ? 'hover:bg-gray-700 text-gray-300' : ''}
                   >
                     View All Services
                   </Menu.Item>
@@ -654,6 +653,7 @@ export default function Header() {
                 component={Link}
                 href="/page/gallery"
                 onClick={() => setDrawerOpened(false)}
+                className={dark ? 'text-gray-300 hover:text-white' : ''}
               >
                 Gallery
               </Button>
@@ -666,21 +666,23 @@ export default function Header() {
                 component={Link}
                 href="/page/aboutus"
                 onClick={() => setDrawerOpened(false)}
+                className={dark ? 'text-gray-300 hover:text-white' : ''}
               >
                 About Us
               </Button>
-                <Button
+              
+              <Button
                 variant="subtle"
                 fullWidth
                 justify="space-between"
-                leftSection={<IconPhoto size={18} />}
+                leftSection={<IconBell size={18} />}
                 component={Link}
                 href="/page/announcements"
                 onClick={() => setDrawerOpened(false)}
+                className={dark ? 'text-gray-300 hover:text-white' : ''}
               >
-                Announcements
+              Announcement
               </Button>
-
             </Stack>
           </Stack>
         </ScrollArea>
