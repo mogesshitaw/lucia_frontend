@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -120,9 +122,9 @@ export default function ServicesMainPage() {
             acc[categorySlug].services.push(service);
             return acc;
           }, {});
-          
-          // Convert to array and sort
-          const categoryList = Object.values(grouped).sort((a, b) => {
+  
+          // Convert to array and sort with proper typing
+          const categoryList = (Object.values(grouped) as Category[]).sort((a: Category, b: Category) => {
             const order: Record<string, number> = {
               'apparel': 1,
               'tshirts': 2,
@@ -151,7 +153,7 @@ export default function ServicesMainPage() {
             };
             return (order[a.slug] || 999) - (order[b.slug] || 999);
           });
-          
+
           setCategories(categoryList);
         } else {
           setError('Failed to load services');
@@ -412,7 +414,7 @@ export default function ServicesMainPage() {
         <Container size="lg">
           <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-3xl p-12 text-center text-white">
             <Title order={2} className="text-3xl md:text-4xl font-bold mb-4">
-              Can't Find What You're Looking For?
+              Can&apos;t Find What You&apos;re Looking For?
             </Title>
             <Text size="xl" className="mb-8 max-w-2xl mx-auto text-white/90">
               Contact us for custom printing solutions tailored to your specific needs.
@@ -423,7 +425,7 @@ export default function ServicesMainPage() {
                 variant="white"
                 color="red"
                 component={Link}
-                href="/contact"
+                href="/page/contact"
               >
                 Contact Us
               </Button>
@@ -432,9 +434,9 @@ export default function ServicesMainPage() {
                 variant="outline"
                 color="white"
                 component={Link}
-                href="/upload"
+                href="https://t.me/Luciachale"
               >
-                Upload Design
+                Upload Design on Telegram
               </Button>
             </Group>
           </div>

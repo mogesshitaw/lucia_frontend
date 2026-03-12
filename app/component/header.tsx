@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +7,6 @@ import {
   Group,
   Text,
   Button,
-  Avatar,
   Menu,
   Drawer,
   Stack,
@@ -22,17 +22,13 @@ import {
 import {
   IconMenu2,
   IconChevronDown,
-  IconUser,
   IconSearch,
   IconHome,
   IconPackage,
   IconPhoto,
   IconSun,
   IconMoon,
-  IconLanguage,
-  IconLogout,
   IconInfoCircle,
-  IconPhone,
   IconBell,
   IconSpeakerphone,
   IconShirt,
@@ -127,7 +123,7 @@ const badgeColorMap: Record<string, string> = {
   'Budget Friendly': 'green',
 };
 
-// Announcement Items (can also be made dynamic)
+// Announcement Items
 const announcementItems = [
   { 
     label: 'New Year Sale - 20% Off', 
@@ -159,42 +155,13 @@ const announcementItems = [
   },
 ];
 
-// Mock auth state
-const useAuth = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  
-  useEffect(() => {
-    // Check if user is logged in from localStorage
-    const checkAuth = () => {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        try {
-          const userData = JSON.parse(userStr);
-          setIsLoggedIn(true);
-          setUser(userData);
-        } catch (e) {
-          setIsLoggedIn(false);
-          setUser(null);
-        }
-      } else {
-        setIsLoggedIn(false);
-        setUser(null);
-      }
-    };
-    checkAuth();
-  }, []);
-  
-  return { isLoggedIn, user };
-};
-
 // Navigation Links
 const navLinks = [
   { href: '/', label: 'Home', icon: IconHome },
   { href: '/page/services', label: 'Services', icon: IconPackage, hasDropdown: true },
   { href: '/page/gallery', label: 'Gallery', icon: IconPhoto },
   { href: '/page/aboutus', label: 'About Us', icon: IconInfoCircle },
-  { href: '/page/announcements', label: 'News', icon: IconBell },
+  { href: '/page/announcements', label: 'Annoncements', icon: IconBell },
 ];
 
 // Types
@@ -222,15 +189,13 @@ interface Service {
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpened, setDrawerOpened] = useState(false);
-  const [language, setLanguage] = useState<'en' | 'am'>('en');
-  const [announcementCount, setAnnouncementCount] = useState(4);
+  const [announcementCount] = useState(4);
   const [categories, setCategories] = useState<Category[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === 'dark';
   const pathname = usePathname();
-  const { isLoggedIn, user } = useAuth();
   
   const { scrollY } = useScroll();
   const headerHeight = useTransform(scrollY, [0, 100], [80, 80]);
@@ -312,47 +277,6 @@ export default function Header() {
     },
   ];
 
-  const translations = {
-    en: {
-      home: 'Home',
-      services: 'Services',
-      gallery: 'Gallery',
-      about: 'About',
-      announcements: 'Announcements',
-      login: 'Login',
-      search: 'Search',
-      dashboard: 'Dashboard',
-      logout: 'Logout',
-      printingServices: 'Our Printing Services',
-      viewAll: 'View All Services',
-      viewAllAnnouncements: 'View All Announcements',
-      latestAnnouncements: 'Latest Announcements',
-      allServices: 'All Services',
-      categories: 'Categories',
-      loading: 'Loading...',
-    },
-    am: {
-      home: 'መነሻ',
-      services: 'አገልግሎቶች',
-      gallery: 'ማዕከለ-ስዕላት',
-      about: 'ስለ እኛ',
-      announcements: 'ማስታወቂያዎች',
-      login: 'ግባ',
-      search: 'ፈልግ',
-      dashboard: 'ዳሽቦርድ',
-      logout: 'ውጣ',
-      printingServices: 'የህትመት አገልግሎቶች',
-      viewAll: 'ሁሉንም አገልግሎቶች ተመልከት',
-      viewAllAnnouncements: 'ሁሉንም ማስታወቂያዎች ተመልከት',
-      latestAnnouncements: 'የቅርብ ጊዜ ማስታወቂያዎች',
-      allServices: 'ሁሉም አገልግሎቶች',
-      categories: 'ምድቦች',
-      loading: 'በመጫን ላይ...',
-    },
-  };
-
-  const t = translations[language];
-
   return (
     <MotionDiv
       style={{
@@ -413,7 +337,7 @@ export default function Header() {
                   }`}
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                 {language === 'en' ? 'Printing & Advertising' : 'ማተሚያ እና ማስታወቂያ'}
+                  Printing & Advertising
                 </Text>
               </div>
 
@@ -435,242 +359,160 @@ export default function Header() {
           </Group>
 
           {/* Desktop Navigation */}
-          {!isLoggedIn && (
-            <Group gap="xl" visibleFrom="md">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
-                const active = isActive(link.href);
-                
-                if (link.hasDropdown) {
-                  return (
-                    <Menu
-                      key={link.label}
-                      trigger="hover"
-                      openDelay={100}
-                      closeDelay={400}
-                      shadow="lg"
-                      width={600}
-                      position="bottom"
-                      withinPortal
-                    >
-                      <Menu.Target>
-                        <Button
-                          variant="subtle"
-                          rightSection={<IconChevronDown size={16} />}
-                          className={`font-medium ${
-                            scrolled 
-                              ? active ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400'
-                              : active ? 'text-red-400' : 'text-white hover:text-red-400'
-                          }`}
-                          styles={{
-                            root: {
-                              '&:hover': {
-                                backgroundColor: 'transparent',
-                              },
-                            },
-                          }}
-                        >
-                          <Group gap="xs">
-                            <Icon size={18} />
-                            <span>{t.services}</span>
-                          </Group>
-                        </Button>
-                      </Menu.Target>
-
-                      <Menu.Dropdown>
-                        <ScrollArea.Autosize mah={500} type="scroll">
-                          <div className="p-2">
-                            {/* Header */}
-                            <div className="px-3 py-2 mb-2 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg">
-                              <Text fw={700} size="lg" className="text-red-600 dark:text-red-400">
-                                {t.printingServices}
-                              </Text>
-                              <Text size="xs" c="dimmed">
-                                {loading ? t.loading : 'Choose from our wide range of professional printing services'}
-                              </Text>
-                            </div>
-
-                            {/* Loading State */}
-                            {loading ? (
-                              <div className="py-8 text-center">
-                                <Loader size="sm" />
-                                <Text size="sm" c="dimmed" mt="xs">{t.loading}</Text>
-                              </div>
-                            ) : (
-                              <>
-                                {/* Services by Category */}
-                                <div className="grid grid-cols-2 gap-4">
-                                  {displayCategories.map((category, idx) => {
-                                    const CategoryIcon = category.icon;
-                                    return (
-                                      <div key={idx} className="space-y-1">
-                                        <div className="flex items-center gap-1 px-3 py-1">
-                                          <CategoryIcon size={14} className="text-red-500" />
-                                          <Text fw={600} size="sm" className="text-gray-700 dark:text-gray-300">
-                                            {category.category}
-                                          </Text>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                          {category.items.slice(0, 5).map((item, itemIdx) => (
-                                            <Menu.Item
-                                              key={itemIdx}
-                                              component={Link}
-                                              href={item.href}
-                                              leftSection={<span className="text-lg w-6">{item.icon}</span>}
-                                              rightSection={
-                                                item.badge && (
-                                                  <Badge 
-                                                    size="xs" 
-                                                    variant="light" 
-                                                    color={badgeColorMap[item.badge] || 'red'}
-                                                  >
-                                                    {item.badge}
-                                                  </Badge>
-                                                )
-                                              }
-                                              className="text-sm"
-                                            >
-                                              {item.label}
-                                            </Menu.Item>
-                                          ))}
-                                          {category.items.length > 5 && (
-                                            <Text size="xs" c="dimmed" className="px-3 pt-1">
-                                              +{category.items.length - 5} more
-                                            </Text>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-
-                                {/* Footer Link */}
-                                <div className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                  <Menu.Item
-                                    component={Link}
-                                    href="/page/services"
-                                    leftSection={<IconPackage size={16} />}
-                                    rightSection={<IconChevronDown size={16} />}
-                                    className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20"
-                                  >
-                                    <Text fw={600}>{t.viewAll}</Text>
-                                  </Menu.Item>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </ScrollArea.Autosize>
-                      </Menu.Dropdown>
-                    </Menu>
-                  );
-                }
-
+          <Group gap="xl" visibleFrom="md">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const active = isActive(link.href);
+              
+              if (link.hasDropdown) {
                 return (
-                  <Button
+                  <Menu
                     key={link.label}
-                    variant="subtle"
-                    component={Link}
-                    href={link.href}
-                    className={`font-medium ${
-                      scrolled 
-                        ? active ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400'
-                        : active ? 'text-red-400' : 'text-white hover:text-red-400'
-                    }`}
-                    styles={{
-                      root: {
-                        '&:hover': {
-                          backgroundColor: 'transparent',
-                        },
-                      },
-                    }}
-                    leftSection={<Icon size={18} />}
+                    trigger="hover"
+                    openDelay={100}
+                    closeDelay={400}
+                    shadow="lg"
+                    width={600}
+                    position="bottom"
+                    withinPortal
                   >
-                    {link.label === 'Home' ? t.home : 
-                     link.label === 'Gallery' ? t.gallery :
-                     link.label === 'About Us' ? t.about :
-                     link.label === 'Announcements' ? t.announcements : 
-                     link.label}
-                  </Button>
+                    <Menu.Target>
+                      <Button
+                        variant="subtle"
+                        rightSection={<IconChevronDown size={16} />}
+                        className={`font-medium ${
+                          scrolled 
+                            ? active ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400'
+                            : active ? 'text-red-400' : 'text-white hover:text-red-400'
+                        }`}
+                        styles={{
+                          root: {
+                            '&:hover': {
+                              backgroundColor: 'transparent',
+                            },
+                          },
+                        }}
+                      >
+                        <Group gap="xs">
+                          <Icon size={18} />
+                          <span>Services</span>
+                        </Group>
+                      </Button>
+                    </Menu.Target>
+
+                    <Menu.Dropdown>
+                      <ScrollArea.Autosize mah={500} type="scroll">
+                        <div className="p-2">
+                          {/* Header */}
+                          <div className="px-3 py-2 mb-2 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg">
+                            <Text fw={700} size="lg" className="text-red-600 dark:text-red-400">
+                              Our Printing Services
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {loading ? 'Loading...' : 'Choose from our wide range of professional printing services'}
+                            </Text>
+                          </div>
+
+                          {/* Loading State */}
+                          {loading ? (
+                            <div className="py-8 text-center">
+                              <Loader size="sm" />
+                              <Text size="sm" c="dimmed" mt="xs">Loading...</Text>
+                            </div>
+                          ) : (
+                            <>
+                              {/* Services by Category */}
+                              <div className="grid grid-cols-2 gap-4">
+                                {displayCategories.map((category, idx) => {
+                                  const CategoryIcon = category.icon;
+                                  return (
+                                    <div key={idx} className="space-y-1">
+                                      <div className="flex items-center gap-1 px-3 py-1">
+                                        <CategoryIcon size={14} className="text-red-500" />
+                                        <Text fw={600} size="sm" className="text-gray-700 dark:text-gray-300">
+                                          {category.category}
+                                        </Text>
+                                      </div>
+                                      <div className="space-y-0.5">
+                                        {category.items.slice(0, 5).map((item, itemIdx) => (
+                                          <Menu.Item
+                                            key={itemIdx}
+                                            component={Link}
+                                            href={item.href}
+                                            leftSection={<span className="text-lg w-6">{item.icon}</span>}
+                                            rightSection={
+                                              item.badge && (
+                                                <Badge 
+                                                  size="xs" 
+                                                  variant="light" 
+                                                  color={badgeColorMap[item.badge] || 'red'}
+                                                >
+                                                  {item.badge}
+                                                </Badge>
+                                              )
+                                            }
+                                            className="text-sm"
+                                          >
+                                            {item.label}
+                                          </Menu.Item>
+                                        ))}
+                                        {category.items.length > 5 && (
+                                          <Text size="xs" c="dimmed" className="px-3 pt-1">
+                                            +{category.items.length - 5} more
+                                          </Text>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Footer Link */}
+                              <div className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                <Menu.Item
+                                  component={Link}
+                                  href="/page/services"
+                                  leftSection={<IconPackage size={16} />}
+                                  rightSection={<IconChevronDown size={16} />}
+                                  className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20"
+                                >
+                                  <Text fw={600}>View All Services</Text>
+                                </Menu.Item>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </ScrollArea.Autosize>
+                    </Menu.Dropdown>
+                  </Menu>
                 );
-              })}
-            </Group>
-          )}
+              }
 
-          {/* Right Section - Actions (unchanged) */}
-          <div className="flex items-center gap-1 sm:gap-2">
-            {/* Announcements Button (unchanged) */}
-            <Menu shadow="lg" width={320} position="bottom-end">
-              <Menu.Target>
-                <Indicator
-                  inline
-                  label={announcementCount}
-                  size={14}
-                  color="red"
-                  offset={4}
-                  disabled={announcementCount === 0}
-                >
-                  <Tooltip label={t.announcements} withArrow position="bottom">
-                    <ActionIcon
-                      size="md"
-                      variant="subtle"
-                      className={scrolled 
-                        ? 'text-gray-700 dark:text-gray-300' 
-                        : 'text-white'
-                      }
-                    >
-                      <IconBell size={18} /> 
-                    </ActionIcon>
-                  </Tooltip>
-                </Indicator>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                <Menu.Label>{t.latestAnnouncements}</Menu.Label>
-                {announcementItems.map((item) => (
-                  <Menu.Item
-                    key={item.href}
-                    component={Link}
-                    href={item.href}
-                    leftSection={<span className="text-xl">{item.icon}</span>}
-                    rightSection={
-                      <Badge color={item.color} size="xs">
-                        {item.badge}
-                      </Badge>
-                    }
-                  >
-                    <Text size="sm">{item.label}</Text>
-                  </Menu.Item>
-                ))}
-                <Menu.Divider />
-                <Menu.Item
-                  component={Link}
-                  href="/page/announcements"
-                  leftSection={<IconSpeakerphone size={16} />}
-                  rightSection={<IconChevronDown size={16} />}
-                >
-                  {t.viewAllAnnouncements}
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-
-            {/* Search Button */}
-            <div className="hidden sm:block">
-              <Tooltip label={t.search} withArrow position="bottom">
-                <ActionIcon
-                  size="md"
+              return (
+                <Button
+                  key={link.label}
                   variant="subtle"
-                  className={scrolled 
-                    ? 'text-gray-700 dark:text-gray-300' 
-                    : 'text-white'
-                  }
+                  component={Link}
+                  href={link.href}
+                  className={`font-medium ${
+                    scrolled 
+                      ? active ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400'
+                      : active ? 'text-red-400' : 'text-white hover:text-red-400'
+                  }`}
+                  styles={{
+                    root: {
+                      '&:hover': {
+                        backgroundColor: 'transparent',
+                      },
+                    },
+                  }}
+                  leftSection={<Icon size={18} />}
                 >
-                  <IconSearch size={18} />
-                </ActionIcon>
-              </Tooltip>
-            </div>
-
-            {/* Dark/Light Mode Toggle */}
-            <Tooltip label={dark ? 'Light mode' : 'Dark mode'} withArrow position="bottom">
+                  {link.label}
+                </Button>
+              );
+            })}
+              <Tooltip label={dark ? 'Light mode' : 'Dark mode'} withArrow position="bottom">
               <ActionIcon
                 size="md"
                 variant="subtle"
@@ -683,113 +525,11 @@ export default function Header() {
                 {dark ? <IconSun size={18} /> : <IconMoon size={18} />}
               </ActionIcon>
             </Tooltip>
+          </Group>
 
-            {/* Language Selector */}
-            <Menu shadow="md" width={100} position="bottom-end">
-              <Menu.Target>
-                <Button
-                  variant="subtle"
-                  size="xs"
-                  leftSection={<IconLanguage size={16} />}
-                  rightSection={<IconChevronDown size={12} />}
-                  className={scrolled 
-                    ? 'text-gray-700 dark:text-gray-300' 
-                    : 'text-white'
-                  }
-                  styles={{
-                    root: {
-                      minWidth: '60px',
-                      padding: '4px 8px',
-                    },
-                  }}
-                >
-                  {language === 'en' ? 'EN' : 'አማ'}
-                </Button>
-              </Menu.Target>
-
-              <Menu.Dropdown>
-                <Menu.Item
-                  onClick={() => setLanguage('en')}
-                  className={language === 'en' ? 'bg-red-50 text-red-600' : ''}
-                >
-                  English
-                </Menu.Item>
-                <Menu.Item
-                  onClick={() => setLanguage('am')}
-                  className={language === 'am' ? 'bg-red-50 text-red-600' : ''}
-                >
-                  አማርኛ
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-
-            {/* Conditional Login/Dashboard Button */}
-            {!isLoggedIn ? (
-              <Button
-                variant={scrolled ? 'filled' : 'outline'}
-                color="red"
-                size="xs"
-                radius="xl"
-                component={Link}
-                href="/page/login"
-                leftSection={<IconUser size={16} />}
-                className={!scrolled ? 'border-2 border-white text-white hover:bg-white/10' : ''}
-                styles={{
-                  root: {
-                    minWidth: '70px',
-                    height: '36px',
-                  },
-                }}
-              >
-                <span className="hidden xs:inline">{t.login}</span>
-                <span className="xs:hidden">Login</span>
-              </Button>
-            ) : (
-              <Menu shadow="lg" width={180} position="bottom-end">
-                <Menu.Target>
-                  <Button
-                    variant={scrolled ? 'light' : 'outline'}
-                    color="red"
-                    radius="xl"
-                    size="xs"
-                    rightSection={<IconChevronDown size={14} />}
-                    className={!scrolled ? 'border-2 border-white text-white hover:bg-white/10' : ''}
-                    styles={{
-                      root: {
-                        minWidth: '90px',
-                        height: '36px',
-                      },
-                    }}
-                  >
-                    <Group gap={4}>
-                      <Avatar size="sm" radius="xl" color="red">
-                        {user?.full_name?.charAt(0) || 'JD'}
-                      </Avatar>
-                      <span className="hidden sm:inline">{t.dashboard}</span>
-                    </Group>
-                  </Button>
-                </Menu.Target>
-
-                <Menu.Dropdown>
-                  <Menu.Label>{t.dashboard}</Menu.Label>
-                  <Menu.Item component={Link} href="/dashboard" leftSection={<IconPackage size={14} />}>
-                    {t.dashboard}
-                  </Menu.Item>
-                  <Menu.Divider />
-                  <Menu.Item 
-                    leftSection={<IconLogout size={14} />} 
-                    color="red"
-                    onClick={() => {
-                      localStorage.removeItem('accessToken');
-                      localStorage.removeItem('user');
-                      window.location.href = '/';
-                    }}
-                  >
-                    {t.logout}
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            )}
+          {/* Right Section - Actions */}
+          <div className="flex items-center gap-0 sm:gap-0">
+          
 
             {/* Mobile Menu Button */}
             <div className="md:hidden">
@@ -806,7 +546,7 @@ export default function Header() {
         </Group>
       </Container>
 
-      {/* Mobile Drawer - Update with dynamic data similarly */}
+      {/* Mobile Drawer */}
       <Drawer
         opened={drawerOpened}
         onClose={() => setDrawerOpened(false)}
@@ -827,221 +567,121 @@ export default function Header() {
             </div>
             <div>
               <Text fw={700} size="sm">Lucia Printing</Text>
-              <Text size="xs" c="dimmed">{language === 'en' ? 'Menu' : 'ምናሌ'}</Text>
+              <Text size="xs" c="dimmed">Menu</Text>
             </div>
           </Group>
         }
       >
         <ScrollArea h="calc(100vh - 100px)" type="scroll">
           <Stack gap="lg" pr="md">
-            {/* Quick Actions */}
-            <Group grow>
-              <Button 
-                variant="light" 
-                color="red" 
-                leftSection={<IconSearch size={18} />}
+            <Stack gap="xs">
+              <Button
+                variant="subtle"
+                fullWidth
+                justify="space-between"
+                leftSection={<IconHome size={18} />}
+                component={Link}
+                href="/"
                 onClick={() => setDrawerOpened(false)}
               >
-                {t.search}
+                Home
               </Button>
-              <Button 
-                variant="light" 
-                leftSection={<IconLanguage size={18} />}
-                onClick={() => {
-                  setLanguage(prev => prev === 'en' ? 'am' : 'en');
-                }}
+
+              {/* Services with nested menu - Mobile version */}
+              <Menu shadow="lg" width="100%" position="bottom">
+                <Menu.Target>
+                  <Button
+                    variant="subtle"
+                    fullWidth
+                    justify="space-between"
+                    leftSection={<IconPackage size={18} />}
+                    rightSection={<IconChevronDown size={16} />}
+                  >
+                    Services
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <ScrollArea.Autosize mah={400} type="scroll">
+                    {loading ? (
+                      <div className="py-4 text-center">
+                        <Loader size="sm" />
+                        <Text size="xs" c="dimmed" mt="xs">Loading...</Text>
+                      </div>
+                    ) : (
+                      displayCategories.map((category, idx) => (
+                        <div key={idx}>
+                          <Menu.Label>{category.category}</Menu.Label>
+                          {category.items.map((item, itemIdx) => (
+                            <Menu.Item
+                              key={itemIdx}
+                              component={Link}
+                              href={item.href}
+                              leftSection={<span className="text-lg">{item.icon}</span>}
+                              rightSection={
+                                item.badge && (
+                                  <Badge size="xs" variant="light" color={badgeColorMap[item.badge] || 'red'}>
+                                    {item.badge}
+                                  </Badge>
+                                )
+                              }
+                              onClick={() => setDrawerOpened(false)}
+                            >
+                              {item.label}
+                            </Menu.Item>
+                          ))}
+                          {idx < displayCategories.length - 1 && <Menu.Divider />}
+                        </div>
+                      ))
+                    )}
+                  </ScrollArea.Autosize>
+                  <Menu.Divider />
+                  <Menu.Item
+                    component={Link}
+                    href="/page/services"
+                    leftSection={<IconPackage size={16} />}
+                    onClick={() => setDrawerOpened(false)}
+                  >
+                    View All Services
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+
+              <Button
+                variant="subtle"
+                fullWidth
+                justify="space-between"
+                leftSection={<IconPhoto size={18} />}
+                component={Link}
+                href="/page/gallery"
+                onClick={() => setDrawerOpened(false)}
               >
-                {language === 'en' ? 'አማርኛ' : 'English'}
+                Gallery
               </Button>
-            </Group>
 
-            {/* Announcements Section */}
-            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-              <Group justify="space-between" mb="xs">
-                <Group gap="xs">
-                  <IconBell size={18} className="text-red-600" />
-                  <Text fw={600} size="sm">{t.announcements}</Text>
-                </Group>
-                <Badge color="red" size="sm">{announcementCount} New</Badge>
-              </Group>
-              <Stack gap="xs">
-                {announcementItems.slice(0, 2).map((item) => (
-                  <Button
-                    key={item.href}
-                    variant="subtle"
-                    fullWidth
-                    justify="space-between"
-                    leftSection={<span className="text-xl">{item.icon}</span>}
-                    rightSection={<Badge color={item.color} size="xs">{item.badge}</Badge>}
-                    component={Link}
-                    href={item.href}
-                    onClick={() => setDrawerOpened(false)}
-                    size="sm"
-                  >
-                    {item.label}
-                  </Button>
-                ))}
+              <Button
+                variant="subtle"
+                fullWidth
+                justify="space-between"
+                leftSection={<IconInfoCircle size={18} />}
+                component={Link}
+                href="/page/aboutus"
+                onClick={() => setDrawerOpened(false)}
+              >
+                About Us
+              </Button>
                 <Button
-                  variant="light"
-                  color="red"
-                  size="xs"
-                  component={Link}
-                  href="/page/announcements"
-                  onClick={() => setDrawerOpened(false)}
-                >
-                  {t.viewAllAnnouncements}
-                </Button>
-              </Stack>
-            </div>
+                variant="subtle"
+                fullWidth
+                justify="space-between"
+                leftSection={<IconPhoto size={18} />}
+                component={Link}
+                href="/page/announcements"
+                onClick={() => setDrawerOpened(false)}
+              >
+                Announcements
+              </Button>
 
-            {/* Navigation Links */}
-            {!isLoggedIn ? (
-              <>
-                <Divider label={t.services} labelPosition="center" />
-                
-                <Stack gap="xs">
-                  <Button
-                    variant="subtle"
-                    fullWidth
-                    justify="space-between"
-                    leftSection={<IconHome size={18} />}
-                    component={Link}
-                    href="/"
-                    onClick={() => setDrawerOpened(false)}
-                  >
-                    {t.home}
-                  </Button>
-
-                  {/* Services with nested menu - Mobile version with dynamic data */}
-                  <Menu shadow="lg" width="100%" position="bottom">
-                    <Menu.Target>
-                      <Button
-                        variant="subtle"
-                        fullWidth
-                        justify="space-between"
-                        leftSection={<IconPackage size={18} />}
-                        rightSection={<IconChevronDown size={16} />}
-                      >
-                        {t.services}
-                      </Button>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <ScrollArea.Autosize mah={400} type="scroll">
-                        {loading ? (
-                          <div className="py-4 text-center">
-                            <Loader size="sm" />
-                            <Text size="xs" c="dimmed" mt="xs">{t.loading}</Text>
-                          </div>
-                        ) : (
-                          displayCategories.map((category, idx) => (
-                            <div key={idx}>
-                              <Menu.Label>{category.category}</Menu.Label>
-                              {category.items.map((item, itemIdx) => (
-                                <Menu.Item
-                                  key={itemIdx}
-                                  component={Link}
-                                  href={item.href}
-                                  leftSection={<span className="text-lg">{item.icon}</span>}
-                                  rightSection={
-                                    item.badge && (
-                                      <Badge size="xs" variant="light" color={badgeColorMap[item.badge] || 'red'}>
-                                        {item.badge}
-                                      </Badge>
-                                    )
-                                  }
-                                  onClick={() => setDrawerOpened(false)}
-                                >
-                                  {item.label}
-                                </Menu.Item>
-                              ))}
-                              {idx < displayCategories.length - 1 && <Menu.Divider />}
-                            </div>
-                          ))
-                        )}
-                      </ScrollArea.Autosize>
-                      <Menu.Divider />
-                      <Menu.Item
-                        component={Link}
-                        href="/page/services"
-                        leftSection={<IconPackage size={16} />}
-                        onClick={() => setDrawerOpened(false)}
-                      >
-                        {t.viewAll}
-                      </Menu.Item>
-                    </Menu.Dropdown>
-                  </Menu>
-
-                  <Button
-                    variant="subtle"
-                    fullWidth
-                    justify="space-between"
-                    leftSection={<IconPhoto size={18} />}
-                    component={Link}
-                    href="/page/gallery"
-                    onClick={() => setDrawerOpened(false)}
-                  >
-                    {t.gallery}
-                  </Button>
-
-                  <Button
-                    variant="subtle"
-                    fullWidth
-                    justify="space-between"
-                    leftSection={<IconInfoCircle size={18} />}
-                    component={Link}
-                    href="/page/aboutus"
-                    onClick={() => setDrawerOpened(false)}
-                  >
-                    {t.about}
-                  </Button>
-                </Stack>
-
-                <Divider />
-
-                <Button
-                  fullWidth
-                  variant="filled"
-                  color="red"
-                  size="lg"
-                  leftSection={<IconUser size={18} />}
-                  component={Link}
-                  href="/page/login"
-                  onClick={() => setDrawerOpened(false)}
-                >
-                  {t.login}
-                </Button>
-              </>
-            ) : (
-              <>
-                <Divider label={t.dashboard} labelPosition="center" />
-                <Button
-                  fullWidth
-                  variant="light"
-                  color="red"
-                  size="lg"
-                  leftSection={<IconPackage size={18} />}
-                  component={Link}
-                  href="/dashboard"
-                  onClick={() => setDrawerOpened(false)}
-                >
-                  {t.dashboard}
-                </Button>
-                <Button
-                  fullWidth
-                  variant="outline"
-                  color="red"
-                  size="lg"
-                  leftSection={<IconLogout size={18} />}
-                  onClick={() => {
-                    localStorage.removeItem('accessToken');
-                    localStorage.removeItem('user');
-                    window.location.href = '/';
-                  }}
-                >
-                  {t.logout}
-                </Button>
-              </>
-            )}
+            </Stack>
           </Stack>
         </ScrollArea>
       </Drawer>

@@ -766,16 +766,16 @@ export default function AboutPage() {
                   variant="white"
                   color="red"
                   component={Link}
-                  href="/contact"
+                  href="/page/contact"
                 >
-                  Get a Free Quote
+                  Contact Us
                 </Button>
                 <Button
                   size="xl"
                   variant="outline"
                   color="white"
                   component={Link}
-                  href="/services"
+                  href="/page/services"
                 >
                   View Services
                 </Button>

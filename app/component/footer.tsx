@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -16,6 +17,8 @@ import {
   List,
   Paper,
   SimpleGrid,
+  Loader,
+  Badge,
 } from '@mantine/core';
 import {
   IconBrandFacebook,
@@ -34,10 +37,15 @@ import {
   IconHeart,
   IconCopyright,
   IconLanguage,
+  IconMessage,
+  IconStar,
 } from '@tabler/icons-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, MotionProps } from 'framer-motion';
+
+// API URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // Type definitions
 type Language = 'en' | 'am';
@@ -53,9 +61,12 @@ interface QuickLink {
 }
 
 interface ServiceItem {
+  id: string;
   label: string;
   href: string;
   icon: string;
+  category?: string;
+  badge?: string | null;
 }
 
 interface ContactInfo {
@@ -95,6 +106,8 @@ interface Translations {
   terms: string;
   faq: string;
   careers: string;
+  feedback: string;
+  viewAllServices: string;
 }
 
 interface TooltipProps {
@@ -123,26 +136,6 @@ const quickLinks: Record<Language, QuickLink[]> = {
     { label: 'ማዕከለ-ስዕላት', href: '/page/gallery' },
     { label: 'ማስታወቂያዎች', href: '/page/announcements' },
     { label: 'ያግኙን', href: '/page/contact' },
-  ],
-};
-
-// Services data
-const services: Record<Language, ServiceItem[]> = {
-  en: [
-    { label: 'DTF Printing', href: '/page/services/dtf', icon: '🖨️' },
-    { label: 'T-Shirt Printing', href: '/page/services/tshirt', icon: '👕' },
-    { label: 'Custom Stickers', href: '/page/services/stickers', icon: '🏷️' },
-    { label: 'Banners & Signage', href: '/page/services/banners', icon: '📋' },
-    { label: 'Vehicle Wraps', href: '/page/services/wraps', icon: '🚗' },
-    { label: 'Business Cards', href: '/page/services/cards', icon: '💳' },
-  ],
-  am: [
-    { label: 'ዲቲኤፍ ህትመት', href: '/page/services/dtf', icon: '🖨️' },
-    { label: 'ቲሸርት ህትመት', href: '/page/services/tshirt', icon: '👕' },
-    { label: 'ስቲከር', href: '/page/services/stickers', icon: '🏷️' },
-    { label: 'ባነር እና ምልክቶች', href: '/page/services/banners', icon: '📋' },
-    { label: 'የመኪና መሸፈኛ', href: '/page/services/wraps', icon: '🚗' },
-    { label: 'ቢዝነስ ካርድ', href: '/page/services/cards', icon: '💳' },
   ],
 };
 
@@ -214,7 +207,104 @@ const Tooltip: React.FC<TooltipProps> = ({ children, label, withArrow = false, p
 export default function Footer({ language = 'en', onLanguageChange }: FooterProps) {
   const [email, setEmail] = useState<string>('');
   const [subscribed, setSubscribed] = useState<boolean>(false);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [displayCount, setDisplayCount] = useState<number>(8);
   const currentYear: number = new Date().getFullYear();
+
+  // Fetch services from database
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_URL}/api/public/services?limit=100`);
+        const data = await response.json();
+        
+        if (data.success) {
+          // Map services to display format with dynamic slugs
+          const mappedServices = data.data.map((service: any) => ({
+            id: service.id,
+            label: language === 'en' ? service.title : service.title, // Add Amharic translations if available
+            href: `/page/services/${service.slug}`,
+            icon: getServiceIcon(service.icon_name),
+            category: service.category_name || service.category,
+            badge: service.badge,
+          }));
+          
+          // Sort by display order or popularity
+          setServices(mappedServices);
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        // Fallback to static services if API fails
+        setServices(getStaticServices(language));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, [language]);
+
+  // Helper function to get icon based on icon_name
+  const getServiceIcon = (iconName: string): string => {
+    const icons: Record<string, string> = {
+      Printer: '🖨️',
+      Shirt: '👕',
+      Megaphone: '📢',
+      Camera: '📷',
+      Car: '🚗',
+      Lightbulb: '💡',
+      Sparkles: '✨',
+      Tag: '🏷️',
+      Snowflake: '❄️',
+      Coffee: '☕',
+      Wine: '🍷',
+      FileText: '📄',
+      Package: '📦',
+      Pen: '✒️',
+      Key: '🔑',
+      Flame: '🔥',
+      Scissors: '✂️',
+      Palette: '🎨',
+      ShoppingBag: '🛍️',
+      Layers: '📚',
+      Award: '🏆',
+      Star: '⭐',
+    };
+    return icons[iconName] || '🖨️';
+  };
+
+  // Fallback static services
+  const getStaticServices = (lang: Language): ServiceItem[] => {
+    const enServices = [
+      { id: '1', label: 'DTF Printing', href: '/page/services/dtf', icon: '🖨️', category: 'Apparel' },
+      { id: '2', label: 'T-Shirt Printing', href: '/page/services/tshirt', icon: '👕', category: 'Apparel' },
+      { id: '3', label: 'Custom Stickers', href: '/page/services/stickers', icon: '🏷️', category: 'Stickers' },
+      { id: '4', label: 'Banner Printing', href: '/page/services/banners', icon: '📋', category: 'Large Format' },
+      { id: '5', label: 'Vehicle Wraps', href: '/page/services/wraps', icon: '🚗', category: 'Large Format' },
+      { id: '6', label: 'Business Cards', href: '/page/services/cards', icon: '💳', category: 'Print' },
+      { id: '7', label: 'Mug Printing', href: '/page/services/mugs', icon: '☕', category: 'Drinkware' },
+      { id: '8', label: 'Laser Engraving', href: '/page/services/engraving', icon: '🔥', category: 'Specialty' },
+      { id: '9', label: 'Embroidery', href: '/page/services/embroidery', icon: '🧵', category: 'Apparel' },
+      { id: '10', label: 'Light Box', href: '/page/services/light-box', icon: '💡', category: 'Signage' },
+      { id: '11', label: 'Neo Light', href: '/page/services/neo-light', icon: '✨', category: 'Signage' },
+      { id: '12', label: 'Frosted Glass', href: '/page/services/frosted', icon: '❄️', category: 'Glass' },
+    ];
+
+    const amServices = [
+      { id: '1', label: 'ዲቲኤፍ ህትመት', href: '/page/services/dtf', icon: '🖨️', category: 'Apparel' },
+      { id: '2', label: 'ቲሸርት ህትመት', href: '/page/services/tshirt', icon: '👕', category: 'Apparel' },
+      { id: '3', label: 'ስቲከር', href: '/page/services/stickers', icon: '🏷️', category: 'Stickers' },
+      { id: '4', label: 'ባነር ህትመት', href: '/page/services/banners', icon: '📋', category: 'Large Format' },
+      { id: '5', label: 'የመኪና መሸፈኛ', href: '/page/services/wraps', icon: '🚗', category: 'Large Format' },
+      { id: '6', label: 'ቢዝነስ ካርድ', href: '/page/services/cards', icon: '💳', category: 'Print' },
+      { id: '7', label: 'ሙግ ህትመት', href: '/page/services/mugs', icon: '☕', category: 'Drinkware' },
+      { id: '8', label: 'ሌዘር ቅርጻቅርጽ', href: '/page/services/engraving', icon: '🔥', category: 'Specialty' },
+    ];
+
+    return lang === 'en' ? enServices : amServices;
+  };
 
   const translations: Record<Language, Translations> = {
     en: {
@@ -235,6 +325,8 @@ export default function Footer({ language = 'en', onLanguageChange }: FooterProp
       terms: 'Terms of Service',
       faq: 'FAQ',
       careers: 'Careers',
+      feedback: 'Give Feedback',
+      viewAllServices: 'View All Services',
     },
     am: {
       about: 'ስለ ሉሲያ ህትመት',
@@ -254,6 +346,8 @@ export default function Footer({ language = 'en', onLanguageChange }: FooterProp
       terms: 'የአገልግሎት ውል',
       faq: 'በተደጋጋሚ የሚጠየቁ ጥያቄዎች',
       careers: 'ስራዎች',
+      feedback: 'አስተያየት ይስጡ',
+      viewAllServices: 'ሁሉንም አገልግሎቶች ተመልከት',
     },
   };
 
@@ -278,11 +372,18 @@ export default function Footer({ language = 'en', onLanguageChange }: FooterProp
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const loadMore = (): void => {
+    setDisplayCount(prev => prev + 8);
+  };
+
   const motionProps: MotionProps = {
     initial: { opacity: 0, y: 20 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true },
   };
+
+  const displayedServices = services.slice(0, displayCount);
+  const hasMore = services.length > displayCount;
 
   return (
     <footer className="bg-gray-900 text-white pt-16 pb-6">
@@ -315,6 +416,30 @@ export default function Footer({ language = 'en', onLanguageChange }: FooterProp
               <Text className="text-gray-400 leading-relaxed mb-6">
                 {t.aboutText}
               </Text>
+
+              {/* Feedback Link */}
+  <Link
+  href="#testimonials"
+  className="text-gray-400 hover:text-red-400 transition-colors duration-300 flex items-center gap-1"
+  onClick={(e) => {
+    e.preventDefault();
+    document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
+  }}
+>
+  <IconStar size={14} />
+  Testimonials
+</Link>
+              <Button
+                component={Link}
+                href="/page/feedback"
+                variant="light"
+                color="red"
+                leftSection={<IconMessage size={18} />}
+                className="mb-6 w-full sm:w-auto"
+                fullWidth
+              >
+                {t.feedback}
+              </Button>
 
               {/* Social Links */}
               <div>
@@ -366,24 +491,57 @@ export default function Footer({ language = 'en', onLanguageChange }: FooterProp
             </MotionDiv>
           </Grid.Col>
 
-          {/* Services */}
+          {/* Services - Dynamic from Database */}
           <Grid.Col span={{ base: 6, md: 3 }}>
             <MotionDiv {...motionProps} transition={{ duration: 0.5, delay: 0.2 }}>
               <Title order={4} size="md" mb="md" className="text-white">
                 {t.ourServices}
               </Title>
-              <SimpleGrid cols={2} spacing="xs">
-                {services[language].map((service) => (
-                  <Link
-                    key={service.href}
-                    href={service.href}
-                    className="text-gray-400 hover:text-red-400 transition-colors duration-300 flex items-center gap-2"
-                  >
-                    <span className="text-lg">{service.icon}</span>
-                    <span className="text-sm">{service.label}</span>
-                  </Link>
-                ))}
-              </SimpleGrid>
+              
+              {loading ? (
+                <div className="flex justify-center py-4">
+                  <Loader size="sm" color="red" />
+                </div>
+              ) : (
+                <>
+                  <SimpleGrid cols={2} spacing="xs">
+                    {displayedServices.map((service) => (
+                      <div key={service.id} className="relative">
+                        <Link
+                          href={service.href}
+                          className="text-gray-400 hover:text-red-400 transition-colors duration-300 flex items-center gap-2 group"
+                        >
+                          <span className="text-lg">{service.icon}</span>
+                          <span className="text-sm">{service.label}</span>
+                          {service.badge && (
+                            <Badge
+                              size="xs"
+                              color="red"
+                              variant="light"
+                              className="absolute -top-1 -right-2"
+                            >
+                              {service.badge}
+                            </Badge>
+                          )}
+                        </Link>
+                      </div>
+                    ))}
+                  </SimpleGrid>
+
+                  {hasMore && (
+                    <Button
+                      variant="subtle"
+                      color="red"
+                      size="xs"
+                      onClick={loadMore}
+                      className="mt-3 text-gray-400 hover:text-red-400"
+                      fullWidth
+                    >
+                      {t.viewAllServices} ({services.length - displayCount} more)
+                    </Button>
+                  )}
+                </>
+              )}
             </MotionDiv>
           </Grid.Col>
 

@@ -1,7 +1,8 @@
+/* eslint-disable @next/next/no-page-custom-font */
 import '@mantine/core/styles.css';
 import './globals.css';
 
-import { MantineProvider } from '@mantine/core';
+import { MantineProvider, createTheme } from '@mantine/core';
 import { ReactNode } from 'react';
 import ClientLayout from './client_layout';
 
@@ -17,11 +18,22 @@ export const metadata = {
   },
 };
 
+// Optional: Customize your theme
+const theme = createTheme({
+  primaryColor: 'red',
+  colors: {
+    // You can customize colors here
+  },
+});
+
 export default function RootLayout({
   children,
 }: {
   children: ReactNode;
-}) {
+  }) {
+  
+  // Add this useEffect in your component
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -30,7 +42,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
       </head>
       <body>
-        <MantineProvider>
+        <MantineProvider theme={theme} defaultColorScheme="auto">
           <ClientLayout>
             {children}
           </ClientLayout>

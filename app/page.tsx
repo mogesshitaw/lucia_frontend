@@ -50,6 +50,7 @@ import {
   ShoppingBag,
   Tag,
   Wine,
+  Snowflake,
 } from 'lucide-react';
 import CountUp from 'react-countup';
 import Footer from './component/footer';
@@ -59,7 +60,30 @@ import { Variants } from 'framer-motion';
 import { TestimonialForm } from './component/TestimonialForm';
 import { IconStar } from '@tabler/icons-react';
 import Link from 'next/link';
-
+ interface ServiceImage {
+  id: string;
+  service_id: string;
+  image_path: string;
+  thumbnail_path: string | null;
+  alt_text: string | null;
+  is_primary: boolean;
+  service?: {
+    title: string;
+    slug: string;
+  };
+}
+interface Service {
+  id: string;
+  title: string;
+  slug: string;
+  short_description: string;
+  icon_name: string;
+  gradient_from: string;
+  gradient_to: string;
+  badge: string | null;
+  category: string;
+  price_range: string;
+}
 // ==================== TYPES ====================
 interface Testimonial {
   id: string;
@@ -601,7 +625,6 @@ export default function HomePage() {
   const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
   const heroBlur = useTransform(scrollYProgress, [0, 0.5], [0, 10]);
   
-  const isMobile = useMediaQuery('(max-width: 768px)');
   const { ref: servicesRef, controls: servicesControls } = useScrollAnimation(0.1);
   const { ref: whyUsRef, controls: whyUsControls } = useScrollAnimation(0.1);
   const { ref: processRef, controls: processControls } = useScrollAnimation(0.1);
@@ -613,6 +636,12 @@ export default function HomePage() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [testimonialsLoading, setTestimonialsLoading] = useState(true);
   const [testimonialFormOpened, setTestimonialFormOpened] = useState(false);
+
+  const [recentWorks, setRecentWorks] = useState<ServiceImage[]>([]);
+  const [recentWorksLoading, setRecentWorksLoading] = useState(true);
+  
+  const [featuredServices, setFeaturedServices] = useState<Service[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -630,12 +659,38 @@ export default function HomePage() {
       setTestimonialsLoading(false);
     }
   };
-
-  // Call it in useEffect
+   // Fetch recent works from service images
+  const fetchRecentWorks = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/public/gallery/images?limit=8&sortBy=created_at&sortOrder=desc`);
+      const data = await response.json();
+      if (data.success) {
+        setRecentWorks(data.data.images || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch recent works:', error);
+    } finally {
+      setRecentWorksLoading(false);
+    }
+  };
+  const fetchFeaturedServices = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/public/services?limit=8`);
+      const data = await response.json();
+      if (data.success) {
+        setFeaturedServices(data.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch services:', error);
+    } finally {
+      setServicesLoading(false);
+    }
+  };
   useEffect(() => {
     fetchTestimonials();
+    fetchRecentWorks();
+    fetchFeaturedServices();
   }, []);
-
   // Add proper typing to your variants
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -667,227 +722,21 @@ export default function HomePage() {
     { value: 13, label: 'Years Experience', suffix: '', icon: <Clock size={24} /> },
     { value: 24, label: 'Hour Support', suffix: '/7', icon: <Headphones size={24} /> },
   ];
+ // Get icon component
+  const getIconComponent = (iconName: string, size: number = 32) => {
+    const icons: Record<string, any> = {
+      Printer, Shirt, Megaphone, Camera, Car, Lightbulb, Sparkles,
+      Tag, Snowflake, Coffee, Wine, FileText, Package, Pen, Key,
+      Flame, Scissors, Palette, ShoppingBag, Layers, Award, Star,
+    };
+    const Icon = icons[iconName] || Printer;
+    return <Icon size={size} />;
+  };
 
-  const featuredServices = [
-    // Apparel Printing
-    {
-      icon: <Printer size={32} />,
-      title: 'DTF Printing',
-      desc: 'Direct to Film printing for vibrant, durable designs on any fabric. Perfect for custom apparel and promotional items.',
-      gradient: 'from-purple-500 to-pink-500',
-      badge: 'Most Popular',
-      features: ['Any Fabric Type', 'Vibrant Colors', 'Wash Durable', 'No Minimum'],
-      link: '/page/services/dtf',
-    },
-    {
-      icon: <Shirt size={32} />,
-      title: 'T-Shirt Printing',
-      desc: 'Custom t-shirts using DTF, screen printing, and DTG methods for any occasion.',
-      gradient: 'from-red-500 to-pink-500',
-      badge: 'Best Seller',
-      features: ['Multiple Methods', 'All Colors', 'Bulk Discounts', 'Fast Delivery'],
-      link: '/page/services/tshirt',
-    },
-    {
-      icon: <Shirt size={32} />,
-      title: 'Hoodies & Sweatshirts',
-      desc: 'Comfortable custom hoodies for teams, events, and corporate wear.',
-      gradient: 'from-blue-500 to-purple-500',
-      badge: 'Comfort',
-      features: ['Premium Blanks', 'All Sizes', 'Embroidery Option', 'Bulk Pricing'],
-      link: '/page/services/hoodies',
-    },
-    {
-      icon: <Shirt size={32} />,
-      title: 'Custom Hats & Caps',
-      desc: 'Personalized headwear with embroidery or printed designs.',
-      gradient: 'from-blue-500 to-cyan-500',
-      badge: 'Trending',
-      features: ['Embroidery', 'Printed Options', 'Adjustable', 'Bulk Orders'],
-      link: '/page/services/hats',
-    },
-    
-    // Large Format
-    {
-      icon: <Megaphone size={32} />,
-      title: 'Banner Printing',
-      desc: 'Large format banners for indoor and outdoor advertising.',
-      gradient: 'from-red-500 to-orange-500',
-      badge: 'Popular',
-      features: ['Indoor/Outdoor', 'Multiple Sizes', 'Weather Resistant', 'Fast Production'],
-      link: '/page/services/banners',
-    },
-    {
-      icon: <Camera size={32} />,
-      title: 'Posters',
-      desc: 'High-quality posters for events, advertising, and art prints.',
-      gradient: 'from-purple-500 to-pink-500',
-      badge: 'Popular',
-      features: ['Multiple Sizes', 'High Resolution', 'UV Resistant', 'Lamination'],
-      link: '/page/services/posters',
-    },
-    {
-      icon: <Car size={32} />,
-      title: 'Vehicle Wraps',
-      desc: 'Full and partial vehicle wraps for mobile advertising.',
-      gradient: 'from-blue-500 to-indigo-500',
-      badge: 'Professional',
-      features: ['Full/Partial Wraps', 'Commercial Vehicles', 'Professional Install', '5-Year Durability'],
-      link: '/page/services/wraps',
-    },
-    {
-      icon: <Lightbulb size={32} />,
-      title: 'Light Box',
-      desc: 'LED illuminated signs for eye-catching displays.',
-      gradient: 'from-yellow-500 to-amber-500',
-      badge: 'Premium',
-      features: ['LED Illumination', 'Custom Sizes', 'Energy Efficient', 'Long Lifespan'],
-      link: '/page/services/light-box',
-    },
-    
-    // Stickers & Labels
-    {
-      icon: <Tag size={32} />,
-      title: 'Custom Stickers',
-      desc: 'Die-cut and kiss-cut stickers in various finishes.',
-      gradient: 'from-yellow-500 to-orange-500',
-      badge: 'Popular',
-      features: ['Custom Shapes', 'Weather Resistant', 'Matte/Glossy', 'Bulk Orders'],
-      link: '/page/services/stickers',
-    },
-    {
-      icon: <Bookmark size={32} />,
-      title: 'Product Labels',
-      desc: 'Custom labels for packaging, branding, and products.',
-      gradient: 'from-green-500 to-teal-500',
-      badge: 'Business',
-      features: ['Barcode Ready', 'Water Resistant', 'Custom Sizes', 'Bulk Rolls'],
-      link: '/page/services/labels',
-    },
-    
-    // Drinkware
-    {
-      icon: <Coffee size={32} />,
-      title: 'Mug Printing',
-      desc: 'Custom printed mugs for gifts, events, and promotions.',
-      gradient: 'from-orange-500 to-red-500',
-      badge: 'Gift Idea',
-      features: ['Full Color', 'Dishwasher Safe', 'Various Sizes', 'Bulk Pricing'],
-      link: '/page/services/mugs',
-    },
-    {
-      icon: <Wine size={32} />,
-      title: 'Bottle Printing',
-      desc: 'Custom printed water bottles, tumblers, and glassware.',
-      gradient: 'from-blue-500 to-indigo-500',
-      badge: 'Eco-Friendly',
-      features: ['Stainless Steel', 'Glass Options', 'Insulated', 'Dishwasher Safe'],
-      link: '/page/services/bottles',
-    },
-    
-    // Print & Promo
-    {
-      icon: <FileText size={32} />,
-      title: 'Business Cards',
-      desc: 'Premium business cards with various finishes and effects.',
-      gradient: 'from-gray-500 to-gray-700',
-      badge: 'Essential',
-      features: ['Premium Paper', 'Foil Options', 'Spot UV', 'Embossing'],
-      link: '/page/services/business-cards',
-    },
-    {
-      icon: <FileText size={32} />,
-      title: 'Flyers & Brochures',
-      desc: 'Marketing materials for your business promotions.',
-      gradient: 'from-blue-500 to-cyan-500',
-      badge: 'Marketing',
-      features: ['Multiple Sizes', 'Folding Options', 'Glossy/Matte', 'Bulk Pricing'],
-      link: '/page/services/flyers',
-    },
-    {
-      icon: <Package size={32} />,
-      title: 'Custom Packaging',
-      desc: 'Custom boxes and packaging for your products.',
-      gradient: 'from-blue-500 to-indigo-500',
-      badge: 'Premium',
-      features: ['Custom Sizes', 'Full Color', 'Structural Design', 'Eco Options'],
-      link: '/page/services/packaging',
-    },
-    {
-      icon: <Pen size={32} />,
-      title: 'Custom Pens',
-      desc: 'Promotional pens with your logo for giveaways.',
-      gradient: 'from-yellow-500 to-orange-500',
-      badge: 'Budget Friendly',
-      features: ['Custom Logo', 'Multiple Colors', 'Bulk Pricing', 'Fast Delivery'],
-      link: '/page/services/pens',
-    },
-    {
-      icon: <Key size={32} />,
-      title: 'Custom Keychains',
-      desc: 'Custom keychains for lasting brand impressions.',
-      gradient: 'from-purple-500 to-pink-500',
-      badge: 'Popular',
-      features: ['Custom Shapes', 'Multiple Materials', 'Bulk Pricing', 'Fast Turnaround'],
-      link: '/page/services/keychains',
-    },
-    
-    // Specialty Services
-    {
-      icon: <Layers size={32} />,
-      title: 'Screen Printing',
-      desc: 'Traditional screen printing for bulk orders.',
-      gradient: 'from-blue-500 to-cyan-500',
-      badge: 'Best for Bulk',
-      features: ['Bulk Orders', 'Spot Colors', 'Pantone Matching', 'Cost Effective'],
-      link: '/page/services/screen-printing',
-    },
-    {
-      icon: <Sparkles size={32} />,
-      title: 'Embroidery',
-      desc: 'Professional embroidery for a premium, textured look.',
-      gradient: 'from-green-500 to-emerald-500',
-      badge: 'Premium',
-      features: ['3D Puff Option', 'Thread Matching', 'Digitizing', 'Bulk Discounts'],
-      link: '/page/services/embroidery',
-    },
-    {
-      icon: <ShoppingBag size={32} />,
-      title: 'Tote Bags',
-      desc: 'Eco-friendly custom tote bags for retail and events.',
-      gradient: 'from-green-500 to-emerald-500',
-      badge: 'Eco-Friendly',
-      features: ['Eco Materials', 'Reusable', 'Custom Printing', 'Bulk Pricing'],
-      link: '/page/services/totes',
-    },
-    {
-      icon: <Flame size={32} />,
-      title: 'Laser Engraving',
-      desc: 'Precision laser engraving on various materials.',
-      gradient: 'from-gray-500 to-gray-700',
-      badge: 'Precision',
-      features: ['Multiple Materials', 'High Precision', 'Permanent Marking', 'Photos Possible'],
-      link: '/page/services/engraving',
-    },
-    {
-      icon: <Scissors size={32} />,
-      title: 'Custom Cutout',
-      desc: 'Precision die-cut shapes, letters, and designs.',
-      gradient: 'from-green-500 to-teal-500',
-      badge: 'Versatile',
-      features: ['Custom Shapes', 'Multiple Materials', 'Precision Cutting', 'Small to Bulk'],
-      link: '/page/services/cutout',
-    },
-    {
-      icon: <Palette size={32} />,
-      title: 'Graphic Design',
-      desc: 'Professional design services for all your needs.',
-      gradient: 'from-orange-500 to-red-500',
-      badge: 'Creative',
-      features: ['Logo Design', 'Brand Identity', 'Print Ready Files', 'Revisions'],
-      link: '/page/services/design',
-    },
-  ];
+  // Get gradient classes
+
+
+
 
   const whyChooseUs = [
     { icon: <Truck size={28} />, title: 'Lightning Fast', desc: 'Fast & Quality & Services at Affordable', color: 'from-blue-500 to-cyan-500' },
@@ -905,20 +754,8 @@ export default function HomePage() {
     { step: 4, title: 'Print & Ship', desc: 'Track your order live', icon: <Truck />, color: 'from-purple-500 to-pink-500' },
   ];
 
-  const recentWorks = [
-    { title: 'Corporate Branding', image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400', category: 'branding' },
-    { title: 'Event Banners', image: 'https://images.unsplash.com/photo-1531058020387-3be344556be6?w=400', category: 'banners' },
-    { title: 'Custom T-Shirts', image: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400', category: 'apparel' },
-    { title: 'Product Labels', image: 'https://images.unsplash.com/photo-1622542796254-5b9c46ab0c2f?w=400', category: 'labels' },
-    { title: 'Vehicle Wraps', image: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400', category: 'wraps' },
-    { title: 'Business Cards', image: 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=400', category: 'print' },
-    { title: 'Billboard Design', image: 'https://images.unsplash.com/photo-1563207153-f403bf289096?w=400', category: 'outdoor' },
-    { title: 'Packaging Design', image: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400', category: 'packaging' },
-  ];
 
-  const filteredWorks = activeTab === 'all' 
-    ? recentWorks 
-    : recentWorks.filter(work => work.category === activeTab);
+
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -936,6 +773,16 @@ export default function HomePage() {
       videoRef.current.muted = !isMuted;
       setIsMuted(!isMuted);
     }
+  };
+ // Get image URL
+  const getImageUrl = (path: string) => {
+    if (!path) return 'https://placehold.co/600x400?text=No+Image';
+    let cleanPath = path.replace(/\\/g, '/');
+    cleanPath = cleanPath.replace(/^\/+/, '');
+    if (!cleanPath.startsWith('uploads/')) {
+      cleanPath = `uploads/${cleanPath}`;
+    }
+    return `${API_URL}/${cleanPath}`;
   };
 
   return (
@@ -1020,6 +867,8 @@ export default function HomePage() {
                   size="xl"
                   radius="xl"
                   variant="gradient"
+                  component={Link}
+                  href="/page/services"
                   gradient={{ from: 'red', to: 'orange' }}
                   className="shadow-2xl hover:shadow-3xl transition-shadow duration-300 px-8 h-14"
                   rightSection={<ArrowRight size={20} />}
@@ -1030,10 +879,12 @@ export default function HomePage() {
                   size="xl"
                   radius="xl"
                   variant="outline"
+                  component={Link}
+                  href="/page/aboutus"
                   className="border-2 border-white text-white hover:bg-white/10 backdrop-blur-sm px-8 h-14"
                   leftSection={<Upload size={20} />}
                 >
-                  Upload Design
+                  Read more
                 </Button>
               </MotionDiv>
 
@@ -1061,7 +912,7 @@ export default function HomePage() {
           </motion.div>
         </MotionSection>
 
-        {/* ================= FEATURED SERVICES ================= */}
+          {/* ================= FEATURED SERVICES ================= */}
         <MotionSection
           ref={servicesRef}  
           animate={servicesControls}
@@ -1081,63 +932,85 @@ export default function HomePage() {
               </Text>
             </MotionDiv>
 
-            <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl">
-              {featuredServices.map((service, index) => (
-                <MotionCard
-                  key={index}
-                  variants={itemVariants}
-                  whileHover={{ y: -10, scale: 1.02 }}
-                  className="relative overflow-hidden group cursor-pointer"
-                  padding="xl"
-                  radius="lg"
-                  withBorder
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-                  
-                  {service.badge && (
-                    <Badge
-                      className="absolute top-4 right-4 animate-pulse"
+            {servicesLoading ? (
+              <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl">
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} height={300} radius="lg" />
+                ))}
+              </SimpleGrid>
+            ) : (
+              <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl">
+                {featuredServices.map((service) => (
+                  <MotionCard
+                    key={service.id}
+                    variants={itemVariants}
+                    whileHover={{ y: -10, scale: 1.02 }}
+                    className="relative overflow-hidden group cursor-pointer"
+                    padding="xl"
+                    radius="lg"
+                    withBorder
+                    component={Link}
+                    href={`/page/services/${service.slug}`}
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${service.gradient_from} ${service.gradient_to} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                    
+                    {service.badge && (
+                      <Badge
+                        className="absolute top-4 right-4 animate-pulse"
+                        variant="gradient"
+                        gradient={{ from: 'red', to: 'orange' }}
+                      >
+                        {service.badge}
+                      </Badge>
+                    )}
+
+                    <ThemeIcon
+                      size={70}
+                      radius="xl"
                       variant="gradient"
-                      gradient={{ from: 'red', to: 'orange' }}
+                      gradient={{ from: service.gradient_from.replace('from-', ''), to: service.gradient_to.replace('to-', '') }}
+                      className="mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"
                     >
-                      {service.badge}
-                    </Badge>
-                  )}
+                      {getIconComponent(service.icon_name)}
+                    </ThemeIcon>
 
-                  <ThemeIcon
-                    size={70}
-                    radius="xl"
-                    variant="gradient"
-                    gradient={{ from: service.gradient.split(' ')[0].replace('from-', ''), to: service.gradient.split(' ')[1].replace('to-', '') }}
-                    className="mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"
-                  >
-                    {service.icon}
-                  </ThemeIcon>
+                    <Title order={4} className="mb-2">{service.title}</Title>
+                    <Text size="sm" c="dimmed" className="mb-4 line-clamp-2">
+                      {service.short_description}
+                    </Text>
 
-                  <Title order={4} className="mb-2">{service.title}</Title>
-                  <Text size="sm" c="dimmed" className="mb-4">{service.desc}</Text>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Text size="sm" fw={600} className="text-red-600">
+                        {service.price_range}
+                      </Text>
+                    </div>
 
-                  <div className="space-y-2 mb-4">
-                    {service.features.map((feature, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <CheckCircle size={14} className="text-green-500" />
-                        <span>{feature}</span>
-                      </div>
-                    ))}
-                  </div>
+                    <Button
+                      variant="subtle"
+                      color="red"
+                      size="compact"
+                      rightSection={<ChevronRight size={16} />}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    >
+                      Learn More
+                    </Button>
+                  </MotionCard>
+                ))}
+              </SimpleGrid>
+            )}
 
-                  <Button
-                    variant="subtle"
-                    color="red"
-                    size="compact"
-                    rightSection={<ChevronRight size={16} />}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  >
-                    Learn More
-                  </Button>
-                </MotionCard>
-              ))}
-            </SimpleGrid>
+            <Group justify="center" mt="xl">
+              <Button
+                component={Link}
+                href="/page/services"
+                variant="light"
+                color="red"
+                size="lg"
+                rightSection={<ArrowRight size={16} />}
+              >
+                View All Services
+              </Button>
+            </Group>
           </Container>
         </MotionSection>
 
@@ -1433,7 +1306,7 @@ export default function HomePage() {
           </Container>
         </MotionSection>
 
-        {/* ================= RECENT WORKS ================= */}
+       {/* ================= RECENT WORKS ================= */}
         <MotionSection
           ref={worksRef}
           animate={worksControls}
@@ -1452,39 +1325,62 @@ export default function HomePage() {
               </Text>
             </MotionDiv>
 
-            <Tabs value={activeTab} onChange={setActiveTab} className="mb-8">
-              <Tabs.List grow>
-                <Tabs.Tab value="all">All</Tabs.Tab>
-                <Tabs.Tab value="branding">Branding</Tabs.Tab>
-                <Tabs.Tab value="banners">Banners</Tabs.Tab>
-                <Tabs.Tab value="apparel">Apparel</Tabs.Tab>
-                <Tabs.Tab value="labels">Labels</Tabs.Tab>
-                <Tabs.Tab value="wraps">Wraps</Tabs.Tab>
-              </Tabs.List>
-            </Tabs>
+            {recentWorksLoading ? (
+              <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} height={250} radius="lg" />
+                ))}
+              </SimpleGrid>
+            ) : recentWorks.length > 0 ? (
+              <>
+                <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
+                  {recentWorks.slice(0, 4).map((work) => (
+                    <MotionDiv
+                      key={work.id}
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.05 }}
+                      className="relative group overflow-hidden rounded-xl cursor-pointer"
+                      onClick={() => window.location.href = `/page/services/${work.service?.slug || 'gallery'}`}
+                    >
+                      <img
+                        src={getImageUrl(work.thumbnail_path || work.image_path)}
+                        alt={work.alt_text || 'Recent project'}
+                        className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="absolute bottom-4 left-4 text-white">
+                          <Text fw={600}>{work.service?.title || 'Project'}</Text>
+                          {work.is_primary && (
+                            <Badge color="red" size="sm" className="mt-2">Featured</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </MotionDiv>
+                  ))}
+                </SimpleGrid>
 
-            <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
-              {filteredWorks.map((work, index) => (
-                <MotionDiv
-                  key={index}
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.05 }}
-                  className="relative group overflow-hidden rounded-xl"
-                >
-                  <img
-                    src={work.image}
-                    alt={work.title}
-                    className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <Text fw={600}>{work.title}</Text>
-                      <Badge color="red" size="sm" className="mt-2">{work.category}</Badge>
-                    </div>
-                  </div>
-                </MotionDiv>
-              ))}
-            </SimpleGrid>
+                <Group justify="center" mt="xl">
+                  <Button
+                    component={Link}
+                    href="/page/gallery"
+                    variant="light"
+                    color="red"
+                    size="lg"
+                    rightSection={<ArrowRight size={16} />}
+                  >
+                    View Full Gallery
+                  </Button>
+                </Group>
+              </>
+            ) : (
+              <Paper p="xl" radius="lg" withBorder>
+                <Center>
+                  <Stack align="center">
+                    <Text size="lg" c="dimmed">No projects yet</Text>
+                  </Stack>
+                </Center>
+              </Paper>
+            )}
           </Container>
         </MotionSection>
 

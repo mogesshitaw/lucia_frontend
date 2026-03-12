@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Container, Title, Text, Button, Grid, Card, Group, ThemeIcon, Badge, SimpleGrid, Stack, Divider, Paper, List, Image } from '@mantine/core';
+import { Container, Title, Text, Button, Grid, Group, ThemeIcon, Badge, SimpleGrid, Stack, Divider, Paper, List } from '@mantine/core';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
   ArrowRight,
   CheckCircle,
-  Phone,
-  Upload,
   Printer,
   Shirt,
   Megaphone,
@@ -78,7 +76,7 @@ export default function DynamicServicePage({ service }: { service: any }) {
                     variant="white"
                     color="red"
                     component={Link}
-                    href="/upload"
+                    href="https://t.me/Luciachale"
                     rightSection={<ArrowRight size={20} />}
                   >
                     Start Your Project
@@ -88,7 +86,7 @@ export default function DynamicServicePage({ service }: { service: any }) {
                     variant="outline"
                     color="white"
                     component={Link}
-                    href="/contact"
+                    href="/page/contact"
                   >
                     Contact Us
                   </Button>
@@ -400,16 +398,16 @@ export default function DynamicServicePage({ service }: { service: any }) {
               variant="white"
               color="red"
               component={Link}
-              href="/upload"
+              href="https://t.me/Luciachale"
             >
-              Upload Your Design
+              Upload Your Design on Telegram
             </Button>
             <Button
               size="xl"
               variant="outline"
               color="white"
               component={Link}
-              href="/contact"
+              href="/page/contact"
             >
               Contact Us
             </Button>

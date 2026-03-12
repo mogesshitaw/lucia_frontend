@@ -1,6 +1,8 @@
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Title,
@@ -22,8 +24,6 @@ import {
   ActionIcon,
   Tooltip,
   Box,
-  Image as MantineImage,
-  Spoiler,
   Divider,
   Chip,
 } from '@mantine/core';
@@ -39,10 +39,7 @@ import {
   IconChevronRight,
   IconCategory,
   IconCalendar,
-  IconUser,
-  IconTags,
 } from '@tabler/icons-react';
-import { useDisclosure } from '@mantine/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import dayjs from 'dayjs';

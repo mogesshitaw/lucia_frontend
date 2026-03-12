@@ -12,44 +12,31 @@ import {
   Badge,
   ScrollArea,
   ActionIcon,
-  TextInput,
+  useMantineColorScheme,
 } from '@mantine/core';
 import {
   IconLayoutDashboard,
   IconPackage,
-  IconShoppingCart,
   IconUsers,
   IconSettings,
   IconLogout,
-  IconSearch,
   IconChevronRight,
   IconChartBar,
   IconMessage,
-  IconCalendar,
-  IconClock,
   IconUser,
-  IconAlertCircle,
-  IconCheck,
   IconSettings2,
-  IconUsersGroup,
-  IconBox,
-  IconDatabase,
-  IconUserPlus,
-  IconPhoto,
-  IconUpload,
-  IconPhotoCheck,
-  IconPhotoX,
+  IconBell,
+  IconBuildingStore,
   IconCategory,
-  IconTag,
-  IconHistory,
-  IconStar,
-  IconCloudUpload,
+  IconSun,
+  IconMoon,
+  IconChevronLeft,
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// const MotionDiv = motion.div;
+const MotionDiv = motion.div;
 
 interface SidebarItem {
   id: string;
@@ -57,72 +44,117 @@ interface SidebarItem {
   icon: React.ReactNode;
   href: string;
   badge?: number;
+  badgeColor?: string;
   children?: SidebarItem[];
 }
 
 interface SidebarProps {
   opened: boolean;
+  toggleSidebar: () => void;
 }
 
-// Sidebar Item Component
+// Animation variants
+const itemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0 },
+};
+
+const childVariants = {
+  hidden: { opacity: 0, height: 0 },
+  visible: { opacity: 1, height: 'auto' },
+};
+
+// Helper function to determine if dark mode is active
+const isDarkMode = (colorScheme: 'light' | 'dark' | 'auto'): boolean => {
+  if (colorScheme === 'dark') return true;
+  if (colorScheme === 'light') return false;
+  // For 'auto', check system preference
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+};
+
+// Sidebar Item Component with animations
 const SidebarItemComponent = ({
   item,
   isActive,
   isExpanded,
   depth = 0,
-  onItemClick,
+  colorScheme,
 }: {
   item: SidebarItem;
   isActive: boolean;
   isExpanded: boolean;
   depth?: number;
-  onItemClick?: () => void;
+  colorScheme: 'light' | 'dark' | 'auto';
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const isDark = isDarkMode(colorScheme);
 
   const handleClick = () => {
     if (item.children) {
       setIsOpen(!isOpen);
     } else {
       router.push(item.href);
-      if (onItemClick) onItemClick();
     }
   };
 
   return (
-    <div style={{ paddingLeft: depth * 12 }} className="mb-1">
+    <MotionDiv
+      variants={itemVariants}
+      initial="hidden"
+      animate="visible"
+      transition={{ duration: 0.2, delay: depth * 0.05 }}
+      style={{ paddingLeft: depth * 16 }}
+      className="mb-1"
+    >
       <Tooltip
         label={item.label}
         position="right"
         withArrow
         disabled={isExpanded}
+        transitionProps={{ duration: 200 }}
       >
         <Button
           variant={isActive ? 'light' : 'subtle'}
           color={isActive ? 'red' : 'gray'}
           fullWidth
           justify={isExpanded ? 'space-between' : 'center'}
-          leftSection={item.icon}
+          leftSection={
+            <div className={isActive ? 'text-red-500' : isDark ? 'text-gray-400' : 'text-gray-600'}>
+              {item.icon}
+            </div>
+          }
           rightSection={
             isExpanded && item.children ? (
               <motion.div animate={{ rotate: isOpen ? 90 : 0 }}>
                 <IconChevronRight size={16} />
               </motion.div>
             ) : isExpanded && item.badge ? (
-              <Badge size="xs" color="red" variant="filled" circle>
+              <Badge 
+                size="sm" 
+                color={item.badgeColor || 'red'} 
+                variant="filled"
+                radius="xl"
+              >
                 {item.badge}
               </Badge>
             ) : null
           }
           onClick={handleClick}
-          className={`${!isExpanded ? 'px-2' : ''}`}
+          className={`${!isExpanded ? 'px-2' : ''} transition-all duration-200`}
           styles={{
             root: {
               height: '44px',
               width: '100%',
+              borderRadius: '8px',
+              backgroundColor: isActive 
+                ? isDark ? 'rgba(240, 62, 62, 0.15)' : undefined 
+                : 'transparent',
               '&:hover': {
-                backgroundColor: isActive ? undefined : 'rgba(0,0,0,0.05)',
+                backgroundColor: isDark 
+                  ? 'rgba(255, 255, 255, 0.1)' 
+                  : 'rgba(0, 0, 0, 0.05)',
+                transform: isExpanded ? 'translateX(4px)' : 'none',
               },
             },
             inner: {
@@ -132,13 +164,22 @@ const SidebarItemComponent = ({
             label: {
               flex: 1,
               textAlign: 'left',
+              fontWeight: isActive ? 600 : 400,
+              color: isActive 
+                ? isDark ? '#ff6b6b' : '#fa5252'
+                : isDark ? '#c1c2c5' : '#495057',
             },
           }}
         >
           {isExpanded && item.label}
           {!isExpanded && item.badge && (
             <div className="absolute -top-1 -right-1">
-              <Badge size="xs" color="red" variant="filled" circle>
+              <Badge 
+                size="xs" 
+                color={item.badgeColor || 'red'} 
+                variant="filled" 
+                circle
+              >
                 {item.badge}
               </Badge>
             </div>
@@ -146,263 +187,136 @@ const SidebarItemComponent = ({
         </Button>
       </Tooltip>
 
-      {item.children && isOpen && isExpanded && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="ml-4 mt-1"
-        >
-          {item.children.map((child) => (
-            <SidebarItemComponent
-              key={child.id}
-              item={child}
-              isActive={false}
-              isExpanded={isExpanded}
-              depth={depth + 1}
-              onItemClick={onItemClick}
-            />
-          ))}
-        </motion.div>
-      )}
-    </div>
+      <AnimatePresence>
+        {item.children && isOpen && isExpanded && (
+          <MotionDiv
+            variants={childVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            transition={{ duration: 0.2 }}
+            className="ml-4 mt-1"
+          >
+            {item.children.map((child) => (
+              <SidebarItemComponent
+                key={child.id}
+                item={child}
+                isActive={false}
+                isExpanded={isExpanded}
+                depth={depth + 1}
+                colorScheme={colorScheme}
+              />
+            ))}
+          </MotionDiv>
+        )}
+      </AnimatePresence>
+    </MotionDiv>
   );
 };
 
-export default function DashboardSidebar({ opened }: SidebarProps) {
+export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  
+  // Use the helper function to determine actual dark mode state
+  const isDark = isDarkMode(colorScheme);
+  
   const [activeItem, setActiveItem] = useState('dashboard');
-  const [imageStats, setImageStats] = useState({
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-    total: 0,
+  const [userData, setUserData] = useState({
+    name: 'Admin User',
+    email: 'admin@luciaprinting.com',
+    role: 'Administrator',
   });
 
   useEffect(() => {
     const path = pathname.split('/').pop() || 'dashboard';
     setActiveItem(path);
   }, [pathname]);
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-  // Fetch image stats
+
+  // Fetch user data
   useEffect(() => {
-    const fetchImageStats = async () => {
+    const fetchUserData = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
-        const response = await fetch(`${API_URL}/api/images/stats`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        if (data.success) {
-          setImageStats(data.data);
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          setUserData(prev => ({
+            ...prev,
+            name: user.full_name || user.name || prev.name,
+            email: user.email || prev.email,
+            role: user.role || prev.role,
+          }));
         }
       } catch (error) {
-        console.error('Failed to fetch image stats:', error);
+        console.error('Failed to fetch user data:', error);
       }
     };
 
-    fetchImageStats();
-  }, [API_URL]);
+    fetchUserData();
+  }, []);
 
   const sidebarItems: SidebarItem[] = [
     {
       id: 'dashboard',
       label: 'Dashboard',
-      icon: <IconLayoutDashboard size={20} />,
+      icon: <IconLayoutDashboard size={18} />,
       href: '/dashboard',
     },
     {
-      id: 'images',
-      label: 'Image Management',
-      icon: <IconPhoto size={20} />,
-      href: '/dashboard/images',
-      badge: imageStats.pending,
+      id: 'services',
+      label: 'Services',
+      icon: <IconBuildingStore size={18} />,
+      href: '/dashboard/services',
       children: [
         {
-          id: 'upload',
-          label: 'Upload Images',
-          icon: <IconCloudUpload size={16} />,
-          href: '/dashboard/images/upload',
-        },
-        {
-          id: 'all-images',
-          label: 'All Images',
-          icon: <IconPhoto size={16} />,
-          href: '/dashboard/images',
-          badge: imageStats.total,
-        },
-        {
-          id: 'pending',
-          label: 'Pending Approval',
-          icon: <IconPhotoCheck size={16} />,
-          href: '/dashboard/images?status=pending',
-          badge: imageStats.pending,
-        },
-        {
-          id: 'approved',
-          label: 'Approved',
-          icon: <IconCheck size={16} />,
-          href: '/dashboard/images?status=approved',
-          badge: imageStats.approved,
-        },
-        {
-          id: 'rejected',
-          label: 'Rejected',
-          icon: <IconPhotoX size={16} />,
-          href: '/dashboard/images?status=rejected',
-          badge: imageStats.rejected,
-        },
-        {
-          id: 'favorites',
-          label: 'Favorites',
-          icon: <IconStar size={16} />,
-          href: '/dashboard/images/favorites',
-        },
-        {
-          id: 'categories',
+          id: 'service-categories',
           label: 'Categories',
           icon: <IconCategory size={16} />,
-          href: '/dashboard/images/categories',
+          href: '/dashboard/services/categories',
         },
         {
-          id: 'tags',
-          label: 'Tags',
-          icon: <IconTag size={16} />,
-          href: '/dashboard/images/tags',
-        },
-        {
-          id: 'history',
-          label: 'History',
-          icon: <IconHistory size={16} />,
-          href: '/dashboard/images/history',
+          id: 'service-list',
+          label: 'All Services',
+          icon: <IconPackage size={16} />,
+          href: '/dashboard/services',
         },
       ],
     },
     {
-      id: 'orders',
-      label: 'Orders',
-      icon: <IconShoppingCart size={20} />,
-      href: '/dashboard/orders',
-      badge: 12,
-      children: [
-        {
-          id: 'active-orders',
-          label: 'Active Orders',
-          icon: <IconClock size={16} />,
-          href: '/dashboard/orders/active',
-          badge: 5,
-        },
-        {
-          id: 'completed-orders',
-          label: 'Completed',
-          icon: <IconCheck size={16} />,
-          href: '/dashboard/orders/completed',
-        },
-        {
-          id: 'cancelled-orders',
-          label: 'Cancelled',
-          icon: <IconAlertCircle size={16} />,
-          href: '/dashboard/orders/cancelled',
-        },
-      ],
+      id: 'announcements',
+      label: 'Announcements',
+      icon: <IconBell size={18} />,
+      href: '/dashboard/announcements',
     },
     {
-      id: 'products',
-      label: 'Products',
-      icon: <IconPackage size={20} />,
-      href: '/dashboard/products',
-      children: [
-        {
-          id: 'all-products',
-          label: 'All Products',
-          icon: <IconBox size={16} />,
-          href: '/dashboard/products',
-        },
-        {
-          id: 'categories',
-          label: 'Categories',
-          icon: <IconCategory size={16} />,
-          href: '/dashboard/products/categories',
-        },
-        {
-          id: 'inventory',
-          label: 'Inventory',
-          icon: <IconDatabase size={16} />,
-          href: '/dashboard/products/inventory',
-        },
-      ],
-    },
-    {
-      id: 'customers',
-      label: 'Customers',
-      icon: <IconUsers size={20} />,
-      href: '/dashboard/manage-user',
-      badge: 5,
-      children: [
-        {
-          id: 'all-customers',
-          label: 'All Customers',
-          icon: <IconUsersGroup size={16} />,
-          href: '/dashboard/manage-user',
-        },
-        {
-          id: 'leads',
-          label: 'Leads',
-          icon: <IconUserPlus size={16} />,
-          href: '/dashboard/customers/leads',
-          badge: 3,
-        },
-      ],
-    },
-    {
-      id: 'Announcement',
-      label: 'Announcement',
-      icon: <IconChartBar size={20} />,
-      href: '/dashboard/announcements'
-    },
-    {
-      id: 'Testmonia',
-      label: 'Testmonia',
-      icon: <IconMessage size={20} />,
+      id: 'testimonials',
+      label: 'Testimonials',
+      icon: <IconMessage size={18} />,
       href: '/dashboard/testimonials',
       badge: 3,
+      badgeColor: 'violet',
     },
     {
-      id: 'calendar',
-      label: 'Calendar',
-      icon: <IconCalendar size={20} />,
-      href: '/dashboard/calendar',
+      id: 'users',
+      label: 'Users',
+      icon: <IconUsers size={18} />,
+      href: '/dashboard/manage-user',
+      badge: 5,
+      badgeColor: 'green',
     },
-     {
-      id: 'Service',
-      label: 'Service',
-      icon: <IconLayoutDashboard size={20} />,
-      href: '/dashboard/service',
-      children: [
-        {
-          id: 'Catagory',
-          label: 'Catagories',
-          icon: <IconClock size={16} />,
-          href: '/dashboard/service/categories',
-        },
-        {
-          id: 'Service',
-          label: 'Service',
-          icon: <IconLayoutDashboard size={20} />,
-          href: '/dashboard/service',
-        }
-      ]
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      icon: <IconChartBar size={18} />,
+      href: '/dashboard/analytics',
     },
     {
       id: 'settings',
       label: 'Settings',
-      icon: <IconSettings size={20} />,
+      icon: <IconSettings size={18} />,
       href: '/dashboard/settings',
     },
-
   ];
 
   const handleLogout = async () => {
@@ -424,114 +338,137 @@ export default function DashboardSidebar({ opened }: SidebarProps) {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-white-900">
-
-      {/* Quick Upload Button */}
-      {opened && (
-        <div className="p-4">
-          <Button
-            fullWidth
-            variant="gradient"
-            gradient={{ from: 'red', to: 'orange' }}
-            leftSection={<IconUpload size={18} />}
-            component={Link}
-            href="/dashboard/images/upload"
-          >
-            Upload Images
-          </Button>
-        </div>
-      )}
-
-      {/* Search */}
-      {opened && (
-        <div className="px-4 pb-2">
-          <div className="relative">
-            <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <TextInput
-              placeholder="Search images..."
-              size="sm"
-              radius="md"
-              styles={{
-                input: {
-                  paddingLeft: '2.5rem',
-                  backgroundColor: '#f8f9fa',
-                },
-              }}
+    <div className={`h-full flex flex-col ${
+      isDark ? 'bg-gray-900' : 'bg-white'
+    } transition-colors duration-200`}>
+      {/* Header with Logo and Collapse Button */}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+        <Group justify="space-between" align="center">
+          <Group gap="sm">
+            <Avatar
+              src="/images/logo.jpg"
+              size={opened ? 40 : 32}
+              radius="xl"
             />
-          </div>
-        </div>
-      )}
+            {opened && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Text fw={700} size="lg" className={isDark ? 'text-white' : 'text-gray-900'}>
+                  Lucia Admin
+                </Text>
+                <Text size="xs" c="dimmed">Dashboard</Text>
+              </motion.div>
+            )}
+          </Group>
+          
+          {/* Collapse/Expand Button */}
+          <Tooltip 
+            label={opened ? 'Collapse sidebar' : 'Expand sidebar'} 
+            position="right"
+          >
+            <ActionIcon
+              variant="subtle"
+              onClick={toggleSidebar}
+              size="md"
+              className={isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}
+            >
+              {opened ? <IconChevronLeft size={18} /> : <IconChevronRight size={18} />}
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      </div>
 
       {/* Navigation Items */}
-      <ScrollArea className="flex-1 px-2">
-        <Stack gap={4}>
+      <ScrollArea className="flex-1 px-2 py-2" offsetScrollbars scrollbarSize={4}>
+        <Stack gap={2}>
           {sidebarItems.map((item) => (
             <SidebarItemComponent
               key={item.id}
               item={item}
               isActive={activeItem === item.id || pathname.includes(item.id)}
               isExpanded={opened}
+              colorScheme={colorScheme} // Pass the original colorScheme which can be 'light' | 'dark' | 'auto'
             />
           ))}
         </Stack>
       </ScrollArea>
 
-      {/* Image Stats Summary */}
-      {opened && (
-        <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-800">
-          <Text size="xs" fw={500} c="dimmed" mb="xs">
-            IMAGE SUMMARY
-          </Text>
-          <Group grow>
-            <div className="text-center">
-              <Text fw={700} size="lg" c="yellow">{imageStats.pending}</Text>
-              <Text size="xs" c="dimmed">Pending</Text>
-            </div>
-            <div className="text-center">
-              <Text fw={700} size="lg" c="green">{imageStats.approved}</Text>
-              <Text size="xs" c="dimmed">Approved</Text>
-            </div>
-            <div className="text-center">
-              <Text fw={700} size="lg" c="red">{imageStats.rejected}</Text>
-              <Text size="xs" c="dimmed">Rejected</Text>
-            </div>
-          </Group>
-        </div>
-      )}
-
-      {/* User Profile */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-800">
-        <Group justify="space-between" wrap="nowrap">
-          <Group gap="md" wrap="nowrap">
+      {/* User Profile Section */}
+      <div className={`p-4 border-t ${
+        isDark ? 'border-gray-800' : 'border-gray-200'
+      }`}>
+        <Group justify="space-between" align="center" wrap="nowrap">
+          <Group gap="md" wrap="nowrap" style={{ flex: 1 }}>
             <Avatar
-              src="https://i.pravatar.cc/150?img=7"
-              size="md"
+              size={opened ? 'md' : 'sm'}
               radius="xl"
-            />
+              color="red"
+            >
+              {userData.name.charAt(0)}
+            </Avatar>
             {opened && (
-              <div>
-                <Text size="sm" fw={500}>John Doe</Text>
-                <Text size="xs" c="dimmed">Administrator</Text>
-              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                style={{ flex: 1, minWidth: 0 }}
+              >
+                <Text size="sm" fw={500} truncate className={isDark ? 'text-white' : 'text-gray-900'}>
+                  {userData.name}
+                </Text>
+                <Group gap={4}>
+                  <Badge size="xs" color="red" variant="light">
+                    {userData.role}
+                  </Badge>
+                </Group>
+              </motion.div>
             )}
           </Group>
-          <Menu shadow="lg" width={200} position="top-end">
+
+          <Menu shadow="lg" width={220} position="top-end" withinPortal>
             <Menu.Target>
-              <ActionIcon variant="subtle" color="gray">
+              <ActionIcon 
+                variant="subtle" 
+                color="gray"
+                size="md"
+                className={isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600'}
+              >
                 <IconSettings2 size={18} />
               </ActionIcon>
             </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Item leftSection={<IconUser size={14} />} component={Link} href="/dashboard/profile">
+
+            <Menu.Dropdown className={isDark ? 'dark' : ''}>
+              <Menu.Label>User Settings</Menu.Label>
+              <Menu.Item 
+                leftSection={<IconUser size={14} />} 
+                component={Link} 
+                href="/dashboard/profile"
+              >
                 Profile
               </Menu.Item>
-              <Menu.Item leftSection={<IconSettings size={14} />} component={Link} href="/dashboard/settings">
+              <Menu.Item 
+                leftSection={<IconSettings size={14} />} 
+                component={Link} 
+                href="/dashboard/settings"
+              >
                 Settings
               </Menu.Item>
-              <Menu.Item leftSection={<IconPhoto size={14} />} component={Link} href="/dashboard/images">
-                My Images
-              </Menu.Item>
+              
               <Menu.Divider />
+              
+              <Menu.Label>Preferences</Menu.Label>
+              <Menu.Item
+                leftSection={isDark ? <IconSun size={14} /> : <IconMoon size={14} />}
+                onClick={() => toggleColorScheme()}
+              >
+                {isDark ? 'Light Mode' : 'Dark Mode'}
+              </Menu.Item>
+              
+              <Menu.Divider />
+              
               <Menu.Item 
                 leftSection={<IconLogout size={14} />} 
                 color="red"
