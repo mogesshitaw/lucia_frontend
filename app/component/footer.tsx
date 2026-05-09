@@ -45,7 +45,7 @@ import Link from 'next/link';
 import { motion, MotionProps } from 'framer-motion';
 
 // API URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 // Type definitions
 type Language = 'en' | 'am';
@@ -217,7 +217,7 @@ export default function Footer({ language = 'en', onLanguageChange }: FooterProp
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/api/public/services?limit=100`);
+        const response = await fetch(`${API_URL}/public/services?limit=100`);
         const data = await response.json();
         
         if (data.success) {

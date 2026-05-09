@@ -146,8 +146,8 @@ export default function SettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/settings`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -168,8 +168,8 @@ export default function SettingsPage() {
     
     setSaving(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/settings`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -205,8 +205,8 @@ export default function SettingsPage() {
     formData.append('logo', files[0]);
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/settings/logo`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/logo`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -234,8 +234,8 @@ export default function SettingsPage() {
 
   const handleBackup = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/settings/backup`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/backup`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });

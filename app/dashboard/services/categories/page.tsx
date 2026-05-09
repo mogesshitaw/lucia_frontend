@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -133,8 +134,8 @@ export default function CategoryManagementPage() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/admin/services/categories`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/services/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       

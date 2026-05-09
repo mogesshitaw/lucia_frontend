@@ -131,23 +131,29 @@ const FloatingParticles = () => {
   );
 };
 
-const getAnnouncementImageUrl = (imagePath: string | null | undefined): string => {
-  if (!imagePath) return '/images/placeholder.jpg'; // Fallback image
-  
-  let cleanPath = imagePath.replace(/\\/g, '/');
-  cleanPath = cleanPath.replace(/^\/+/, '');
-  
-  if (cleanPath.startsWith('http')) {
-    return cleanPath;
-  }
-  
-  if (!cleanPath.startsWith('uploads/')) {
-    cleanPath = `uploads/${cleanPath}`;
-  }
-  
-  return `${API_URL}/${cleanPath}`;
-};
+// utils/imageHelper.ts
 
+ const getAnnouncementImageUrl = (imagePath: string | null | undefined): string => {
+  if (!imagePath) return '/images/placeholder.jpg';
+  
+  try {
+    let cleanPath = imagePath.replace(/\\/g, '/');
+    cleanPath = cleanPath.replace(/^\/+/, '');
+    
+    if (cleanPath.startsWith('http')) {
+      return cleanPath;
+    }
+    
+    if (!cleanPath.startsWith('uploads/')) {
+      cleanPath = `uploads/${cleanPath}`;
+    }
+    
+    return `${API_URL}/${cleanPath}`;
+  } catch (error) {
+    console.error('Error processing image path:', error);
+    return '/images/placeholder.jpg';
+  }
+};
 // Announcement Card Component
 const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Announcement; index: number; onLike: (id: string) => void }) => {
   const { colorScheme } = useMantineColorScheme();
@@ -193,7 +199,7 @@ const AnnouncementCard = ({ announcement, index, onLike }: { announcement: Annou
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const response = await fetch(`${API_URL}/api/announcements/${announcement.id}/like`, {
+      const response = await fetch(`${API_URL}/announcements/${announcement.id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -462,7 +468,7 @@ const FeaturedAnnouncement = ({ announcement }: { announcement: Announcement | n
           className="w-full h-full object-cover"
           onError={(e) => {
             console.error('Featured image failed to load:', announcement.image);
-            e.currentTarget.src = '/images/placeholder.jpg';
+            // e.currentTarget.src = '/images/placeholder.jpg';
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
@@ -620,7 +626,7 @@ const NewsletterSubscribe = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/announcements/newsletter/subscribe`, {
+      const response = await fetch(`${API_URL}/announcements/newsletter/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -865,7 +871,7 @@ export default function AnnouncementsPage() {
           ...(searchQuery && { search: searchQuery }),
         });
 
-        const response = await fetch(`${API_URL}/api/announcements?${params}`);
+        const response = await fetch(`${API_URL}/announcements?${params}`);
         const data = await response.json();
         
         if (data.success) {
@@ -892,7 +898,7 @@ export default function AnnouncementsPage() {
     const fetchStats = async () => {
       setStatsLoading(true);
       try {
-        const response = await fetch(`${API_URL}/api/announcements/stats`);
+        const response = await fetch(`${API_URL}/announcements/stats`);
         const data = await response.json();
         if (data.success) {
           setStats(data.data);
@@ -912,7 +918,7 @@ export default function AnnouncementsPage() {
     const fetchTimeline = async () => {
       setTimelineLoading(true);
       try {
-        const response = await fetch(`${API_URL}/api/announcements/timeline`);
+        const response = await fetch(`${API_URL}/announcements/timeline`);
         const data = await response.json();
         if (data.success) {
           setTimelineEvents(data.data);
@@ -931,7 +937,7 @@ export default function AnnouncementsPage() {
   useEffect(() => {
     const fetchTypes = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/announcements/types`);
+        const response = await fetch(`${API_URL}/announcements/types`);
         const data = await response.json();
         if (data.success) {
           setTypes(data.data.map((t: any) => t.type));
@@ -946,7 +952,7 @@ export default function AnnouncementsPage() {
 
   const handleLike = async (id: string) => {
     try {
-      const response = await fetch(`${API_URL}/api/announcements/${id}/like`, {
+      const response = await fetch(`${API_URL}/announcements/${id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

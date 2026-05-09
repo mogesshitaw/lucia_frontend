@@ -169,7 +169,7 @@ export default function AdminServicesPage() {
   const fetchServices = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
@@ -178,7 +178,7 @@ export default function AdminServicesPage() {
         ...(selectedStatus && { status: selectedStatus }),
       });
 
-      const response = await fetch(`${API_URL}/api/admin/services?${params}`, {
+      const response = await fetch(`${API_URL}/admin/services?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -201,8 +201,8 @@ export default function AdminServicesPage() {
   // Fetch categories
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/admin/services/categories`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/services/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
@@ -259,7 +259,7 @@ export default function AdminServicesPage() {
 const handleSave = async () => {
   setSaving(true);
   try {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('token');
     const formDataToSend = new FormData();
     
     // IMPORTANT: Send ALL form data, including empty arrays
@@ -308,8 +308,8 @@ const handleSave = async () => {
     }
 
     const url = editingService
-      ? `${API_URL}/api/admin/services/${editingService.id}`
-      : `${API_URL}/api/admin/services`;
+      ? `${API_URL}/admin/services/${editingService.id}`
+      : `${API_URL}/admin/services`;
     
     console.log('Sending form data to:', url); // Debug log
     
@@ -353,8 +353,8 @@ const handleSave = async () => {
     if (!confirm('Are you sure you want to delete this service?')) return;
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/admin/services/${id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/services/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -383,8 +383,8 @@ const handleSave = async () => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
     
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/admin/services/${id}/toggle-status`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/admin/services/${id}/toggle-status`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -453,8 +453,8 @@ const resetForm = () => {
 // Edit service
 const handleEdit = async (service: any) => {
   try {
-    const token = localStorage.getItem('accessToken');
-    const response = await fetch(`${API_URL}/api/admin/services/${service.id}`, {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/admin/services/${service.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await response.json();
@@ -1149,7 +1149,7 @@ const handleEdit = async (service: any) => {
                     {existingGallery.map((img) => (
                       <Paper key={img.id} withBorder p="xs">
                         <img
-                          src={`${API_URL}/${img.thumbnail_path}`}
+                          src={`http://localhost:5000/${img.thumbnail_path}`}
                           alt={img.alt}
                           style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: 4 }}
                         />

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Group,
   Text,
@@ -8,10 +9,6 @@ import {
   Menu,
   ActionIcon,
   Tooltip,
-  Indicator,
-  TextInput,
-  Drawer,
-  Burger,
   Badge,
   LoadingOverlay,
   Modal,
@@ -19,56 +16,61 @@ import {
   Button,
   Stack,
   Divider,
+  useMantineColorScheme,
+  Image,
+  Box,
+  Burger,
 } from '@mantine/core';
 import {
   IconChevronDown,
   IconUser,
-  IconSearch,
-  IconBell,
   IconLogout,
   IconSettings,
-  IconCreditCard,
   IconDashboard,
-  IconFileText,
-  IconMessage,
   IconLock,
   IconEyeCheck,
   IconUserCircle,
   IconKey,
+  IconSun,
+  IconMoon,
+  IconMenu2,
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import { notifications } from '@mantine/notifications';
 import { useForm } from '@mantine/form';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+interface User {
+  id: string;
+  username: string;
+  full_name: string | null;
+  role: string;
+  avatar?: string;
+  is_active: boolean;
+  last_login: string | null;
+  created_at: string;
+}
+
 interface HeaderProps {
   toggleSidebar: () => void;
   isSidebarOpen: boolean;
-  user?: {
-    id: string;
-    full_name: string;
-    email: string;
-    role: string;
-    department_name?: string;
-    avatar?: string;
-    is_first_login?: boolean;
-  } | null;
   onLogout?: () => void;
 }
 
-export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }: HeaderProps) {
+export default function Header({ toggleSidebar, isSidebarOpen, onLogout }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
-  const [searchOpened, setSearchOpened] = useState(false);
-  const [notificationsCount, setNotificationsCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [changePasswordOpened, setChangePasswordOpened] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark';
+  const [user, setUser] = useState<User | null>(null);
+  const [logoError, setLogoError] = useState(false);
 
   const passwordForm = useForm({
     initialValues: {
@@ -77,12 +79,13 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
       confirmPassword: '',
     },
     validate: {
-      currentPassword: (value) => (value.length < 6 ? 'Password must be at least 6 characters' : null),
+      currentPassword: (value) => {
+        if (!value) return 'Current password is required';
+        return null;
+      },
       newPassword: (value) => {
-        if (value.length < 8) return 'Password must be at least 8 characters';
-        if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
-          return 'Password must contain uppercase, lowercase, and numbers';
-        }
+        if (!value) return 'New password is required';
+        if (value.length < 6) return 'Password must be at least 6 characters';
         return null;
       },
       confirmPassword: (value, values) => 
@@ -98,43 +101,60 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Fetch notifications count (optional)
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem('accessToken');
-        if (!token || !user) return;
-        
-        const response = await fetch(`${API_URL}/api/notifications/count`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        if (data.success) {
-          setNotificationsCount(data.count || 0);
-        }
-      } catch (error) {
-        console.error('Failed to fetch notifications:', error);
+  const fetchUserData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/page/login');
+        return;
       }
-    };
 
-    fetchNotifications();
-  }, [user]);
+      const response = await fetch(`${API_URL}/auth/me`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          router.push('/page/login');
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.user) {
+        setUser(data.user);
+      } else {
+        console.error('Failed to load user data');
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   const handleLogout = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('token');
       
-      // Call logout API
       if (token) {
-        await fetch(`${API_URL}/api/auth/logout`, {
+        await fetch(`${API_URL}/auth/logout`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        });
+          headers: { 'Authorization': `Bearer ${token}` },
+        }).catch(() => null);
       }
       
-      // Clear local storage
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
       
       notifications.show({
@@ -143,14 +163,13 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
         color: 'green',
       });
       
-      // Call custom onLogout if provided
       if (onLogout) {
         onLogout();
       }
       
-      // Redirect to home
-      router.push('/');
+      router.push('/page/login');
     } catch (error) {
+      console.error('Logout error:', error);
       notifications.show({
         title: 'Error',
         message: 'Failed to logout',
@@ -164,16 +183,15 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
   const handleChangePassword = async (values: typeof passwordForm.values) => {
     setPasswordLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      
-      const response = await fetch(`${API_URL}/api/auth/change-password`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/auth/change-password`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          currentPassword: values.currentPassword,
+          oldPassword: values.currentPassword,
           newPassword: values.newPassword,
         }),
       });
@@ -189,7 +207,7 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
         setChangePasswordOpened(false);
         passwordForm.reset();
       } else {
-        throw new Error(data.message || 'Failed to change password');
+        throw new Error(data.error || 'Failed to change password');
       }
     } catch (error: any) {
       notifications.show({
@@ -202,22 +220,23 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
     }
   };
 
-  // Get current page title from pathname
   const getPageTitle = () => {
-    const path = pathname.split('/').pop();
-    if (!path || path === 'dashboard') return 'Dashboard';
+    const titles: Record<string, string> = {
+      dashboard: 'Dashboard',
+      announcements: 'Announcements',
+      services: 'Services',
+      testimonials: 'Testimonials',
+      settings: 'Settings',
+      profile: 'Profile',
+    };
     
-    // Format the title (e.g., "manage-users" -> "Manage Users")
-    return path
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    const path = pathname.split('/').pop() || 'dashboard';
+    return titles[path] || path.charAt(0).toUpperCase() + path.slice(1);
   };
 
-  // Get user initials for avatar fallback
   const getUserInitials = () => {
-    if (!user?.full_name) return 'U';
-    return user.full_name
+    const displayName = user?.full_name || user?.username || 'User';
+    return displayName
       .split(' ')
       .map(n => n[0])
       .join('')
@@ -225,45 +244,97 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
       .slice(0, 2);
   };
 
-  // Get role badge color
   const getRoleColor = (role: string) => {
     const roleColors: Record<string, string> = {
       admin: 'red',
       manager: 'orange',
-      cashier: 'green',
-      instructor: 'blue',
-      student: 'grape',
-      department_head: 'violet',
+      user: 'blue',
     };
     return roleColors[role?.toLowerCase()] || 'gray';
   };
 
-  // Format role for display
   const formatRole = (role: string) => {
-    return role
-      ?.split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ') || 'User';
+    if (role?.toLowerCase() === 'admin') return 'Admin';
+    if (role?.toLowerCase() === 'manager') return 'Manager';
+    return 'User';
   };
 
   return (
     <>
       <header
         className={`w-full h-full flex items-center px-4 md:px-6 transition-all duration-300 relative ${
-          scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm dark:bg-gray-900/95' : 'bg-transparent'
+          scrolled 
+            ? `bg-white/95 backdrop-blur-md shadow-sm ${isDark ? 'dark:bg-gray-900/95' : ''}` 
+            : 'bg-transparent'
         }`}
       >
         <LoadingOverlay visible={loading} overlayProps={{ blur: 2 }} />
         
         <Group justify="space-between" className="w-full">
-          <Group>
-            <Burger
+          {/* Left side - Logo and Page Title */}
+          <Group gap="md">
+           <Burger
               opened={isSidebarOpen}
               onClick={toggleSidebar}
               size="sm"
               className="md:hidden"
               aria-label="Toggle navigation"
             />
+               {/* Logo Section */}
+          <Group gap="xs">
+            <Link href="/dashboard" className="flex items-center gap-2 no-underline">
+              <div className="relative">
+                <div className="w-[45px] h-[45px] rounded-full overflow-hidden border-2 border-red-500 shadow-lg  hidden md:block">
+                  <Image
+                    src="/images/logo.jpg"
+                    alt="Lucia Printing Logo"
+                    width={45}
+                    height={45}
+                    className="object-cover "
+                  />
+                </div>
+                <motion.div
+                  className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                />
+              </div>
+
+              {/* Logo Text */}
+              <div className="hidden sm:flex flex-col min-w-0">
+                <Text
+                  size="lg"
+                  fw={800}
+                  className={`leading-tight truncate transition-colors duration-300`}
+                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                >
+                  Lucia 
+                </Text>
+                <Text
+                  size="sm"
+                  fw={500}
+                  className={`leading-tight truncate transition-colors duration-300 `}
+                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                >
+                 Printing && Advertising
+                </Text>
+              </div>
+
+              {/* Mobile: Short logo */}
+              <div className="sm:hidden flex flex-col">
+                <Text
+                  size="md"
+                  fw={800}
+                  className={`leading-tight transition-colors duration-300 `}
+                >
+                  Lucia
+                </Text>
+              </div>
+            </Link>
+          </Group>
+
+            {/* Vertical Divider */}
+            <div className={`hidden md:block h-8 w-px ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`} />
             
             {/* Page Title */}
             <motion.div
@@ -272,53 +343,25 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
               transition={{ duration: 0.3 }}
               className="hidden md:block"
             >
-              <Text size="xl" fw={700} className="text-gray-800 dark:text-white">
+              <Text size="xl" fw={600} className={isDark ? 'text-white' : 'text-gray-800'}>
                 {getPageTitle()}
               </Text>
             </motion.div>
           </Group>
 
+          {/* Right side - Theme toggle and User menu */}
           <Group gap="lg">
-            {/* Search */}
-            <div className="hidden md:block relative">
-              <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <TextInput
-                placeholder="Search..."
-                className="w-64"
-                size="sm"
-                radius="md"
-                styles={{
-                  input: {
-                    paddingLeft: '2.5rem',
-                    backgroundColor: scrolled ? 'white' : '#f8f9fa',
-                    border: 'none',
-                    '&:focus': {
-                      border: '1px solid #ef4444',
-                    },
-                  },
-                }}
-              />
-            </div>
-
-            {/* Notifications */}
-            <Indicator 
-              label={notificationsCount} 
-              size={16} 
-              color="red" 
-              offset={4}
-              disabled={notificationsCount === 0}
-            >
-              <Tooltip label="Notifications" withArrow position="bottom">
-                <ActionIcon 
-                  size="lg" 
-                  variant="subtle" 
-                  color="gray"
-                  onClick={() => router.push('/dashboard/notifications')}
-                >
-                  <IconBell size={20} />
-                </ActionIcon>
-              </Tooltip>
-            </Indicator>
+            {/* Theme Toggle */}
+            <Tooltip label={isDark ? 'Light Mode' : 'Dark Mode'} withArrow position="bottom">
+              <ActionIcon 
+                size="lg" 
+                variant="subtle" 
+                color="gray"
+                onClick={() => toggleColorScheme()}
+              >
+                {isDark ? <IconSun size={20} /> : <IconMoon size={20} />}
+              </ActionIcon>
+            </Tooltip>
 
             {/* User Menu */}
             <Menu shadow="lg" width={280} position="bottom-end" withArrow>
@@ -334,7 +377,9 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
                   </Avatar>
                   <div className="hidden md:block">
                     <Group gap="xs">
-                      <Text size="sm" fw={500}>{user?.full_name || 'User'}</Text>
+                      <Text size="sm" fw={500} className={isDark ? 'text-white' : 'text-gray-800'}>
+                        {user?.full_name || user?.username || 'User'}
+                      </Text>
                       <Badge 
                         size="xs" 
                         color={getRoleColor(user?.role || '')}
@@ -343,15 +388,14 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
                         {formatRole(user?.role || 'user')}
                       </Badge>
                     </Group>
-                    <Text size="xs" c="dimmed">{user?.email || 'user@example.com'}</Text>
                   </div>
                   <IconChevronDown size={14} className="hidden md:block" />
                 </Group>
               </Menu.Target>
               
-              <Menu.Dropdown>
+              <Menu.Dropdown className={isDark ? 'dark' : ''}>
                 {/* User Info Header */}
-                <div className="px-3 py-2 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-t-lg">
+                <div className={`px-3 py-2 bg-gradient-to-r from-red-50 to-orange-50 ${isDark ? 'dark:from-red-900/20 dark:to-orange-900/20' : ''} rounded-t-lg`}>
                   <Group>
                     <Avatar 
                       src={user?.avatar || null} 
@@ -362,8 +406,9 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
                       {getUserInitials()}
                     </Avatar>
                     <div>
-                      <Text fw={600} size="sm">{user?.full_name || 'User'}</Text>
-                      <Text size="xs" c="dimmed">{user?.email || 'user@example.com'}</Text>
+                      <Text fw={600} size="sm" className={isDark ? 'text-white' : ''}>
+                        {user?.full_name || user?.username || 'User'}
+                      </Text>
                       <Badge 
                         size="xs" 
                         color={getRoleColor(user?.role || '')}
@@ -401,20 +446,6 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
                 >
                   Dashboard
                 </Menu.Item>
-                <Menu.Item 
-                  leftSection={<IconFileText size={14} />} 
-                  component={Link} 
-                  href="/dashboard/my-uploads"
-                >
-                  My Uploads
-                </Menu.Item>
-                <Menu.Item 
-                  leftSection={<IconMessage size={14} />} 
-                  component={Link} 
-                  href="/dashboard/messages"
-                >
-                  Messages
-                </Menu.Item>
                 
                 <Menu.Divider />
                 
@@ -425,13 +456,6 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
                   href="/dashboard/settings"
                 >
                   Account Settings
-                </Menu.Item>
-                <Menu.Item 
-                  leftSection={<IconCreditCard size={14} />} 
-                  component={Link} 
-                  href="/dashboard/billing"
-                >
-                  Billing & Payments
                 </Menu.Item>
                 
                 <Menu.Divider />
@@ -448,29 +472,6 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
             </Menu>
           </Group>
         </Group>
-
-        {/* Mobile Search Drawer */}
-        <Drawer
-          opened={searchOpened}
-          onClose={() => setSearchOpened(false)}
-          position="top"
-          size="auto"
-          padding="md"
-          radius="md"
-        >
-          <TextInput
-            placeholder="Search..."
-            size="lg"
-            radius="md"
-            autoFocus
-            leftSection={<IconSearch size={18} />}
-            rightSection={
-              <ActionIcon size="sm" onClick={() => setSearchOpened(false)}>
-                ✕
-              </ActionIcon>
-            }
-          />
-        </Drawer>
       </header>
 
       {/* Change Password Modal */}
@@ -484,6 +485,7 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
         size="md"
         radius="lg"
         centered
+        className={isDark ? 'dark' : ''}
       >
         <form onSubmit={passwordForm.onSubmit(handleChangePassword)}>
           <Stack gap="md">
@@ -500,7 +502,7 @@ export default function Header({ toggleSidebar, isSidebarOpen, user, onLogout }:
               placeholder="Enter new password"
               leftSection={<IconKey size={16} />}
               required
-              description="Password must be at least 8 characters with uppercase, lowercase, and numbers"
+              description="Password must be at least 6 characters"
               {...passwordForm.getInputProps('newPassword')}
             />
 

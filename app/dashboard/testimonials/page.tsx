@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Paper,
@@ -96,15 +97,11 @@ export default function TestimonialsAdminPage() {
   const [editAvatarFile, setEditAvatarFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchTestimonials();
-    fetchStats();
-  }, [page, search, statusFilter]);
 
-  const fetchTestimonials = async () => {
+   const fetchTestimonials = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
@@ -112,7 +109,7 @@ export default function TestimonialsAdminPage() {
         ...(statusFilter && { status: statusFilter }),
       });
 
-      const response = await fetch(`${API_URL}/api/testimonials?${params}`, {
+      const response = await fetch(`${API_URL}/testimonials?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -132,12 +129,18 @@ export default function TestimonialsAdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, statusFilter]);
 
+  useEffect(() => {
+    fetchTestimonials();
+    fetchStats();
+  }, [fetchTestimonials, page, search, statusFilter]);
+
+ 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/testimonials/stats`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/testimonials/stats`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -153,8 +156,8 @@ export default function TestimonialsAdminPage() {
 
   const handleApprove = async (id: string) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/testimonials/${id}/approve`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/testimonials/${id}/approve`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -183,8 +186,8 @@ export default function TestimonialsAdminPage() {
 
   const handleReject = async (id: string) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/testimonials/${id}/reject`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/testimonials/${id}/reject`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -215,8 +218,8 @@ export default function TestimonialsAdminPage() {
     if (!confirm('Are you sure you want to delete this testimonial?')) return;
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/testimonials/${id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/testimonials/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -245,8 +248,8 @@ export default function TestimonialsAdminPage() {
 
   const handleToggleFeatured = async (id: string, currentValue: boolean) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/testimonials/${id}/toggle-featured`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/testimonials/${id}/toggle-featured`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -304,8 +307,8 @@ export default function TestimonialsAdminPage() {
     }
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/testimonials/${selectedTestimonial.id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/testimonials/${selectedTestimonial.id}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,

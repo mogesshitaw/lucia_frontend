@@ -13,7 +13,6 @@ import {
   Stack,
   Table,
   Badge,
-  Avatar,
   ActionIcon,
   Tooltip,
   TextInput,
@@ -28,8 +27,6 @@ import {
   Loader,
   Center,
   ScrollArea,
-  Tabs,
-  Alert,
   Divider,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -39,15 +36,11 @@ import {
   IconEdit,
   IconTrash,
   IconEye,
-  IconCheck,
-  IconX,
   IconSearch,
   IconFilter,
   IconRefresh,
   IconCalendar,
   IconTag,
-  IconBell,
-  IconDownload,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -118,7 +111,7 @@ export default function AnnouncementsAdminPage() {
  const fetchAnnouncements = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '10',
@@ -127,7 +120,7 @@ export default function AnnouncementsAdminPage() {
         ...(typeFilter && { type: typeFilter }),
       });
 
-      const response = await fetch(`${API_URL}/api/announcements/admin/all?${params}`, {
+      const response = await fetch(`${API_URL}/announcements/admin/all?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -158,7 +151,7 @@ export default function AnnouncementsAdminPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/announcements/stats`);
+      const response = await fetch(`${API_URL}/announcements/stats`);
       const data = await response.json();
       if (data.success) {
         setStats(data.data);
@@ -170,7 +163,7 @@ export default function AnnouncementsAdminPage() {
 
   const fetchTypes = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/announcements/types`);
+      const response = await fetch(`${API_URL}/announcements/types`);
       const data = await response.json();
       if (data.success) {
         setTypes(data.data);
@@ -199,8 +192,8 @@ export default function AnnouncementsAdminPage() {
     }
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/announcements`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/announcements`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -254,8 +247,8 @@ export default function AnnouncementsAdminPage() {
     }
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/announcements/${selectedAnnouncement.id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/announcements/${selectedAnnouncement.id}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -292,8 +285,8 @@ export default function AnnouncementsAdminPage() {
     if (!confirm('Are you sure you want to delete this announcement?')) return;
 
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${API_URL}/api/announcements/${id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/announcements/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,

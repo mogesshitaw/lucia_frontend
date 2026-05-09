@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Container,
   Group,
@@ -151,51 +151,119 @@ interface Service {
   is_new: boolean;
 }
 
+// Cache for API responses
+let categoriesCache: Category[] | null = null;
+let servicesCache: Service[] | null = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpened, setDrawerOpened] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === 'dark';
   const pathname = usePathname();
+  const isMountedRef = useRef(true);
+  const fetchInProgressRef = useRef(false);
   
   const { scrollY } = useScroll();
   const headerHeight = useTransform(scrollY, [0, 100], [80, 70]);
   const headerOpacity = useTransform(scrollY, [0, 100], [1, 0.98]);
   const headerBlur = useTransform(scrollY, [0, 100], [0, 12]);
 
-  // Fetch categories and services
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch categories
-        const categoriesResponse = await fetch(`${API_URL}/api/public/services/categories/all`);
-        const categoriesData = await categoriesResponse.json();
-        
-        if (categoriesData.success) {
-          setCategories(categoriesData.data);
+  // Fetch categories and services with caching
+  const fetchData = useCallback(async () => {
+    // Don't fetch if already fetching
+    if (fetchInProgressRef.current) return;
+    
+    // Check cache
+    const now = Date.now();
+    if (categoriesCache && servicesCache && (now - lastFetchTime) < CACHE_DURATION) {
+      setCategories(categoriesCache);
+      setServices(servicesCache);
+      setLoading(false);
+      return;
+    }
+    
+    fetchInProgressRef.current = true;
+    
+    try {
+      // Use Promise.allSettled to handle individual failures
+      const [catResult, serResult] = await Promise.allSettled([
+        fetch(`${API_URL}/public/services/categories/all`),
+        fetch(`${API_URL}/public/services`)
+      ]);
+      
+      let newCategories: Category[] = [];
+      let newServices: Service[] = [];
+      
+      // Process categories
+      if (catResult.status === 'fulfilled' && catResult.value.ok) {
+        const catData = await catResult.value.json();
+        if (catData.success && catData.data) {
+          newCategories = catData.data;
         }
-
-        // Fetch all active services
-        const servicesResponse = await fetch(`${API_URL}/api/public/services`);
-        const servicesData = await servicesResponse.json();
-        
-        if (servicesData.success) {
-          setServices(servicesData.data);
+      } else {
+        console.warn('Failed to fetch categories');
+      }
+      
+      // Process services
+      if (serResult.status === 'fulfilled' && serResult.value.ok) {
+        const serData = await serResult.value.json();
+        if (serData.success && serData.data) {
+          newServices = serData.data;
         }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
+      } else {
+        console.warn('Failed to fetch services');
+      }
+      
+      // Update cache only if we have data
+      if (newCategories.length > 0) {
+        categoriesCache = newCategories;
+      }
+      if (newServices.length > 0) {
+        servicesCache = newServices;
+      }
+      
+      if (isMountedRef.current) {
+        setCategories(categoriesCache || newCategories);
+        setServices(servicesCache || newServices);
+        setError(null);
+      }
+      
+      lastFetchTime = now;
+      
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      if (isMountedRef.current) {
+        setError('Failed to load services. Please refresh the page.');
+        // Use cached data if available
+        if (categoriesCache) setCategories(categoriesCache);
+        if (servicesCache) setServices(servicesCache);
+      }
+    } finally {
+      if (isMountedRef.current) {
         setLoading(false);
       }
-    };
-
-    fetchData();
+      fetchInProgressRef.current = false;
+    }
   }, []);
 
+  // Initial fetch
+  useEffect(() => {
+    isMountedRef.current = true;
+    fetchData();
+    
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [fetchData]);
+
+  // Handle scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -291,7 +359,7 @@ export default function Header() {
                   }`}
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                  Lucia Printing
+                  Lucia 
                 </Text>
                 <Text
                   size="sm"
@@ -303,7 +371,7 @@ export default function Header() {
                   }`}
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                  Since 2010 • Ethiopia
+                Printing & Advertising 
                 </Text>
               </div>
 
@@ -385,11 +453,22 @@ export default function Header() {
                             </Text>
                           </div>
 
+                          {/* Error State */}
+                          {error && (
+                            <div className="px-3 py-2 mb-2 bg-red-500/10 border border-red-500/30 rounded-lg">
+                              <Text size="xs" c="red">{error}</Text>
+                            </div>
+                          )}
+
                           {/* Loading State */}
                           {loading ? (
                             <div className="py-8 text-center">
                               <Loader size="sm" color="red" />
                               <Text size="sm" c="dimmed" mt="xs">Loading services...</Text>
+                            </div>
+                          ) : displayCategories.length === 0 ? (
+                            <div className="py-8 text-center">
+                              <Text size="sm" c="dimmed">No services available</Text>
                             </div>
                           ) : (
                             <>
@@ -600,6 +679,14 @@ export default function Header() {
                         <Loader size="sm" color="red" />
                         <Text size="xs" c="dimmed" mt="xs">Loading...</Text>
                       </div>
+                    ) : error ? (
+                      <div className="py-4 text-center">
+                        <Text size="xs" c="red">{error}</Text>
+                      </div>
+                    ) : displayCategories.length === 0 ? (
+                      <div className="py-4 text-center">
+                        <Text size="xs" c="dimmed">No services available</Text>
+                      </div>
                     ) : (
                       displayCategories.map((category, idx) => (
                         <div key={idx}>
@@ -681,7 +768,7 @@ export default function Header() {
                 onClick={() => setDrawerOpened(false)}
                 className={dark ? 'text-gray-300 hover:text-white' : ''}
               >
-              Announcement
+                Announcement
               </Button>
             </Stack>
           </Stack>

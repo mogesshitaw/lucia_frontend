@@ -838,12 +838,12 @@ export default function HomePage() {
   const [featuredServices, setFeaturedServices] = useState<Service[]>([]);
   const [servicesLoading, setServicesLoading] = useState(true);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
   // Fetch testimonials from API
   const fetchTestimonials = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/testimonials/public?limit=6&featured=true`);
+      const response = await fetch(`${API_URL}/testimonials/public?limit=6&featured=true`);
       const data = await response.json();
       if (data.success) {
         setTestimonials(data.data);
@@ -858,7 +858,7 @@ export default function HomePage() {
   // Fetch recent works from service images
   const fetchRecentWorks = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/public/gallery/images?limit=8&sortBy=created_at&sortOrder=desc`);
+      const response = await fetch(`${API_URL}/public/gallery/images?limit=8&sortBy=created_at&sortOrder=desc`);
       const data = await response.json();
       if (data.success) {
         setRecentWorks(data.data.images || []);
@@ -872,7 +872,7 @@ export default function HomePage() {
   
   const fetchFeaturedServices = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/public/services?limit=8`);
+      const response = await fetch(`${API_URL}/public/services?limit=8`);
       const data = await response.json();
       if (data.success) {
         setFeaturedServices(data.data || []);
@@ -974,7 +974,7 @@ export default function HomePage() {
     if (!cleanPath.startsWith('uploads/')) {
       cleanPath = `uploads/${cleanPath}`;
     }
-    return `${API_URL}/${cleanPath}`;
+    return `http://localhost:5000/${cleanPath}`;
   };
 
   return (

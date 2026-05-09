@@ -20,7 +20,7 @@ import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconX, IconStar, IconUser, IconBuilding, IconBriefcase } from '@tabler/icons-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 interface TestimonialFormProps {
   opened: boolean;
@@ -83,7 +83,7 @@ export function TestimonialForm({ opened, onClose, onSuccess }: TestimonialFormP
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/testimonials/submit`, {
+      const response = await fetch(`${API_URL}/testimonials/submit`, {
         method: 'POST',
         body: formData,
       });

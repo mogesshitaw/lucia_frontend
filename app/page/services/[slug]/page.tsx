@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { notFound } from 'next/navigation';
 import DynamicServicePage from './DynamicServicePage';
 
@@ -5,7 +6,7 @@ import DynamicServicePage from './DynamicServicePage';
 async function getService(slug: string) {
   try {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    const response = await fetch(`${API_URL}/api/public/services/${slug}`, {
+    const response = await fetch(`${API_URL}/public/services/${slug}`, {
       cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
@@ -31,7 +32,7 @@ async function getService(slug: string) {
 export async function generateStaticParams() {
   try {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    const response = await fetch(`${API_URL}/api/public/services`, {
+    const response = await fetch(`${API_URL}/public/services`, {
       cache: 'no-store',
     });
     

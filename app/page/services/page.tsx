@@ -101,7 +101,7 @@ export default function ServicesMainPage() {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_URL}/api/public/services?limit=100`);
+        const response = await fetch(`${API_URL}/public/services?limit=100`);
         const data = await response.json();
         
         if (data.success) {

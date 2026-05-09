@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,16 +14,14 @@ import {
   ScrollArea,
   ActionIcon,
   useMantineColorScheme,
+  Box,
 } from '@mantine/core';
 import {
   IconLayoutDashboard,
   IconPackage,
-  IconUsers,
   IconSettings,
   IconLogout,
   IconChevronRight,
-  IconChartBar,
-  IconMessage,
   IconUser,
   IconSettings2,
   IconBell,
@@ -31,10 +30,12 @@ import {
   IconSun,
   IconMoon,
   IconChevronLeft,
+  IconFileText,
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { notifications } from '@mantine/notifications';
 
 const MotionDiv = motion.div;
 
@@ -53,7 +54,6 @@ interface SidebarProps {
   toggleSidebar: () => void;
 }
 
-// Animation variants
 const itemVariants = {
   hidden: { opacity: 0, x: -20 },
   visible: { opacity: 1, x: 0 },
@@ -64,31 +64,21 @@ const childVariants = {
   visible: { opacity: 1, height: 'auto' },
 };
 
-// Helper function to determine if dark mode is active
-const isDarkMode = (colorScheme: 'light' | 'dark' | 'auto'): boolean => {
-  if (colorScheme === 'dark') return true;
-  if (colorScheme === 'light') return false;
-  // For 'auto', check system preference
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
-};
-
-// Sidebar Item Component with animations
 const SidebarItemComponent = ({
   item,
   isActive,
   isExpanded,
   depth = 0,
-  colorScheme,
+  isDark,
 }: {
   item: SidebarItem;
   isActive: boolean;
   isExpanded: boolean;
   depth?: number;
-  colorScheme: 'light' | 'dark' | 'auto';
+  isDark: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
-  const isDark = isDarkMode(colorScheme);
 
   const handleClick = () => {
     if (item.children) {
@@ -172,18 +162,6 @@ const SidebarItemComponent = ({
           }}
         >
           {isExpanded && item.label}
-          {!isExpanded && item.badge && (
-            <div className="absolute -top-1 -right-1">
-              <Badge 
-                size="xs" 
-                color={item.badgeColor || 'red'} 
-                variant="filled" 
-                circle
-              >
-                {item.badge}
-              </Badge>
-            </div>
-          )}
         </Button>
       </Tooltip>
 
@@ -204,7 +182,7 @@ const SidebarItemComponent = ({
                 isActive={false}
                 isExpanded={isExpanded}
                 depth={depth + 1}
-                colorScheme={colorScheme}
+                isDark={isDark}
               />
             ))}
           </MotionDiv>
@@ -218,15 +196,14 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
   const pathname = usePathname();
   const router = useRouter();
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
-  
-  // Use the helper function to determine actual dark mode state
-  const isDark = isDarkMode(colorScheme);
+  const isDark = colorScheme === 'dark';
+  const [logoError, setLogoError] = useState(false);
   
   const [activeItem, setActiveItem] = useState('dashboard');
   const [userData, setUserData] = useState({
     name: 'Admin User',
     email: 'admin@luciaprinting.com',
-    role: 'Administrator',
+    role: 'Admin',
   });
 
   useEffect(() => {
@@ -234,7 +211,6 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
     setActiveItem(path);
   }, [pathname]);
 
-  // Fetch user data
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -243,9 +219,9 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
           const user = JSON.parse(userStr);
           setUserData(prev => ({
             ...prev,
-            name: user.full_name || user.name || prev.name,
+            name: user.full_name || user.name || user.username || prev.name,
             email: user.email || prev.email,
-            role: user.role || prev.role,
+            role: user.role === 'admin' ? 'Admin' : 'User',
           }));
         }
       } catch (error) {
@@ -264,7 +240,7 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
       href: '/dashboard',
     },
     {
-      id: 'service',
+      id: 'services',
       label: 'Services',
       icon: <IconBuildingStore size={18} />,
       href: '/dashboard/service',
@@ -273,13 +249,13 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
           id: 'service-categories',
           label: 'Categories',
           icon: <IconCategory size={16} />,
-          href: '/dashboard/service/categories',
+          href: '/dashboard/services/categories',
         },
         {
           id: 'service-list',
           label: 'All Services',
           icon: <IconPackage size={16} />,
-          href: '/dashboard/service',
+          href: '/dashboard/services',
         },
       ],
     },
@@ -292,24 +268,8 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
     {
       id: 'testimonials',
       label: 'Testimonials',
-      icon: <IconMessage size={18} />,
+      icon: <IconFileText size={18} />,
       href: '/dashboard/testimonials',
-      badge: 3,
-      badgeColor: 'violet',
-    },
-    {
-      id: 'users',
-      label: 'Users',
-      icon: <IconUsers size={18} />,
-      href: '/dashboard/manage-user',
-      badge: 5,
-      badgeColor: 'green',
-    },
-    {
-      id: 'analytics',
-      label: 'Analytics',
-      icon: <IconChartBar size={18} />,
-      href: '/dashboard/analytics',
     },
     {
       id: 'settings',
@@ -321,18 +281,27 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const token = localStorage.getItem('token');
+      if (token) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('accessToken');
+      localStorage.removeItem('token');
       localStorage.removeItem('user');
+      
+      notifications.show({
+        title: 'Logged Out',
+        message: 'You have been logged out successfully',
+        color: 'blue',
+      });
+      
       router.push('/page/login');
     }
   };
@@ -340,31 +309,54 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
   return (
     <div className={`h-full flex flex-col ${
       isDark ? 'bg-gray-900' : 'bg-white'
-    } transition-colors duration-200`}>
+    } transition-all duration-300`}>
       {/* Header with Logo and Collapse Button */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-        <Group justify="space-between" align="center">
-          <Group gap="sm">
-            <Avatar
-              src="/images/logo.jpg"
-              size={opened ? 40 : 32}
-              radius="xl"
-            />
+      <div className={`p-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+        <Group justify="space-between" align="center" wrap="nowrap">
+          <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
+            {/* Logo with error handling */}
+            {!logoError ? (
+              <img
+                src="/images/logo.jpg"
+                alt="Logo"
+                width={opened ? 40 : 32}
+                height={opened ? 40 : 32}
+                className="rounded-lg object-cover"
+                onError={() => setLogoError(true)}
+                style={{ 
+                  width: opened ? '40px' : '32px', 
+                  height: opened ? '40px' : '32px',
+                  transition: 'all 0.3s ease'
+                }}
+              />
+            ) : (
+              <Avatar
+                size={opened ? 40 : 32}
+                radius="lg"
+                color="red"
+                style={{ transition: 'all 0.3s ease' }}
+              >
+                SP
+              </Avatar>
+            )}
+            
             {opened && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.2 }}
+                style={{ overflow: 'hidden' }}
               >
-                <Text fw={700} size="lg" className={isDark ? 'text-white' : 'text-gray-900'}>
-                  Lucia Admin
+                <Text fw={700} size="md" className={isDark ? 'text-white' : 'text-gray-900'} truncate>
+                  SPUMS
                 </Text>
-                <Text size="xs" c="dimmed">Dashboard</Text>
+                <Text size="xs" c="dimmed" truncate>Print Management</Text>
               </motion.div>
             )}
           </Group>
           
-          {/* Collapse/Expand Button */}
+          {/* Collapse/Expand Button - Improved */}
           <Tooltip 
             label={opened ? 'Collapse sidebar' : 'Expand sidebar'} 
             position="right"
@@ -390,24 +382,23 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
               item={item}
               isActive={activeItem === item.id || pathname.includes(item.id)}
               isExpanded={opened}
-              colorScheme={colorScheme} // Pass the original colorScheme which can be 'light' | 'dark' | 'auto'
+              isDark={isDark}
             />
           ))}
         </Stack>
       </ScrollArea>
 
-      {/* User Profile Section */}
-      <div className={`p-4 border-t ${
-        isDark ? 'border-gray-800' : 'border-gray-200'
-      }`}>
+      {/* User Profile Section - Fixed */}
+      <div className={`p-4 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <Group justify="space-between" align="center" wrap="nowrap">
           <Group gap="md" wrap="nowrap" style={{ flex: 1 }}>
             <Avatar
               size={opened ? 'md' : 'sm'}
               radius="xl"
               color="red"
+              style={{ transition: 'all 0.3s ease' }}
             >
-              {userData.name.charAt(0)}
+              {userData.name.charAt(0).toUpperCase()}
             </Avatar>
             {opened && (
               <motion.div
@@ -419,11 +410,12 @@ export default function DashboardSidebar({ opened, toggleSidebar }: SidebarProps
                 <Text size="sm" fw={500} truncate className={isDark ? 'text-white' : 'text-gray-900'}>
                   {userData.name}
                 </Text>
-                <Group gap={4}>
+                <Box>
+                  <Text size="xs" component="span" c="dimmed">Role: </Text>
                   <Badge size="xs" color="red" variant="light">
                     {userData.role}
                   </Badge>
-                </Group>
+                </Box>
               </motion.div>
             )}
           </Group>

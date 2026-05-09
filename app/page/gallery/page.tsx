@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Title,
@@ -115,7 +115,7 @@ export default function GalleryPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   // Fetch images
-  const fetchImages = async () => {
+  const fetchImages = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -126,7 +126,7 @@ export default function GalleryPage() {
         ...(selectedCategory && { category: selectedCategory }),
       });
 
-      const response = await fetch(`${API_URL}/api/public/gallery/images?${params}`);
+      const response = await fetch(`${API_URL}/public/gallery/images?${params}`);
       const data = await response.json();
       
       if (data.success) {
@@ -139,12 +139,12 @@ export default function GalleryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  },[page, searchQuery, selectedCategory, selectedService]);
 
   // Fetch services for filter
   const fetchServices = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/public/services?limit=100`);
+      const response = await fetch(`${API_URL}/public/services?limit=100`);
       const data = await response.json();
       if (data.success) {
         setServices(data.data || []);
@@ -157,7 +157,7 @@ export default function GalleryPage() {
   // Fetch categories with counts
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/public/gallery/categories`);
+      const response = await fetch(`${API_URL}/public/gallery/categories`);
       const data = await response.json();
       if (data.success) {
         setCategories(data.data || []);
@@ -191,7 +191,7 @@ export default function GalleryPage() {
     fetchImages();
     fetchServices();
     fetchCategories();
-  }, [page, searchQuery, selectedService, selectedCategory]);
+  }, [page, searchQuery, selectedService, selectedCategory, fetchImages]);
 
   // Get image URL
   const getImageUrl = (path: string) => {
@@ -201,7 +201,7 @@ export default function GalleryPage() {
     if (!cleanPath.startsWith('uploads/')) {
       cleanPath = `uploads/${cleanPath}`;
     }
-    return `${API_URL}/${cleanPath}`;
+    return `http://localhost:5000/${cleanPath}`;
   };
 
   // Open lightbox
@@ -212,7 +212,7 @@ export default function GalleryPage() {
   };
 
   // Navigate lightbox
-  const navigateLightbox = (direction: 'prev' | 'next') => {
+  const navigateLightbox = useCallback((direction: 'prev' | 'next') => {
     if (!images.length) return;
     
     let newIndex = currentIndex;
@@ -224,7 +224,7 @@ export default function GalleryPage() {
     
     setCurrentIndex(newIndex);
     setCurrentImage(images[newIndex]);
-  };
+  },[currentIndex, images]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -242,7 +242,7 @@ export default function GalleryPage() {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpened, currentIndex]);
+  }, [lightboxOpened, currentIndex, navigateLightbox]);
 
   // Get service icon emoji
   const getServiceIcon = (iconName: string) => {
@@ -515,7 +515,7 @@ export default function GalleryPage() {
         opened={lightboxOpened}
         onClose={() => setLightboxOpened(false)}
         size="xl"
-        padding={0}
+        padding={20}
         radius="lg"
         withCloseButton={false}
         centered
@@ -553,7 +553,7 @@ export default function GalleryPage() {
             </ActionIcon>
 
             {/* Close button */}
-            <ActionIcon
+            <ActionIcon style={{ float:"right" }}
               className="absolute right-2 top-2 z-10"
               size="lg"
               radius="xl"
@@ -590,7 +590,7 @@ export default function GalleryPage() {
                   <div>
                     <Group gap="xs" mb={4}>
                       <Text fw={600} size="lg" className={isDark ? 'text-white' : 'text-gray-900'}>
-                        {currentImage.alt_text || 'Service Image'}
+                         {/* {currentImage.alt_text || 'Service Image'} */}
                       </Text>
                       {currentImage.is_primary && (
                         <Badge color="red" variant="light">Primary</Badge>
@@ -743,7 +743,7 @@ function GalleryCard({
         <Stack gap="xs" mt="md">
           <Group justify="space-between">
             <Text fw={600} size="sm" lineClamp={1} className={isDark ? 'text-white' : 'text-gray-900'}>
-              {image.alt_text || 'Service Image'}
+            {/* {image.alt_text || 'Service Image'} */}
             </Text>
           </Group>
           
